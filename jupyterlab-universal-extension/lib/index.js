@@ -1,4 +1,3 @@
-"use strict";
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {

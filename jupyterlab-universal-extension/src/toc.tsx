@@ -117,7 +117,7 @@ export class GalyleoEditor extends Widget {
     let cell: CodeCellModel = new CodeCellModel({});
     cell.value.text = code;
     model?.cells.insert(idx, cell);
-    return panel.content.widgets[idx];
+    return panel.content.widgets[idx] as unknown as Cell<ICellModel>;
   }
 
   protected selectCell() {
@@ -137,7 +137,7 @@ export class GalyleoEditor extends Widget {
         let target = evt.composedPath().find((node: HTMLDivElement) => node.classList && node.classList.contains('jp-CodeCell')) as HTMLDivElement;
         if (target) {
           let bounds = target.getBoundingClientRect();
-          currentCell = panel.content.widgets.find(w => w.node === target);
+          currentCell = (panel.content.widgets.find(w => w.node === target) as unknown as Cell<ICellModel>);
           markerElement.style.display = 'initial';
           markerElement.style.top = bounds.top + 'px';
           markerElement.style.left = bounds.left + 'px';
