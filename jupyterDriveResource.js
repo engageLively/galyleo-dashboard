@@ -1,9 +1,4 @@
 export class JupyterLabDriveResource extends Resource {
-  export var resourceExtension = {
-    name: "local-resource",
-    matches: (url) => url.startsWith("jupyterlab:"),
-    resourceClass: JupyterLabDriveResource
-  }
   // the url should be a string of the form 'jupyterlab://<path with respect to>/'
   // Note that absolute paths (e.g. /home/jovyan) are not supported by the underling API.
   // /foo resolves to /home/jovyan/foo
@@ -96,7 +91,7 @@ export class JupyterLabDriveResource extends Resource {
   async dirList (depth, opts) {
     const path = this._getFileSystemPath_();
     
-    if this._isDirectory_(dirPath) {
+    if (this._isDirectory_(dirPath)) {
       return await this.read();
     } else {
       throw(`Error!  ${path} is not a directory`)
@@ -104,6 +99,12 @@ export class JupyterLabDriveResource extends Resource {
 
   }
   async readProperties (opts) {
-    await return this._getFileOrDirectory_();
+    return await this._getFileOrDirectory_();
   }
+}
+
+export var resourceExtension = {
+  name: "local-resource",
+  matches: (url) => url.startsWith("jupyterlab:"),
+  resourceClass: JupyterLabDriveResource
 }
