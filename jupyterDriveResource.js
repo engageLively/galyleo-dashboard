@@ -22,14 +22,25 @@ export class JupyterLabDriveResource extends Resource {
   }
 
   async read () { 
-    const fileOrDirectory = await this._getFileSystemPath_();
+    const fileOrDirectory = await this._getFileOrDirectory_();
     return fileOrDirectory.contents;
   }
 
   // For the moment, just replaces the contents.  Creates the file if it doesn't exist
   // Behavior should be governed by options.
 
-  async write () {  }
+  async write (jsonObject) {
+    const dirPath = this._getFileSystemPath_();
+    if (await exists(dirPath)) {
+      await window.EXTENSION_INFO.drive.save(dirPath, jsonObject);
+    } else {
+      const directory = this._splitIntoDirectoryAndFile_(filePath);
+      jsonObject.path = directory.directory;
+      const newFileOrDirectory = await window.EXTENSION_INFO.newUntitled(jsonObject);
+      await window.EXTENSION_INFO.drive.rename(newFileOrDirectory.path, dirPath);
+    }
+    
+  }
 
   async _isDirectory (dirPath)  {
     if (dirPath == "" || dirPath == "/") {
@@ -42,21 +53,25 @@ export class JupyterLabDriveResource extends Resource {
     return dir.type == "directory"
   }
 
-  async mkdir () {
-    const filePath = this._getFileSystemPath_();
+  _splitIntoDirectoryAndFile_(filePath) {
     const lastSlash = filePath.lastIndexOf("/");
     const fileName = lastSlash <= 0?filePath:filePath.slice(lastSlash + 1);
     const directory = lastSlash <= 0?"":filePath.slice(0, lastSlash);
-      
-      if (await this.exists(filePath)) {
+    return { directory: directory, fileName: fileName }
+
+  }
+
+  async mkdir () {
+    const filePath = this._getFileSystemPath_();
+    if (await this.exists(filePath)) {
         throw `Error: "${filePath}" already exists`;
-      }
-      if (!await this._isDirectory_(directory)) {
-        throw `Error: "${directory}" is not a directory`
-      }
-      const m = await window.EXTENSION_INFO.drive.newUntitled({path: directory, type: 'directory'})
-      await window.EXTENSION_INFO.drive.rename(m.path, filePath)
     }
+    const dirPath = this._splitIntoDirectoryAndFile_(filePath);
+    if (!await this._isDirectory_(directory.directory)) {
+      throw `Error: "${directory.directory}" is not a directory`
+    }
+    const m = await window.EXTENSION_INFO.drive.newUntitled({path: directory.directory, type: 'directory'})
+    await window.EXTENSION_INFO.drive.rename(m.path, filePath)
   }
 
   async exists () {
@@ -66,7 +81,7 @@ export class JupyterLabDriveResource extends Resource {
     } catch(e) {
       return false;
     }
-   }
+  }
   async remove () {
     // Need to think about the semantics of this.  The Unix rm command
     // refuses to remove a non-empty directory, unless the -f flag is 
@@ -76,8 +91,19 @@ export class JupyterLabDriveResource extends Resource {
     // in that case.
     // No error-checking: if the file/dir doesn't exist, drive throws an error,
     // which is all we would do
-    return await   window.EXTENSION_INFO.drive.delete(this._getFileSystemPath_())
+    return await window.EXTENSION_INFO.drive.delete(this._getFileSystemPath_())
   }
-  async dirList (depth, opts) { nyi(this, 'dirList'); }
-  async readProperties (opts) { nyi(this, 'readProperties'); }
+  async dirList (depth, opts) {
+    const path = this._getFileSystemPath_();
+    
+    if this._isDirectory_(dirPath) {
+      return await this.read();
+    } else {
+      throw(`Error!  ${path} is not a directory`)
+    }
+
+  }
+  async readProperties (opts) {
+    await return this._getFileOrDirectory_();
+  }
 }
