@@ -67,6 +67,10 @@ div.editor-area {
   background-image: url(star-dark.svg);
 }
 
+.jp-launcher-icon {
+  image: url(engageLively.svg);
+}
+
 .jp-TableOfContents-codeContainer {
   overflow: hidden;
 }
