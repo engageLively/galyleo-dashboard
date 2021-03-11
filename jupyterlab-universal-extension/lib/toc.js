@@ -24,6 +24,8 @@ class GalyleoEditor extends widgets_1.Widget {
         this._labShell = options.labShell;
         this._documentManager = options.docmanager;
         this._app = options.app;
+        let u = Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
+        this._guid = [u.substr(0, 8), u.substr(8, 4), '4000-8' + u.substr(13, 3), u.substr(16, 12)].join('-');
     }
     /**
      * Callback invoked to re-render after showing a table of contents.
@@ -54,6 +56,7 @@ class GalyleoEditor extends widgets_1.Widget {
                 app: this._app,
                 docmanager: this._documentManager,
                 drive: new services_1.Drive(),
+                room: this._guid,
             };
             // window.$world.resizePolicy = 'static';
             // let galyleo = window.$world.getSubmorphNamed('galyleo');
@@ -66,12 +69,59 @@ class GalyleoEditor extends widgets_1.Widget {
             this.update();
         };
         document.head.appendChild(script);
+        const self = this;
+        this._notebook.widgetAdded.connect((tracker, panel) => self.sendGuid(tracker, panel));
     }
+    sendGuid(tracker, panel) {
+        console.log('Panel connected');
+        const code = `%env DASHBOARD_ROOM=${this._guid}`;
+        const success = `Execution of ${code} successful`;
+        const failure = `Execution of ${code} failed`;
+        panel.sessionContext.ready.then(_ => {
+            var _a;
+            console.log('Session is ready!');
+            let kernel = (_a = panel.sessionContext.session) === null || _a === void 0 ? void 0 : _a.kernel;
+            return new Promise((resolve, reject) => {
+                if (!kernel) {
+                    console.log('No kernel!');
+                    return reject();
+                }
+                ;
+                let req = kernel.requestExecute({
+                    code,
+                    silent: true
+                });
+                if (req) {
+                    console.log(success);
+                    req.onIOPub = (msg) => {
+                        if (!msg.content.execution_state)
+                            resolve(msg);
+                    };
+                }
+                else {
+                    console.log(failure);
+                }
+            });
+        });
+    }
+    /* protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
+      console.log('Panel connected')
+      const msg = `%env DASHBOARD_ROOM=${this._guid}`;
+      const success = `Execution of ${msg} successful`;
+      const failure = `Execution of ${msg} failed`
+      this._executeOnPanel(msg, panel)?.then(_ => console.log(success), _ => console.log(failure))
+    } */
     execute(code) {
-        var _a, _b;
         let panel = this._labShell.widgets('main').next();
-        if (!((_a = panel.sessionContext.session) === null || _a === void 0 ? void 0 : _a.kernel))
+        this._executeOnPanel(code, panel);
+    }
+    _executeOnPanel(code, panel) {
+        var _a, _b;
+        console.log(`sending ${code} to kernel for execution`);
+        if (!((_a = panel.sessionContext.session) === null || _a === void 0 ? void 0 : _a.kernel)) {
+            console.log("No kernel present in panel!");
             return;
+        }
         let kernel = (_b = panel.sessionContext.session) === null || _b === void 0 ? void 0 : _b.kernel;
         return new Promise((resolve, reject) => {
             if (!kernel)
@@ -81,6 +131,7 @@ class GalyleoEditor extends widgets_1.Widget {
                 silent: true
             });
             if (req) {
+                console.log("Executed code successfully");
                 req.onIOPub = (msg) => {
                     if (!msg.content.execution_state)
                         resolve(msg);

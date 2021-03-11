@@ -1,6 +1,6 @@
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Cell, ICellModel } from '@jupyterlab/cells';
-import { INotebookTracker } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
@@ -34,7 +34,9 @@ export declare class GalyleoEditor extends Widget {
      * @param msg - message
      */
     protected onAfterAttach(msg: Message): void;
-    protected execute(code: string): Promise<unknown> | undefined;
+    protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel): void;
+    protected execute(code: string): void;
+    protected _executeOnPanel(code: string, panel: NotebookPanel): Promise<unknown> | undefined;
     protected createCell(idx: number, code: string): Cell<ICellModel>;
     protected selectCell(): Promise<unknown> | undefined;
     protected insertAndEval(idx: number, code: string): void;
@@ -43,6 +45,7 @@ export declare class GalyleoEditor extends Widget {
     private _labShell;
     private _app;
     private _documentManager;
+    private _guid;
 }
 /**
  * A namespace for TableOfContents statics.

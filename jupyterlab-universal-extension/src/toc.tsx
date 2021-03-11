@@ -5,12 +5,16 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { CodeCell, Cell, ICellModel } from '@jupyterlab/cells';
-import { INotebookTracker, INotebookModel, NotebookPanel } from '@jupyterlab/notebook';
+import {
+  INotebookTracker,
+  INotebookModel,
+  NotebookPanel
+} from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 import { CodeCellModel } from '@jupyterlab/cells/lib/model';
-import { Drive } from "@jupyterlab/services";
+import { Drive } from '@jupyterlab/services';
 
 declare global {
   interface Window {
@@ -18,11 +22,11 @@ declare global {
     frozenPart: any;
     $world: any;
     lively: {};
-    EXTENSION_INFO: {},
-    FORCE_FAST_LOAD: boolean,
-    SNAPSHOT_PATH: string,
-    SYSTEM_BASE_URL: string,
-    WORLD_NAME: string,
+    EXTENSION_INFO: {};
+    FORCE_FAST_LOAD: boolean;
+    SNAPSHOT_PATH: string;
+    SYSTEM_BASE_URL: string;
+    WORLD_NAME: string;
   }
 }
 
@@ -42,6 +46,14 @@ export class GalyleoEditor extends Widget {
     this._labShell = options.labShell;
     this._documentManager = options.docmanager;
     this._app = options.app;
+    let u =
+      Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
+    this._guid = [
+      u.substr(0, 8),
+      u.substr(8, 4),
+      '4000-8' + u.substr(13, 3),
+      u.substr(16, 12)
+    ].join('-');
   }
   /**
    * Callback invoked to re-render after showing a table of contents.
@@ -53,23 +65,26 @@ export class GalyleoEditor extends Widget {
     let jsx = (
       <div className="jp-TableOfContents">
         <header>{title}</header>
-        <div className="editor-area">
-          This is an area... for galyleo
-        </div>
+        <div className="editor-area">This is an area... for galyleo</div>
       </div>
     );
     ReactDOM.render(jsx, this.node);
 
-    // dynamically load the load.js from the cdn and wait 
+    // dynamically load the load.js from the cdn and wait
     var script = document.createElement('script');
-    const bootstrapBaseURL = 'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
-    script.src = 'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
+    const bootstrapBaseURL =
+      'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
+    script.src =
+      'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
     window.WORLD_NAME = '__newWorld__';
     // window.FORCE_FAST_LOAD = true;
     //window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/published/dashboards/dashboard-studio.json';
-    window.SYSTEM_BASE_URL = 'https://matt.engagelively.com' // once bootstrapped, we need to change the base URL to here
+    window.SYSTEM_BASE_URL = 'https://matt.engagelively.com'; // once bootstrapped, we need to change the base URL to here
     script.onload = () => {
-      window.frozenPart.renderFrozenPart(document.getElementsByClassName('editor-area')[0], bootstrapBaseURL);
+      window.frozenPart.renderFrozenPart(
+        document.getElementsByClassName('editor-area')[0],
+        bootstrapBaseURL
+      );
       // wait until the $world is defined
       window.EXTENSION_INFO = {
         notebook: this._notebook,
@@ -78,7 +93,8 @@ export class GalyleoEditor extends Widget {
         app: this._app,
         docmanager: this._documentManager,
         drive: new Drive(),
-      }
+        room: this._guid
+      };
 
       // window.$world.resizePolicy = 'static';
       // let galyleo = window.$world.getSubmorphNamed('galyleo');
@@ -89,13 +105,62 @@ export class GalyleoEditor extends Widget {
       // jupyter.runtime.labShell = this._labShell;
       // window.$world.trackOffset = true;
       this.update();
-    }
+    };
     document.head.appendChild(script);
+    const self = this;
+    this._notebook.widgetAdded.connect((tracker, panel) =>
+      self.sendGuid(tracker, panel)
+    );
   }
+
+  protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
+    console.log('Panel connected');
+    const code = `%env DASHBOARD_ROOM=${this._guid}`;
+    const success = `Execution of ${code} successful`;
+    const failure = `Execution of ${code} failed`;
+    panel.sessionContext.ready.then(_ => {
+      console.log('Session is ready!');
+      let kernel = panel.sessionContext.session?.kernel;
+      return new Promise((resolve, reject) => {
+        if (!kernel) {
+          console.log('No kernel!');
+          return reject();
+        }
+        let req = kernel.requestExecute({
+          code,
+          silent: true
+        });
+        if (req) {
+          console.log(success);
+          req.onIOPub = (msg: any) => {
+            if (!msg.content.execution_state) resolve(msg);
+          };
+        } else {
+          console.log(failure);
+        }
+      });
+    });
+  }
+
+  /* protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
+    console.log('Panel connected')
+    const msg = `%env DASHBOARD_ROOM=${this._guid}`;
+    const success = `Execution of ${msg} successful`;
+    const failure = `Execution of ${msg} failed`
+    this._executeOnPanel(msg, panel)?.then(_ => console.log(success), _ => console.log(failure))
+  } */
 
   protected execute(code: string) {
     let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    if (!panel.sessionContext.session?.kernel) return;
+    this._executeOnPanel(code, panel);
+  }
+
+  protected _executeOnPanel(code: string, panel: NotebookPanel) {
+    console.log(`sending ${code} to kernel for execution`);
+    if (!panel.sessionContext.session?.kernel) {
+      console.log('No kernel present in panel!');
+      return;
+    }
     let kernel = panel.sessionContext.session?.kernel;
     return new Promise((resolve, reject) => {
       if (!kernel) return reject();
@@ -103,12 +168,14 @@ export class GalyleoEditor extends Widget {
         code,
         silent: true
       });
+
       if (req) {
+        console.log('Executed code successfully');
         req.onIOPub = (msg: any) => {
           if (!msg.content.execution_state) resolve(msg);
-        }
+        };
       }
-    }); 
+    });
   }
 
   protected createCell(idx: number, code: string): Cell<ICellModel> {
@@ -117,7 +184,7 @@ export class GalyleoEditor extends Widget {
     let cell: CodeCellModel = new CodeCellModel({});
     cell.value.text = code;
     model?.cells.insert(idx, cell);
-    return panel.content.widgets[idx] as unknown as Cell<ICellModel>;
+    return (panel.content.widgets[idx] as unknown) as Cell<ICellModel>;
   }
 
   protected selectCell() {
@@ -128,16 +195,23 @@ export class GalyleoEditor extends Widget {
     markerElement.style.display = 'none';
     markerElement.style.pointerEvents = 'none';
     let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    let notebookNode = panel && panel.node as HTMLDivElement;
+    let notebookNode = panel && (panel.node as HTMLDivElement);
     if (!notebookNode) return;
     document.body.appendChild(markerElement);
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let currentCell: Cell<ICellModel> | undefined;
       let update = (evt: MouseEvent) => {
-        let target = evt.composedPath().find((node: HTMLDivElement) => node.classList && node.classList.contains('jp-CodeCell')) as HTMLDivElement;
+        let target = evt
+          .composedPath()
+          .find(
+            (node: HTMLDivElement) =>
+              node.classList && node.classList.contains('jp-CodeCell')
+          ) as HTMLDivElement;
         if (target) {
           let bounds = target.getBoundingClientRect();
-          currentCell = (panel.content.widgets.find(w => w.node === target) as unknown as Cell<ICellModel>);
+          currentCell = (panel.content.widgets.find(
+            w => w.node === target
+          ) as unknown) as Cell<ICellModel>;
           markerElement.style.display = 'initial';
           markerElement.style.top = bounds.top + 'px';
           markerElement.style.left = bounds.left + 'px';
@@ -146,13 +220,13 @@ export class GalyleoEditor extends Widget {
         } else {
           markerElement.style.display = 'none';
         }
-      }
+      };
       window.addEventListener('mousemove', update);
       notebookNode.onmousedown = () => {
         markerElement.remove();
         resolve(currentCell);
         window.removeEventListener('mousemove', update);
-      }
+      };
     });
   }
 
@@ -178,6 +252,7 @@ export class GalyleoEditor extends Widget {
   private _labShell: ILabShell;
   private _app: JupyterFrontEnd;
   private _documentManager: IDocumentManager;
+  private _guid: string;
 }
 
 /**
@@ -211,6 +286,5 @@ export namespace GalyleoEditor {
      * Current widget.
      */
     widget: W;
-
   }
 }
