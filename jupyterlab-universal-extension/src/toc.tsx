@@ -4,17 +4,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IDocumentManager } from '@jupyterlab/docmanager';
-import { CodeCell, Cell, ICellModel } from '@jupyterlab/cells';
-import {
-  INotebookTracker,
-  INotebookModel,
-  NotebookPanel
-} from '@jupyterlab/notebook';
+
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
-import { CodeCellModel } from '@jupyterlab/cells/lib/model';
 import { Drive } from '@jupyterlab/services';
+// import { IKernelConnection } from '@jupyterlab/services';
 
 declare global {
   interface Window {
@@ -46,6 +42,7 @@ export class GalyleoEditor extends Widget {
     this._labShell = options.labShell;
     this._documentManager = options.docmanager;
     this._app = options.app;
+
     let u =
       Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
     this._guid = [
@@ -116,126 +113,43 @@ export class GalyleoEditor extends Widget {
   protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
     console.log('Panel connected');
     const code = `%env DASHBOARD_ROOM=${this._guid}`;
-    const success = `Execution of ${code} successful`;
-    const failure = `Execution of ${code} failed`;
+
     panel.sessionContext.ready.then(_ => {
       console.log('Session is ready!');
       let kernel = panel.sessionContext.session?.kernel;
-      return new Promise((resolve, reject) => {
-        if (!kernel) {
-          console.log('No kernel!');
-          return reject();
-        }
-        let req = kernel.requestExecute({
-          code,
-          silent: true
-        });
-        if (req) {
-          console.log(success);
-          req.onIOPub = (msg: any) => {
-            if (!msg.content.execution_state) resolve(msg);
-          };
-        } else {
-          console.log(failure);
+      kernel?.connectionStatusChanged.connect((kernel, status) => {
+        if (status == 'connected') {
+          kernel?.requestExecute({ code: code, silent: true });
         }
       });
-    });
-  }
-
-  /* protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
-    console.log('Panel connected')
-    const msg = `%env DASHBOARD_ROOM=${this._guid}`;
-    const success = `Execution of ${msg} successful`;
-    const failure = `Execution of ${msg} failed`
-    this._executeOnPanel(msg, panel)?.then(_ => console.log(success), _ => console.log(failure))
-  } */
-
-  protected execute(code: string) {
-    let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    this._executeOnPanel(code, panel);
-  }
-
-  protected _executeOnPanel(code: string, panel: NotebookPanel) {
-    console.log(`sending ${code} to kernel for execution`);
-    if (!panel.sessionContext.session?.kernel) {
-      console.log('No kernel present in panel!');
-      return;
-    }
-    let kernel = panel.sessionContext.session?.kernel;
-    return new Promise((resolve, reject) => {
-      if (!kernel) return reject();
-      let req = kernel.requestExecute({
-        code,
-        silent: true
-      });
-
-      if (req) {
-        console.log('Executed code successfully');
-        req.onIOPub = (msg: any) => {
-          if (!msg.content.execution_state) resolve(msg);
-        };
+      if (!kernel) {
+        console.log('No kernel!');
+      } else {
+        kernel?.requestExecute({ code: code, silent: true });
       }
     });
   }
 
-  protected createCell(idx: number, code: string): Cell<ICellModel> {
-    let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    let model: INotebookModel | null = panel.model;
-    let cell: CodeCellModel = new CodeCellModel({});
-    cell.value.text = code;
-    model?.cells.insert(idx, cell);
-    return (panel.content.widgets[idx] as unknown) as Cell<ICellModel>;
-  }
-
-  protected selectCell() {
-    let markerElement = document.createElement('div');
-    markerElement.style.background = 'orange';
-    markerElement.style.opacity = '0.5';
-    markerElement.style.position = 'absolute';
-    markerElement.style.display = 'none';
-    markerElement.style.pointerEvents = 'none';
-    let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    let notebookNode = panel && (panel.node as HTMLDivElement);
-    if (!notebookNode) return;
-    document.body.appendChild(markerElement);
-    return new Promise(resolve => {
-      let currentCell: Cell<ICellModel> | undefined;
-      let update = (evt: MouseEvent) => {
-        let target = evt
-          .composedPath()
-          .find(
-            (node: HTMLDivElement) =>
-              node.classList && node.classList.contains('jp-CodeCell')
-          ) as HTMLDivElement;
-        if (target) {
-          let bounds = target.getBoundingClientRect();
-          currentCell = (panel.content.widgets.find(
-            w => w.node === target
-          ) as unknown) as Cell<ICellModel>;
-          markerElement.style.display = 'initial';
-          markerElement.style.top = bounds.top + 'px';
-          markerElement.style.left = bounds.left + 'px';
-          markerElement.style.width = bounds.width + 'px';
-          markerElement.style.height = bounds.height + 'px';
-        } else {
-          markerElement.style.display = 'none';
-        }
-      };
-      window.addEventListener('mousemove', update);
-      notebookNode.onmousedown = () => {
-        markerElement.remove();
-        resolve(currentCell);
-        window.removeEventListener('mousemove', update);
-      };
+  /* protected _executeCode(kernel: IKernelConnection | null | undefined, code: string) {
+    const success = `Execution of ${code} successful`;
+    const failure = `Execution of ${code} failed`;
+    return new Promise((resolve, reject) => {
+      
+      let req = kernel.requestExecute({
+        code,
+        silent: true
+      });
+      if (req) {
+        console.log(success);
+        req.onIOPub = (msg: any) => {
+          if (!msg.content.execution_state) resolve(msg);
+        };
+      } else {
+        console.log(failure);
+      }
     });
-  }
 
-  protected insertAndEval(idx: number, code: string) {
-    let panel = this._labShell.widgets('main').next() as NotebookPanel;
-    let cell = this.createCell(0, code);
-    const session = panel.sessionContext;
-    session && CodeCell.execute(cell as CodeCell, session);
-  }
+  } */
 
   protected onResize(msg: Widget.ResizeMessage) {
     const world = window.$world;

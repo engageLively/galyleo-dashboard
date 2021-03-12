@@ -1,5 +1,4 @@
 import { IDocumentManager } from '@jupyterlab/docmanager';
-import { Cell, ICellModel } from '@jupyterlab/cells';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
@@ -35,11 +34,6 @@ export declare class GalyleoEditor extends Widget {
      */
     protected onAfterAttach(msg: Message): void;
     protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel): void;
-    protected execute(code: string): void;
-    protected _executeOnPanel(code: string, panel: NotebookPanel): Promise<unknown> | undefined;
-    protected createCell(idx: number, code: string): Cell<ICellModel>;
-    protected selectCell(): Promise<unknown> | undefined;
-    protected insertAndEval(idx: number, code: string): void;
     protected onResize(msg: Widget.ResizeMessage): void;
     private _notebook;
     private _labShell;
