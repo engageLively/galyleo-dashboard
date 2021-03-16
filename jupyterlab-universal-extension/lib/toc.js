@@ -97,25 +97,25 @@ class GalyleoEditor extends widgets_1.Widget {
         });
     }
     /* protected _executeCode(kernel: IKernelConnection | null | undefined, code: string) {
-       const success = `Execution of ${code} successful`;
-       const failure = `Execution of ${code} failed`;
-       return new Promise((resolve, reject) => {
-         
-         let req = kernel.requestExecute({
-           code,
-           silent: true
-         });
-         if (req) {
-           console.log(success);
-           req.onIOPub = (msg: any) => {
-             if (!msg.content.execution_state) resolve(msg);
-           };
-         } else {
-           console.log(failure);
-         }
-       });
-   
-     } */
+      const success = `Execution of ${code} successful`;
+      const failure = `Execution of ${code} failed`;
+      return new Promise((resolve, reject) => {
+        
+        let req = kernel.requestExecute({
+          code,
+          silent: true
+        });
+        if (req) {
+          console.log(success);
+          req.onIOPub = (msg: any) => {
+            if (!msg.content.execution_state) resolve(msg);
+          };
+        } else {
+          console.log(failure);
+        }
+      });
+  
+    } */
     onResize(msg) {
         const world = window.$world;
         if (world) {

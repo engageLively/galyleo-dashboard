@@ -29,7 +29,12 @@ const mainmenu_1 = require("@jupyterlab/mainmenu");
  * @returns table of contents registry
  */
 function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory) {
-    const editor = new toc_1.GalyleoEditor({ docmanager, notebook: notebookTracker, labShell, app });
+    const editor = new toc_1.GalyleoEditor({
+        docmanager,
+        notebook: notebookTracker,
+        labShell,
+        app
+    });
     editor.title.iconClass = 'jp-TableOfContents-icon jp-SideBar-tabIcon';
     editor.title.caption = 'Galyleo Editor';
     editor.id = 'Galyleo Editor';
