@@ -22,6 +22,7 @@ class GalyleoEditor extends widgets_1.Widget {
         this._labShell = options.labShell;
         this._documentManager = options.docmanager;
         this._app = options.app;
+        this._currentDocumentInfo = { fileModel: undefined };
         let u = Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
         this._guid = [
             u.substr(0, 8),
@@ -46,7 +47,8 @@ class GalyleoEditor extends widgets_1.Widget {
         const bootstrapBaseURL = 'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
         script.src =
             'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
-        window.WORLD_NAME = '__newWorld__';
+        // window.WORLD_NAME = '__newWorld__';
+        window.WORLD_NAME = 'Dashboard Studio Development';
         // window.FORCE_FAST_LOAD = true;
         //window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/published/dashboards/dashboard-studio.json';
         window.SYSTEM_BASE_URL = 'https://matt.engagelively.com'; // once bootstrapped, we need to change the base URL to here
@@ -60,7 +62,8 @@ class GalyleoEditor extends widgets_1.Widget {
                 app: this._app,
                 docmanager: this._documentManager,
                 drive: new services_1.Drive(),
-                room: this._guid
+                room: this._guid,
+                currentDocument: this._currentDocumentInfo
             };
             // window.$world.resizePolicy = 'static';
             // let galyleo = window.$world.getSubmorphNamed('galyleo');
@@ -76,6 +79,21 @@ class GalyleoEditor extends widgets_1.Widget {
         const self = this;
         this._notebook.widgetAdded.connect((tracker, panel) => self.sendGuid(tracker, panel));
     }
+    newDashboard(path) {
+        window.$world.get('dashboard').loadDashboardFromFile(path, true);
+    }
+    loadDashboard(cwd) {
+        window.$world.get('dashboard').loadDashboardFromFile(cwd, true);
+    }
+    saveCurrentDashboard() {
+        window.$world.get('dashboard').saveDashboardToFile(false);
+    }
+    saveCurrentDashboardAndPrompt() {
+        window.$world.get('dashboard').saveDashboardToFile(true);
+    }
+    /* renameCurrentDashboard(): void {
+      window.$world.get('dashboard').renameCurrentDashboard();
+    } */
     sendGuid(tracker, panel) {
         console.log('Panel connected');
         const code = `%env DASHBOARD_ROOM=${this._guid}`;

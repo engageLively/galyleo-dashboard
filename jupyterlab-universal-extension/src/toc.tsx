@@ -10,6 +10,7 @@ import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 import { Drive } from '@jupyterlab/services';
+
 // import { IKernelConnection } from '@jupyterlab/services';
 
 declare global {
@@ -42,6 +43,10 @@ export class GalyleoEditor extends Widget {
     this._labShell = options.labShell;
     this._documentManager = options.docmanager;
     this._app = options.app;
+    this._currentDocumentInfo = { fileModel: undefined };
+
+    // Create a guid from a canned algorithm to give a unique
+    // room name to this dashboard session
 
     let u =
       Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
@@ -73,7 +78,8 @@ export class GalyleoEditor extends Widget {
       'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
     script.src =
       'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
-    window.WORLD_NAME = '__newWorld__';
+    // window.WORLD_NAME = '__newWorld__';
+    window.WORLD_NAME = 'Dashboard Studio Development';
     // window.FORCE_FAST_LOAD = true;
     //window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/published/dashboards/dashboard-studio.json';
     window.SYSTEM_BASE_URL = 'https://matt.engagelively.com'; // once bootstrapped, we need to change the base URL to here
@@ -90,7 +96,8 @@ export class GalyleoEditor extends Widget {
         app: this._app,
         docmanager: this._documentManager,
         drive: new Drive(),
-        room: this._guid
+        room: this._guid,
+        currentDocument: this._currentDocumentInfo
       };
 
       // window.$world.resizePolicy = 'static';
@@ -104,11 +111,55 @@ export class GalyleoEditor extends Widget {
       this.update();
     };
     document.head.appendChild(script);
+    // When a Notebook starts executing, send it the room (the GUID) in
+    // an environment variable
     const self = this;
     this._notebook.widgetAdded.connect((tracker, panel) =>
       self.sendGuid(tracker, panel)
     );
   }
+
+  // Implement the New Galyleo Dashboard command.  The new
+  // dashboard will have been created as an untitled file by the
+  // doc manager, so just tell the dashboard to load the untitled
+  // file without asking the user for a prompt
+
+  newDashboard(path: string): void {
+    window.$world.get('dashboard').loadDashboardFromFile(path, false);
+  }
+
+  // Implement the Load Dashboard Command.  No file has been specified,
+  // so prompt, with the current working directory as the initial prompt
+
+  loadDashboard(cwd: string): void {
+    window.$world.get('dashboard').loadDashboardFromFile(cwd, true);
+  }
+
+  // Implement the Save Dashboard command.  Just tell the dashboard
+  // to save, without prompting for a filename if it already has one.
+
+  saveCurrentDashboard(): void {
+    window.$world.get('dashboard').saveDashboardToFile(false);
+  }
+
+  // Implement the Save  Dashboard As command.  Just tell the dashboard
+  // to save, first  prompting for a filename .
+
+  saveCurrentDashboardAndPrompt(): void {
+    window.$world.get('dashboard').saveDashboardToFile(true);
+  }
+
+  /* renameCurrentDashboard(): void {
+    window.$world.get('dashboard').renameCurrentDashboard();
+  } */
+
+  // Send the dashboard name to a newly executing kernel by setting
+  // its environment variable through a magic %env command.  Also, since
+  // the kernel's connection status can change (for example, when the kernel
+  // is restarted) set uip a callback to set it again in that event.
+  // Note the execute code should be broken out in a separate routine, but
+  // this is hard to do since we'd need to find and import the type of
+  // kernel.
 
   protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
     console.log('Panel connected');
@@ -167,6 +218,7 @@ export class GalyleoEditor extends Widget {
   private _app: JupyterFrontEnd;
   private _documentManager: IDocumentManager;
   private _guid: string;
+  private _currentDocumentInfo: any;
 }
 
 /**

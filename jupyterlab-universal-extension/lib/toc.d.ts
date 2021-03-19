@@ -33,6 +33,10 @@ export declare class GalyleoEditor extends Widget {
      * @param msg - message
      */
     protected onAfterAttach(msg: Message): void;
+    newDashboard(path: string): void;
+    loadDashboard(cwd: string): void;
+    saveCurrentDashboard(): void;
+    saveCurrentDashboardAndPrompt(): void;
     protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel): void;
     protected onResize(msg: Widget.ResizeMessage): void;
     private _notebook;
@@ -40,6 +44,7 @@ export declare class GalyleoEditor extends Widget {
     private _app;
     private _documentManager;
     private _guid;
+    private _currentDocumentInfo;
 }
 /**
  * A namespace for TableOfContents statics.

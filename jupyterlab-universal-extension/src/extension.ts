@@ -19,6 +19,7 @@ import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
+// import { runIcon } from '@jupyterlab/ui-components';
 
 /**
  * Activates the ToC extension.
@@ -44,7 +45,9 @@ function activateTOC(
   markdownViewerTracker: IMarkdownViewerTracker,
   notebookTracker: INotebookTracker,
   rendermime: IRenderMimeRegistry,
-  browserFactory: IFileBrowserFactory | null
+  browserFactory: IFileBrowserFactory,
+  palette: ICommandPalette,
+  mainMenu: IMainMenu
 ): GalyleoEditor {
   const editor = new GalyleoEditor({
     docmanager,
@@ -58,6 +61,84 @@ function activateTOC(
   labShell.add(editor, 'right', { rank: 700 });
   restorer.add(editor, 'jupyterlab-toc');
   BoxPanel.setStretch(editor.parent as Widget, 2);
+
+  // set up the file extension
+  app.docRegistry.addFileType({
+    name: 'Galyleo',
+    // icon: runIcon,
+    displayName: 'Galyleo Dashboard File',
+    extensions: ['.gd', '.gd.json'],
+    fileFormat: 'json',
+    contentType: 'file',
+    mimeTypes: ['text/json']
+  });
+
+  const newCommand = 'galyleo-editor:new-dashboard';
+  const saveCommand = 'galyleo-editor:save-dashboard';
+  const loadCommand = 'galyleo-editor:load-dashboard';
+  const saveAsCommand = 'galyleo-editor:save-dashboard-as';
+  // const renameCommand = 'galyleo-editor:renameDashboard';
+
+  app.commands.addCommand(newCommand, {
+    label: 'Open new Galyleo Dashboard',
+    caption: 'Open a new Galyleo Dashboard',
+    execute: async (args: any) => {
+      // Create a new untitled python file
+      const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+      const model = await app.commands.execute('docmanager:new-untitled', {
+        path: cwd,
+        contentType: 'file',
+        ext: 'gd',
+        fileFormat: 'json',
+        type: 'Galyleo'
+      });
+
+      editor.newDashboard(model.path);
+    }
+  });
+
+  app.commands.addCommand(loadCommand, {
+    label: 'Load a Galyleo Dashboard from file',
+    caption: 'Load a Galyleo Dashboard from file',
+    execute: (args: any) => {
+      const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+      editor.loadDashboard(cwd);
+    }
+  });
+
+  app.commands.addCommand(saveCommand, {
+    label: 'Save the current Galyleo Dashboard',
+    caption: 'Save the current Galyleo Dashboard',
+    execute: (args: any) => {
+      editor.saveCurrentDashboard();
+    }
+  });
+
+  app.commands.addCommand(saveAsCommand, {
+    label: 'Save the current Galyleo Dashboard as...',
+    caption: 'Save the current Galyleo Dashboard as...',
+    execute: (args: any) => {
+      editor.saveCurrentDashboardAndPrompt();
+    }
+  });
+
+  /* app.commands.addCommand(renameCommand, {
+    label: 'Rename current Galyleo Dashboard',
+    caption: 'Rename current Galyleo Dashboard',
+    execute: (args: any) => {
+      editor.renameCurrentDashboard();
+    }
+  }) */
+
+  const category = 'Galyleo  Dashboard';
+  palette.addItem({ command: newCommand, category: category, args: {} });
+
+  mainMenu.fileMenu.addGroup([
+    { command: newCommand },
+    { command: loadCommand },
+    { command: saveCommand },
+    { command: saveAsCommand }
+  ]);
 
   return editor;
 }
@@ -79,9 +160,9 @@ const extension: JupyterFrontEndPlugin<GalyleoEditor> = {
     INotebookTracker,
     IRenderMimeRegistry,
     IFileBrowserFactory,
-    ILauncher,
+    ICommandPalette,
     IMainMenu,
-    ICommandPalette
+    ILauncher
   ],
   activate: activateTOC
 };
