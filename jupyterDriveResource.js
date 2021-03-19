@@ -1,4 +1,7 @@
-class JupyterLabDriveResource extends Resource {
+import { Resource } from 'lively.resources';
+import { registerExtension } from 'lively.resources/src/helpers.js';
+
+export class JupyterLabDriveResource extends Resource {
   // the url should be a string of the form 'jupyterlab://<path with respect to>/'
   // Note that absolute paths (e.g. /home/jovyan) are not supported by the underling API.
   // /foo resolves to /home/jovyan/foo
@@ -80,7 +83,15 @@ class JupyterLabDriveResource extends Resource {
     return { directory: directory, fileName: fileName };
   }
 
+  async createFile () {
+    this._makeFileSystemEntry_({ type: 'file' });
+  }
+
   async mkdir () {
+    this._makeFileSystemEntry_({ type: 'directory' });
+  }
+
+  async _makeFileSystemEntry_ (options) {
     const filePath = this._getFileSystemPath_();
     if (await this.exists(filePath)) {
       throw `Error: "${filePath}" already exists`;
@@ -89,7 +100,8 @@ class JupyterLabDriveResource extends Resource {
     if (!await this._isDirectory_(dirPath.directory)) {
       throw `Error: "${dirPath.directory}" is not a directory`;
     }
-    const m = await window.EXTENSION_INFO.drive.newUntitled({ path: dirPath.directory, type: 'directory' });
+    options.path = dirPath.directory;
+    const m = await window.EXTENSION_INFO.drive.newUntitled(options);
     await window.EXTENSION_INFO.drive.rename(m.path, filePath);
   }
 
@@ -128,3 +140,10 @@ class JupyterLabDriveResource extends Resource {
     return await this._getFileOrDirectory_();
   }
 }
+
+export var resourceExtension = {
+  name: 'jupyter-resource',
+  matches: (url) => url.startsWith('jupyterlab:'),
+  resourceClass: JupyterLabDriveResource
+};
+registerExtension(resourceExtension);
