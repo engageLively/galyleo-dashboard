@@ -23,6 +23,10 @@ class GalyleoEditor extends widgets_1.Widget {
         this._documentManager = options.docmanager;
         this._app = options.app;
         this._currentDocumentInfo = { fileModel: undefined };
+        this._drive = new services_1.Drive();
+        this._browserModel = options.browserModel;
+        // Create a guid from a canned algorithm to give a unique
+        // room name to this dashboard session
         let u = Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
         this._guid = [
             u.substr(0, 8),
@@ -61,10 +65,27 @@ class GalyleoEditor extends widgets_1.Widget {
                 labShell: this._labShell,
                 app: this._app,
                 docmanager: this._documentManager,
-                drive: new services_1.Drive(),
+                drive: this._drive,
                 room: this._guid,
-                currentDocument: this._currentDocumentInfo
+                currentDocument: this._currentDocumentInfo,
+                browserModel: this._browserModel
             };
+            // check for file name changes.  This can happen either from drive
+            // or from the File browser.  For the moment, commenting out the drive
+            // usage since this might lead to us catching our own save events.
+            /*
+                  this._drive.fileChanged.connect((drive, changedInfo) => {
+                    console.log(`file changed ${changedInfo}`);
+                    window.$world.get('dashboard').checkPossibleRename(drive, changedInfo)
+                  })
+            */
+            const dashboard = window.$world.get('dashboard');
+            // check for file name changes from the File browser.  Just put the hook here and
+            // let the dashboard handle it.
+            this._browserModel.fileChanged.connect((browserModel, changedArgs) => {
+                console.log(`file changed in browser ${changedArgs}`);
+                dashboard.checkPossibleBrowserRename(browserModel, changedArgs);
+            }, dashboard);
             // window.$world.resizePolicy = 'static';
             // let galyleo = window.$world.getSubmorphNamed('galyleo');
             // let jupyter = window.$world.getSubmorphNamed('jupyter');
@@ -76,24 +97,43 @@ class GalyleoEditor extends widgets_1.Widget {
             this.update();
         };
         document.head.appendChild(script);
+        // When a Notebook starts executing, send it the room (the GUID) in
+        // an environment variable
         const self = this;
         this._notebook.widgetAdded.connect((tracker, panel) => self.sendGuid(tracker, panel));
     }
+    // Implement the New Galyleo Dashboard command.  The new
+    // dashboard will have been created as an untitled file by the
+    // doc manager, so just tell the dashboard to load the untitled
+    // file without asking the user for a prompt
     newDashboard(path) {
-        window.$world.get('dashboard').loadDashboardFromFile(path, true);
+        window.$world.get('dashboard').loadDashboardFromFile(path, false);
     }
+    // Implement the Load Dashboard Command.  No file has been specified,
+    // so prompt, with the current working directory as the initial prompt
     loadDashboard(cwd) {
         window.$world.get('dashboard').loadDashboardFromFile(cwd, true);
     }
+    // Implement the Save Dashboard command.  Just tell the dashboard
+    // to save, without prompting for a filename if it already has one.
     saveCurrentDashboard() {
         window.$world.get('dashboard').saveDashboardToFile(false);
     }
+    // Implement the Save  Dashboard As command.  Just tell the dashboard
+    // to save, first  prompting for a filename .
     saveCurrentDashboardAndPrompt() {
         window.$world.get('dashboard').saveDashboardToFile(true);
     }
     /* renameCurrentDashboard(): void {
       window.$world.get('dashboard').renameCurrentDashboard();
     } */
+    // Send the dashboard name to a newly executing kernel by setting
+    // its environment variable through a magic %env command.  Also, since
+    // the kernel's connection status can change (for example, when the kernel
+    // is restarted) set uip a callback to set it again in that event.
+    // Note the execute code should be broken out in a separate routine, but
+    // this is hard to do since we'd need to find and import the type of
+    // kernel.
     sendGuid(tracker, panel) {
         console.log('Panel connected');
         const code = `%env DASHBOARD_ROOM=${this._guid}`;

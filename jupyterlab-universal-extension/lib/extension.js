@@ -39,11 +39,13 @@ const mainmenu_1 = require("@jupyterlab/mainmenu");
  * @returns table of contents registry
  */
 function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu) {
+    const browserModel = browserFactory.defaultBrowser.model;
     const editor = new toc_1.GalyleoEditor({
         docmanager,
         notebook: notebookTracker,
         labShell,
-        app
+        app,
+        browserModel
     });
     editor.title.iconClass = 'jp-TableOfContents-icon jp-SideBar-tabIcon';
     editor.title.caption = 'Galyleo Editor';
@@ -61,11 +63,15 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         contentType: 'file',
         mimeTypes: ['text/json']
     });
+    // set up the main menu commands
     const newCommand = 'galyleo-editor:new-dashboard';
     const saveCommand = 'galyleo-editor:save-dashboard';
     const loadCommand = 'galyleo-editor:load-dashboard';
     const saveAsCommand = 'galyleo-editor:save-dashboard-as';
-    // const renameCommand = 'galyleo-editor:renameDashboard';
+    // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
+    // New dashboard command -- tell the docmanager to open up a 
+    // galyleo dashboard file, and then tell the editor to edit it,
+    // sending the pathname to the editor
     app.commands.addCommand(newCommand, {
         label: 'Open new Galyleo Dashboard',
         caption: 'Open a new Galyleo Dashboard',
@@ -82,6 +88,9 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             editor.newDashboard(model.path);
         })
     });
+    // Load an existing dashboard command.  Just send the
+    // editor the path to the cwd and the editor will open it in the
+    // dashboard
     app.commands.addCommand(loadCommand, {
         label: 'Load a Galyleo Dashboard from file',
         caption: 'Load a Galyleo Dashboard from file',
@@ -90,6 +99,7 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             editor.loadDashboard(cwd);
         }
     });
+    // Save the dashboard currently being edited.
     app.commands.addCommand(saveCommand, {
         label: 'Save the current Galyleo Dashboard',
         caption: 'Save the current Galyleo Dashboard',
@@ -97,6 +107,8 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             editor.saveCurrentDashboard();
         }
     });
+    // Save the dashboard currently being edited, asking the user
+    // for the file name
     app.commands.addCommand(saveAsCommand, {
         label: 'Save the current Galyleo Dashboard as...',
         caption: 'Save the current Galyleo Dashboard as...',
@@ -111,6 +123,7 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         editor.renameCurrentDashboard();
       }
     }) */
+    // Add the commands to the main menu
     const category = 'Galyleo  Dashboard';
     palette.addItem({ command: newCommand, category: category, args: {} });
     mainMenu.fileMenu.addGroup([

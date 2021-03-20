@@ -3,6 +3,7 @@ import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
+import { FileBrowserModel } from '@jupyterlab/filebrowser';
 declare global {
     interface Window {
         System: any;
@@ -45,6 +46,8 @@ export declare class GalyleoEditor extends Widget {
     private _documentManager;
     private _guid;
     private _currentDocumentInfo;
+    private _drive;
+    private _browserModel;
 }
 /**
  * A namespace for TableOfContents statics.
@@ -64,6 +67,7 @@ export declare namespace GalyleoEditor {
         notebook: INotebookTracker;
         labShell: ILabShell;
         app: JupyterFrontEnd;
+        browserModel: FileBrowserModel;
     }
     /**
      * Interface describing the current widget.

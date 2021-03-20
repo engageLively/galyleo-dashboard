@@ -4,12 +4,12 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IDocumentManager } from '@jupyterlab/docmanager';
-
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { ILabShell, JupyterFrontEnd } from '@jupyterlab/application';
 import { Message } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 import { Drive } from '@jupyterlab/services';
+import { FileBrowserModel } from '@jupyterlab/filebrowser';
 
 // import { IKernelConnection } from '@jupyterlab/services';
 
@@ -44,6 +44,8 @@ export class GalyleoEditor extends Widget {
     this._documentManager = options.docmanager;
     this._app = options.app;
     this._currentDocumentInfo = { fileModel: undefined };
+    this._drive = new Drive();
+    this._browserModel = options.browserModel;
 
     // Create a guid from a canned algorithm to give a unique
     // room name to this dashboard session
@@ -95,10 +97,34 @@ export class GalyleoEditor extends Widget {
         labShell: this._labShell,
         app: this._app,
         docmanager: this._documentManager,
-        drive: new Drive(),
+        drive: this._drive,
         room: this._guid,
-        currentDocument: this._currentDocumentInfo
+        currentDocument: this._currentDocumentInfo,
+        browserModel: this._browserModel
       };
+
+      // check for file name changes.  This can happen either from drive
+      // or from the File browser.  For the moment, commenting out the drive
+      // usage since this might lead to us catching our own save events.
+      /*
+      this._drive.fileChanged.connect((drive, changedInfo) => {
+        console.log(`file changed ${changedInfo}`);
+        window.$world.get('dashboard').checkPossibleRename(drive, changedInfo)
+      })
+*/
+      const dashboard = window.$world.get('dashboard');
+
+      // check for file name changes from the File browser.  Just put the hook here and
+      // let the dashboard handle it.
+
+      // AFAICT, this isn't being called at all.  The hell with it; moving it
+      // to the dashboard (we should consider this for all hooks: just pass the correct
+      // object to Lively and do it there)
+
+      this._browserModel.fileChanged.connect((browserModel, changedArgs) => {
+        console.log(`file changed in browser ${changedArgs}`);
+        dashboard.checkPossibleBrowserRename(browserModel, changedArgs);
+      }, dashboard);
 
       // window.$world.resizePolicy = 'static';
       // let galyleo = window.$world.getSubmorphNamed('galyleo');
@@ -219,6 +245,8 @@ export class GalyleoEditor extends Widget {
   private _documentManager: IDocumentManager;
   private _guid: string;
   private _currentDocumentInfo: any;
+  private _drive: Drive;
+  private _browserModel: FileBrowserModel;
 }
 
 /**
@@ -242,6 +270,8 @@ export namespace GalyleoEditor {
     labShell: ILabShell;
 
     app: JupyterFrontEnd;
+
+    browserModel: FileBrowserModel;
   }
 
   /**
