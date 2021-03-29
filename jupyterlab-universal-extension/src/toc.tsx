@@ -80,14 +80,16 @@ export class GalyleoEditor extends Widget {
       'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
     script.src =
       'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
-    // window.WORLD_NAME = '__newWorld__';
     window.WORLD_NAME = 'Dashboard Studio Development';
     // window.FORCE_FAST_LOAD = true;
     //window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/published/dashboards/dashboard-studio.json';
     window.SYSTEM_BASE_URL = 'https://matt.engagelively.com'; // once bootstrapped, we need to change the base URL to here
     script.onload = () => {
+      // render this into the shadow dom
+      const elementRef = document.getElementsByClassName('editor-area')[0];
+      const shadowRoot = elementRef.attachShadow({ mode: 'open' });
       window.frozenPart.renderFrozenPart(
-        document.getElementsByClassName('editor-area')[0],
+        shadowRoot,
         bootstrapBaseURL
       );
       // wait until the $world is defined
