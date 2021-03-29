@@ -68,8 +68,9 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
     const saveCommand = 'galyleo-editor:save-dashboard';
     const loadCommand = 'galyleo-editor:load-dashboard';
     const saveAsCommand = 'galyleo-editor:save-dashboard-as';
+    const changeRoomCommand = 'galyleo-editor:change-room';
     // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
-    // New dashboard command -- tell the docmanager to open up a 
+    // New dashboard command -- tell the docmanager to open up a
     // galyleo dashboard file, and then tell the editor to edit it,
     // sending the pathname to the editor
     app.commands.addCommand(newCommand, {
@@ -116,6 +117,15 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             editor.saveCurrentDashboardAndPrompt();
         }
     });
+    // Change the Room Name for dashboard and kernels. Note this does not affect the room name
+    // for existing kernels until restated
+    app.commands.addCommand(changeRoomCommand, {
+        label: 'Change the Dashboard Room (Advanced users only...)',
+        caption: 'Change the Dashboard Room (Advanced users only...)',
+        execute: (args) => {
+            editor.changeRoomPrompt();
+        }
+    });
     /* app.commands.addCommand(renameCommand, {
       label: 'Rename current Galyleo Dashboard',
       caption: 'Rename current Galyleo Dashboard',
@@ -130,7 +140,8 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         { command: newCommand },
         { command: loadCommand },
         { command: saveCommand },
-        { command: saveAsCommand }
+        { command: saveAsCommand },
+        { command: changeRoomCommand }
     ]);
     return editor;
 }

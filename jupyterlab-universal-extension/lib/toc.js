@@ -74,14 +74,17 @@ class GalyleoEditor extends widgets_1.Widget {
             // or from the File browser.  For the moment, commenting out the drive
             // usage since this might lead to us catching our own save events.
             /*
-                  this._drive.fileChanged.connect((drive, changedInfo) => {
-                    console.log(`file changed ${changedInfo}`);
-                    window.$world.get('dashboard').checkPossibleRename(drive, changedInfo)
-                  })
-            */
+            this._drive.fileChanged.connect((drive, changedInfo) => {
+              console.log(`file changed ${changedInfo}`);
+              window.$world.get('dashboard').checkPossibleRename(drive, changedInfo)
+            })
+      */
             const dashboard = window.$world.get('dashboard');
             // check for file name changes from the File browser.  Just put the hook here and
             // let the dashboard handle it.
+            // AFAICT, this isn't being called at all.  The hell with it; moving it
+            // to the dashboard (we should consider this for all hooks: just pass the correct
+            // object to Lively and do it there)
             this._browserModel.fileChanged.connect((browserModel, changedArgs) => {
                 console.log(`file changed in browser ${changedArgs}`);
                 dashboard.checkPossibleBrowserRename(browserModel, changedArgs);
@@ -124,6 +127,10 @@ class GalyleoEditor extends widgets_1.Widget {
     saveCurrentDashboardAndPrompt() {
         window.$world.get('dashboard').saveDashboardToFile(true);
     }
+    // Tell the dashboard that the room has changed
+    changeRoomPrompt() {
+        window.$world.get('dashboard').promptRoom();
+    }
     /* renameCurrentDashboard(): void {
       window.$world.get('dashboard').renameCurrentDashboard();
     } */
@@ -136,7 +143,7 @@ class GalyleoEditor extends widgets_1.Widget {
     // kernel.
     sendGuid(tracker, panel) {
         console.log('Panel connected');
-        const code = `%env DASHBOARD_ROOM=${this._guid}`;
+        const code = `%env DASHBOARD_ROOM=${window.$world.get('dashboard').l2lRoomName}`;
         panel.sessionContext.ready.then(_ => {
             var _a;
             console.log('Session is ready!');

@@ -175,6 +175,12 @@ export class GalyleoEditor extends Widget {
     window.$world.get('dashboard').saveDashboardToFile(true);
   }
 
+  // Tell the dashboard that the room has changed
+
+  changeRoomPrompt(): void {
+    window.$world.get('dashboard').promptRoom();
+  }
+
   /* renameCurrentDashboard(): void {
     window.$world.get('dashboard').renameCurrentDashboard();
   } */
@@ -189,7 +195,9 @@ export class GalyleoEditor extends Widget {
 
   protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel) {
     console.log('Panel connected');
-    const code = `%env DASHBOARD_ROOM=${this._guid}`;
+    const code = `%env DASHBOARD_ROOM=${
+      window.$world.get('dashboard').l2lRoomName
+    }`;
 
     panel.sessionContext.ready.then(_ => {
       console.log('Session is ready!');

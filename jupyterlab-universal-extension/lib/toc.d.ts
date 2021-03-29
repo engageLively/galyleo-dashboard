@@ -38,6 +38,7 @@ export declare class GalyleoEditor extends Widget {
     loadDashboard(cwd: string): void;
     saveCurrentDashboard(): void;
     saveCurrentDashboardAndPrompt(): void;
+    changeRoomPrompt(): void;
     protected sendGuid(tracker: INotebookTracker, panel: NotebookPanel): void;
     protected onResize(msg: Widget.ResizeMessage): void;
     private _notebook;

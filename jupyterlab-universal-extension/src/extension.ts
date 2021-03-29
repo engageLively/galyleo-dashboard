@@ -81,6 +81,7 @@ function activateTOC(
   const saveCommand = 'galyleo-editor:save-dashboard';
   const loadCommand = 'galyleo-editor:load-dashboard';
   const saveAsCommand = 'galyleo-editor:save-dashboard-as';
+  const changeRoomCommand = 'galyleo-editor:change-room';
   // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
 
   // New dashboard command -- tell the docmanager to open up a
@@ -139,6 +140,17 @@ function activateTOC(
     }
   });
 
+  // Change the Room Name for dashboard and kernels. Note this does not affect the room name
+  // for existing kernels until restated
+
+  app.commands.addCommand(changeRoomCommand, {
+    label: 'Change the Dashboard Room (Advanced users only...)',
+    caption: 'Change the Dashboard Room (Advanced users only...)',
+    execute: (args: any) => {
+      editor.changeRoomPrompt();
+    }
+  });
+
   /* app.commands.addCommand(renameCommand, {
     label: 'Rename current Galyleo Dashboard',
     caption: 'Rename current Galyleo Dashboard',
@@ -156,7 +168,8 @@ function activateTOC(
     { command: newCommand },
     { command: loadCommand },
     { command: saveCommand },
-    { command: saveAsCommand }
+    { command: saveAsCommand },
+    { command: changeRoomCommand }
   ]);
 
   return editor;
