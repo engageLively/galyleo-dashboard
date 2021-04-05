@@ -57,8 +57,17 @@ export class GalyleoModelFactory extends TextModelFactory {
 }
 
 // import { runIcon } from '@jupyterlab/ui-components';
+import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
+import galyleoSvgstr from '../style/engageLively.svg';
+
+export const galyleoIcon = new LabIcon({
+  name: 'Galyleopkg:galyleo',
+  svgstr: galyleoSvgstr
+});
+/// <svg.d.ts>
 
 /**
+ *
  * Activates the ToC extension.
  *
  * @private
@@ -84,7 +93,8 @@ function activateTOC(
   rendermime: IRenderMimeRegistry,
   browserFactory: IFileBrowserFactory,
   palette: ICommandPalette,
-  mainMenu: IMainMenu
+  mainMenu: IMainMenu,
+  launcher: ILauncher,
 ): GalyleoEditor {
   const browserModel = browserFactory.defaultBrowser.model;
   const editor = new GalyleoEditor({
@@ -102,17 +112,18 @@ function activateTOC(
   BoxPanel.setStretch(editor.parent as Widget, 2);
   const modelFactory = new GalyleoModelFactory();
 
-  app.docRegistry.addModelFactory(modelFactory);
+  app.docRegistry.addModelFactory(<any>modelFactory);
 
   // set up the file extension
+
   app.docRegistry.addFileType({
     name: 'Galyleo',
-    // icon: runIcon,
+    icon: <any>galyleoIcon, // shut up the tsc compiler for god's sake
     displayName: 'Galyleo Dashboard File',
     extensions: ['.gd', '.gd.json'],
-    fileFormat: 'json',
+    fileFormat: 'text',
     contentType: 'file',
-    mimeTypes: ['text/json']
+    mimeTypes: ['application/json']
   });
 
   // set up the main menu commands
@@ -129,8 +140,9 @@ function activateTOC(
   // sending the pathname to the editor
 
   app.commands.addCommand(newCommand, {
-    label: 'Open new Galyleo Dashboard',
+    label: 'Galyleo Dashboard',
     caption: 'Open a new Galyleo Dashboard',
+    icon: galyleoIcon,
     execute: async (args: any) => {
       // Create a new untitled python file
       const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
@@ -199,18 +211,27 @@ function activateTOC(
     }
   }) */
 
+  launcher.add({
+    command: newCommand,
+  });
+
+  mainMenu.fileMenu.newMenu.addGroup(
+    [{ command: newCommand }],
+    30
+  );
+
   // Add the commands to the main menu
 
   const category = 'Galyleo  Dashboard';
   palette.addItem({ command: newCommand, category: category, args: {} });
 
-  mainMenu.fileMenu.addGroup([
-    { command: newCommand },
-    { command: loadCommand },
-    { command: saveCommand },
-    { command: saveAsCommand },
-    { command: changeRoomCommand }
-  ]);
+  // mainMenu.fileMenu.addGroup([
+  //   { command: newCommand }, // handled by all the other default menu entries
+  //   { command: loadCommand }, // handled by double clicking, right click open with command
+  //   { command: saveCommand }, // handled by the already existing file save command
+  //   { command: saveAsCommand }, // we can rename stuff alredy in the extension, this is not needed
+  //   { command: changeRoomCommand } // this should be done from within the extension if at all needed
+  // ]);
 
   return editor;
 }

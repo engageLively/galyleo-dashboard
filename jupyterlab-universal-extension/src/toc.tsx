@@ -24,6 +24,7 @@ declare global {
     SNAPSHOT_PATH: string;
     SYSTEM_BASE_URL: string;
     WORLD_NAME: string;
+    SERVER_URL: string;
   }
 }
 
@@ -77,13 +78,18 @@ export class GalyleoEditor extends Widget {
     // dynamically load the load.js from the cdn and wait
     var script = document.createElement('script');
     const bootstrapBaseURL =
-      'https://matt.engagelively.com/lively.freezer/loading-screen/'; // this is the base url while the frozen part of the loader is loaded
+      'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/'; // this is the base url while the frozen part of the loader is loaded
     script.src =
-      'https://matt.engagelively.com/lively.freezer/loading-screen/load.js';
-    window.WORLD_NAME = 'Dashboard Studio Development';
+       'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/load.js';
+      // 'https://matt.engagelively.com/users/robin/published/Dashboard%20Studio%20Development/'; // this is the base url while the frozen part of the loader is loaded
+    // script.src =
+       // 'https://matt.engagelively.com/users/robin/published/Dashboard%20Studio%20Development/load.js';
+    //window.WORLD_NAME = 'Dashboard Studio Development';
     // window.FORCE_FAST_LOAD = true;
-    //window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/published/dashboards/dashboard-studio.json';
-    window.SYSTEM_BASE_URL = 'https://matt.engagelively.com'; // once bootstrapped, we need to change the base URL to here
+    // window.SNAPSHOT_PATH = 'https://matt.engagelively.com/users/robin/uploads/galyleo.json'
+    window.SYSTEM_BASE_URL = 'https://matt.engagelively.com';
+    window.SERVER_URL = window.SYSTEM_BASE_URL;
+
     script.onload = () => {
       // render this into the shadow dom
       const elementRef = document.getElementsByClassName('editor-area')[0];
