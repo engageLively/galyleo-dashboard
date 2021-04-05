@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GalyleoModelFactory = void 0;
 const application_1 = require("@jupyterlab/application");
 const docmanager_1 = require("@jupyterlab/docmanager");
 const fileeditor_1 = require("@jupyterlab/fileeditor");
@@ -23,6 +24,39 @@ const apputils_1 = require("@jupyterlab/apputils");
 const launcher_1 = require("@jupyterlab/launcher");
 const filebrowser_1 = require("@jupyterlab/filebrowser");
 const mainmenu_1 = require("@jupyterlab/mainmenu");
+const docregistry_1 = require("@jupyterlab/docregistry");
+/**
+ * An implementation of a model factory for base64 files.
+ */
+class GalyleoModelFactory extends docregistry_1.TextModelFactory {
+    /**
+     * The name of the model type.
+     *
+     * #### Notes
+     * This is a read-only property.
+     */
+    get name() {
+        return 'galyleo';
+    }
+    /**
+     * The type of the file.
+     *
+     * #### Notes
+     * This is a read-only property.
+     */
+    get contentType() {
+        return 'file';
+    }
+    /**
+     * The format of the file.
+     *
+     * This is a read-only property.
+     */
+    get fileFormat() {
+        return 'json';
+    }
+}
+exports.GalyleoModelFactory = GalyleoModelFactory;
 // import { runIcon } from '@jupyterlab/ui-components';
 /**
  * Activates the ToC extension.
@@ -53,6 +87,8 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
     labShell.add(editor, 'right', { rank: 700 });
     restorer.add(editor, 'jupyterlab-toc');
     widgets_1.BoxPanel.setStretch(editor.parent, 2);
+    const modelFactory = new GalyleoModelFactory();
+    app.docRegistry.addModelFactory(modelFactory);
     // set up the file extension
     app.docRegistry.addFileType({
         name: 'Galyleo',
@@ -82,9 +118,9 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             const model = yield app.commands.execute('docmanager:new-untitled', {
                 path: cwd,
                 contentType: 'file',
-                ext: 'gd',
+                ext: 'gd.json',
                 fileFormat: 'json',
-                type: 'Galyleo'
+                type: 'file'
             });
             editor.newDashboard(model.path);
         })

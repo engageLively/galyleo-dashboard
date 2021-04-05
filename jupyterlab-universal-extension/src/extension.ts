@@ -19,6 +19,43 @@ import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
+import { TextModelFactory } from '@jupyterlab/docregistry';
+import { Contents } from '@jupyterlab/services';
+
+/**
+ * An implementation of a model factory for base64 files.
+ */
+export class GalyleoModelFactory extends TextModelFactory {
+  /**
+   * The name of the model type.
+   *
+   * #### Notes
+   * This is a read-only property.
+   */
+  get name(): string {
+    return 'galyleo';
+  }
+
+  /**
+   * The type of the file.
+   *
+   * #### Notes
+   * This is a read-only property.
+   */
+  get contentType(): Contents.ContentType {
+    return 'file';
+  }
+
+  /**
+   * The format of the file.
+   *
+   * This is a read-only property.
+   */
+  get fileFormat(): Contents.FileFormat {
+    return 'json';
+  }
+}
+
 // import { runIcon } from '@jupyterlab/ui-components';
 
 /**
@@ -63,6 +100,9 @@ function activateTOC(
   labShell.add(editor, 'right', { rank: 700 });
   restorer.add(editor, 'jupyterlab-toc');
   BoxPanel.setStretch(editor.parent as Widget, 2);
+  const modelFactory = new GalyleoModelFactory();
+
+  app.docRegistry.addModelFactory(modelFactory);
 
   // set up the file extension
   app.docRegistry.addFileType({
@@ -97,9 +137,9 @@ function activateTOC(
       const model = await app.commands.execute('docmanager:new-untitled', {
         path: cwd,
         contentType: 'file',
-        ext: 'gd',
+        ext: 'gd.json',
         fileFormat: 'json',
-        type: 'Galyleo'
+        type: 'file'
       });
 
       editor.newDashboard(model.path);
