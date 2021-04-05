@@ -196,6 +196,7 @@ function activateTOC(
     name: 'Galyleo Studio',
     fileTypes: ['Galyleo'],
     defaultRendered: ['Galyleo'],
+    defaultFor: ['Galyleo']
   });
 
   app.docRegistry.addWidgetFactory(<any>widgetFactory);

@@ -39,9 +39,7 @@ export namespace GalyleoEditor {
      * Application document manager.
      */
     // docmanager: IDocumentManager;
-
     content: any;
-
     context: any;
 
     /**
