@@ -14,13 +14,69 @@ import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { GalyleoEditor } from './toc';
 import '../style/index.css';
-import { BoxPanel, Widget } from '@lumino/widgets';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
-import { TextModelFactory } from '@jupyterlab/docregistry';
+import { TextModelFactory, DocumentRegistry, ABCWidgetFactory } from '@jupyterlab/docregistry';
 import { Contents } from '@jupyterlab/services';
+import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
+import galyleoSvgstr from '../style/engageLively.svg';
+import { CodeEditor } from '@jupyterlab/codeeditor';
+import { JSONValue } from '@phosphor/coreutils';
+import { Signal } from '@phosphor/signaling';
+import { IModelDB } from '@jupyterlab/observables';
+
+export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
+
+  contentChanged: any;
+  stateChanged: any;
+
+  readOnly = false;
+  // we dont need those
+  defaultKernelName = '';
+  defaultKernelLanguage = '';
+
+  id = 'foo bar';
+  
+  constructor(options?: CodeEditor.Model.IOptions) {
+    super(options)
+    this.value // this contains the json as a string as soon as its loaded
+    this.contentChanged = new Signal(this);
+    this.stateChanged = new Signal(this);
+  }
+
+  get dirty() {
+    // get response from iframe
+    return false;
+  }
+
+  set dirty (v) {
+    if (v == false) {
+      // tell studio that we want to be saved
+    }
+  }
+
+
+  toString(): string {
+    return JSON.stringify(this.toJSON());
+  }
+  fromString(value: string): void {
+    this.fromJSON(JSON.parse(value));
+  }
+  toJSON(): JSONValue {
+    // get json snapshot from 
+    throw new Error('Method not implemented.');
+  }
+  fromJSON(value: any): void {
+    // send json to iframe
+    throw new Error('Method not implemented.');
+  }
+  initialize(): void {
+    // send data to iframe
+  }
+
+}
 
 /**
  * An implementation of a model factory for base64 files.
@@ -32,8 +88,8 @@ export class GalyleoModelFactory extends TextModelFactory {
    * #### Notes
    * This is a read-only property.
    */
-  get name(): string {
-    return 'galyleo';
+  get name() {
+    return 'galyleo'
   }
 
   /**
@@ -54,18 +110,38 @@ export class GalyleoModelFactory extends TextModelFactory {
   get fileFormat(): Contents.FileFormat {
     return 'json';
   }
+
+  
+
+  createNew(languagePreference?: string | undefined, modelDb?: IModelDB) {
+    return new GalyleoModel();
+  }
+ 
 }
 
-// import { runIcon } from '@jupyterlab/ui-components';
-import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
-import galyleoSvgstr from '../style/engageLively.svg';
+export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoEditor, GalyleoModel> {
+  /**
+   * Construct a new mimetype widget factory.
+   */
+  // constructor(options) {
+  //     super(options);
+  // }
+  /**
+   * Create a new widget given a context.
+   */
+  createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>, source: any) {
+      // fixme: not sure what source is...
+      return new GalyleoEditor({
+        context,
+        content: source
+      });
+  }
+}
 
 export const galyleoIcon = new LabIcon({
   name: 'Galyleopkg:galyleo',
   svgstr: galyleoSvgstr
 });
-/// <svg.d.ts>
-
 /**
  *
  * Activates the ToC extension.
@@ -95,25 +171,11 @@ function activateTOC(
   palette: ICommandPalette,
   mainMenu: IMainMenu,
   launcher: ILauncher,
-): GalyleoEditor {
-  const browserModel = browserFactory.defaultBrowser.model;
-  const editor = new GalyleoEditor({
-    docmanager,
-    notebook: notebookTracker,
-    labShell,
-    app,
-    browserModel
-  });
-  editor.title.iconClass = 'jp-TableOfContents-icon jp-SideBar-tabIcon';
-  editor.title.caption = 'Galyleo Editor';
-  editor.id = 'Galyleo Editor';
-  labShell.add(editor, 'right', { rank: 700 });
-  restorer.add(editor, 'jupyterlab-toc');
-  BoxPanel.setStretch(editor.parent as Widget, 2);
+): void {
   const modelFactory = new GalyleoModelFactory();
-
   app.docRegistry.addModelFactory(<any>modelFactory);
-
+  
+  //app.docRegistry.addWidgetFactory()
   // set up the file extension
 
   app.docRegistry.addFileType({
@@ -126,13 +188,21 @@ function activateTOC(
     mimeTypes: ['application/json']
   });
 
+  // we need a different factory that returns widgets which
+  // allow us to intercept undo/redo/save commands
+
+  // this factory only works for files that are purely text based
+  const widgetFactory = new GalyleoStudioFactory({
+    name: 'Galyleo Studio',
+    fileTypes: ['Galyleo'],
+    defaultRendered: ['Galyleo'],
+  });
+
+  app.docRegistry.addWidgetFactory(<any>widgetFactory);
+
   // set up the main menu commands
 
   const newCommand = 'galyleo-editor:new-dashboard';
-  const saveCommand = 'galyleo-editor:save-dashboard';
-  const loadCommand = 'galyleo-editor:load-dashboard';
-  const saveAsCommand = 'galyleo-editor:save-dashboard-as';
-  const changeRoomCommand = 'galyleo-editor:change-room';
   // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
 
   // New dashboard command -- tell the docmanager to open up a
@@ -146,70 +216,16 @@ function activateTOC(
     execute: async (args: any) => {
       // Create a new untitled python file
       const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-      const model = await app.commands.execute('docmanager:new-untitled', {
+      await app.commands.execute('docmanager:new-untitled', {
         path: cwd,
         contentType: 'file',
         ext: 'gd.json',
         fileFormat: 'json',
         type: 'file'
       });
-
-      editor.newDashboard(model.path);
+      // open that dashboard
     }
   });
-
-  // Load an existing dashboard command.  Just send the
-  // editor the path to the cwd and the editor will open it in the
-  // dashboard
-
-  app.commands.addCommand(loadCommand, {
-    label: 'Load a Galyleo Dashboard from file',
-    caption: 'Load a Galyleo Dashboard from file',
-    execute: (args: any) => {
-      const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-      editor.loadDashboard(cwd);
-    }
-  });
-
-  // Save the dashboard currently being edited.
-
-  app.commands.addCommand(saveCommand, {
-    label: 'Save the current Galyleo Dashboard',
-    caption: 'Save the current Galyleo Dashboard',
-    execute: (args: any) => {
-      editor.saveCurrentDashboard();
-    }
-  });
-
-  // Save the dashboard currently being edited, asking the user
-  // for the file name
-
-  app.commands.addCommand(saveAsCommand, {
-    label: 'Save the current Galyleo Dashboard as...',
-    caption: 'Save the current Galyleo Dashboard as...',
-    execute: (args: any) => {
-      editor.saveCurrentDashboardAndPrompt();
-    }
-  });
-
-  // Change the Room Name for dashboard and kernels. Note this does not affect the room name
-  // for existing kernels until restated
-
-  app.commands.addCommand(changeRoomCommand, {
-    label: 'Change the Dashboard Room (Advanced users only...)',
-    caption: 'Change the Dashboard Room (Advanced users only...)',
-    execute: (args: any) => {
-      editor.changeRoomPrompt();
-    }
-  });
-
-  /* app.commands.addCommand(renameCommand, {
-    label: 'Rename current Galyleo Dashboard',
-    caption: 'Rename current Galyleo Dashboard',
-    execute: (args: any) => {
-      editor.renameCurrentDashboard();
-    }
-  }) */
 
   launcher.add({
     command: newCommand,
@@ -232,8 +248,6 @@ function activateTOC(
   //   { command: saveAsCommand }, // we can rename stuff alredy in the extension, this is not needed
   //   { command: changeRoomCommand } // this should be done from within the extension if at all needed
   // ]);
-
-  return editor;
 }
 
 /**
@@ -241,7 +255,7 @@ function activateTOC(
  *
  * @private
  */
-const extension: JupyterFrontEndPlugin<GalyleoEditor> = {
+const extension: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-toc',
   autoStart: true,
   requires: [
