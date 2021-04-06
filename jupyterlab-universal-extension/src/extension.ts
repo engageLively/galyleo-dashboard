@@ -12,7 +12,7 @@ import { IEditorTracker } from '@jupyterlab/fileeditor';
 import { IMarkdownViewerTracker } from '@jupyterlab/markdownviewer';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { GalyleoEditor } from './toc';
+import { GalyleoDocument, GalyleoEditor } from './editor';
 import '../style/index.css';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -26,6 +26,7 @@ import { CodeEditor } from '@jupyterlab/codeeditor';
 import { JSONValue } from '@phosphor/coreutils';
 import { Signal } from '@phosphor/signaling';
 import { IModelDB } from '@jupyterlab/observables';
+import { UUID } from '@lumino/coreutils';
 
 export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
 
@@ -37,26 +38,25 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   defaultKernelName = '';
   defaultKernelLanguage = '';
 
-  id = 'foo bar';
+  session: string;
+  _dirty = false;
   
   constructor(options?: CodeEditor.Model.IOptions) {
     super(options)
     this.value // this contains the json as a string as soon as its loaded
+    this.session = UUID.uuid4(); // could be we dont even need that one...
     this.contentChanged = new Signal(this);
     this.stateChanged = new Signal(this);
   }
 
   get dirty() {
-    // get response from iframe
-    return false;
+    return this._dirty;
   }
 
   set dirty (v) {
-    if (v == false) {
-      // tell studio that we want to be saved
-    }
+    this._dirty = v;
+    this.stateChanged.emit();
   }
-
 
   toString(): string {
     return JSON.stringify(this.toJSON());
@@ -66,11 +66,10 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   }
   toJSON(): JSONValue {
     // get json snapshot from 
-    throw new Error('Method not implemented.');
+    return JSON.parse(this.value.text);
   }
   fromJSON(value: any): void {
     // send json to iframe
-    throw new Error('Method not implemented.');
   }
   initialize(): void {
     // send data to iframe
@@ -92,6 +91,8 @@ export class GalyleoModelFactory extends TextModelFactory {
     return 'galyleo'
   }
 
+  
+
   /**
    * The type of the file.
    *
@@ -108,7 +109,7 @@ export class GalyleoModelFactory extends TextModelFactory {
    * This is a read-only property.
    */
   get fileFormat(): Contents.FileFormat {
-    return 'json';
+    return 'text';
   }
 
   
@@ -119,22 +120,66 @@ export class GalyleoModelFactory extends TextModelFactory {
  
 }
 
-export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoEditor, GalyleoModel> {
+declare type StudioHandler = 'galyleo:writeFile' | 'galyleo:setDirty';
+
+namespace GalyleoStudioFactory{
+  export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
+    manager: IDocumentManager;
+  }
+} 
+
+export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, GalyleoModel> {
   /**
    * Construct a new mimetype widget factory.
    */
-  // constructor(options) {
-  //     super(options);
-  // }
+  
+  private _documentManager: IDocumentManager;
+
+  constructor(options: GalyleoStudioFactory.IOptions) {
+      super(options);
+      this._initMessageListeners();
+      this._documentManager = options.manager;
+  }
+
+  _initMessageListeners() {
+    // get a hold of the tracker and dispatch to the different widgets
+    const handlers = {
+      'galyleo:writeFile': (evt: MessageEvent) => {
+        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+        doc.context.model.value.text =  evt.data.jsonString;
+        doc.content.completeSave(); // signal that save can be finalized
+      },
+      'galyleo:setDirty': (evt: MessageEvent) => {
+        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+        doc.context.model.dirty = evt.data.dirty;
+      }
+    }
+    window.addEventListener('message', evt => {
+      handlers[evt.data.method as StudioHandler](evt);
+    })
+  }
+
+  _getDocumentForFilePath(path: string): GalyleoDocument {
+    // since we are coming from an incoming message due to an iframe embedded inside
+    // a widget, that widget still has to be there
+    return <GalyleoDocument><unknown>this._documentManager.findWidget(path);
+  }
   /**
    * Create a new widget given a context.
    */
-  createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>, source: any) {
-      // fixme: not sure what source is...
-      return new GalyleoEditor({
-        context,
-        content: source
-      });
+  createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>) {
+      
+      const content = new GalyleoEditor({ context });
+      content.title.icon = <any>galyleoIcon;
+      const origSave = context.save;
+      // wrap the save function, no better way to do this....
+      context.save = async () => {
+        await content.requestSave();
+        await origSave.bind(context)();
+      }
+      const widget = new GalyleoDocument({ content, context });
+     
+      return widget;
   }
 }
 
@@ -171,6 +216,7 @@ function activateTOC(
   palette: ICommandPalette,
   mainMenu: IMainMenu,
   launcher: ILauncher,
+  manager: IDocumentManager
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
@@ -190,13 +236,15 @@ function activateTOC(
 
   // we need a different factory that returns widgets which
   // allow us to intercept undo/redo/save commands
-
+   
   // this factory only works for files that are purely text based
   const widgetFactory = new GalyleoStudioFactory({
-    name: 'Galyleo Studio',
+    name: 'Galyleo',
     fileTypes: ['Galyleo'],
     defaultRendered: ['Galyleo'],
-    defaultFor: ['Galyleo']
+    defaultFor: ['Galyleo'],
+    modelName: 'galyleo',
+    manager
   });
 
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
@@ -270,7 +318,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     IFileBrowserFactory,
     ICommandPalette,
     IMainMenu,
-    ILauncher
+    ILauncher,
+    IDocumentManager
   ],
   activate: activateTOC
 };
