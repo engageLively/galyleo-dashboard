@@ -10,21 +10,63 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GalyleoModelFactory = void 0;
+exports.galyleoIcon = exports.GalyleoStudioFactory = exports.GalyleoModelFactory = exports.GalyleoModel = void 0;
 const application_1 = require("@jupyterlab/application");
 const docmanager_1 = require("@jupyterlab/docmanager");
 const fileeditor_1 = require("@jupyterlab/fileeditor");
 const markdownviewer_1 = require("@jupyterlab/markdownviewer");
 const notebook_1 = require("@jupyterlab/notebook");
 const rendermime_1 = require("@jupyterlab/rendermime");
-const toc_1 = require("./toc");
+const editor_1 = require("./editor");
 require("../style/index.css");
-const widgets_1 = require("@lumino/widgets");
 const apputils_1 = require("@jupyterlab/apputils");
 const launcher_1 = require("@jupyterlab/launcher");
 const filebrowser_1 = require("@jupyterlab/filebrowser");
 const mainmenu_1 = require("@jupyterlab/mainmenu");
 const docregistry_1 = require("@jupyterlab/docregistry");
+const ui_components_1 = require("@jupyterlab/ui-components"); // WTF???
+const engageLively_svg_1 = require("../style/engageLively.svg");
+const codeeditor_1 = require("@jupyterlab/codeeditor");
+const signaling_1 = require("@phosphor/signaling");
+const coreutils_1 = require("@lumino/coreutils");
+class GalyleoModel extends codeeditor_1.CodeEditor.Model {
+    constructor(options) {
+        super(options);
+        this.readOnly = false;
+        // we dont need those
+        this.defaultKernelName = '';
+        this.defaultKernelLanguage = '';
+        this._dirty = false;
+        this.value; // this contains the json as a string as soon as its loaded
+        this.session = coreutils_1.UUID.uuid4(); // could be we dont even need that one...
+        this.contentChanged = new signaling_1.Signal(this);
+        this.stateChanged = new signaling_1.Signal(this);
+    }
+    get dirty() {
+        return this._dirty;
+    }
+    set dirty(v) {
+        this._dirty = v;
+        this.stateChanged.emit();
+    }
+    toString() {
+        return JSON.stringify(this.toJSON());
+    }
+    fromString(value) {
+        this.fromJSON(JSON.parse(value));
+    }
+    toJSON() {
+        // get json snapshot from 
+        return JSON.parse(this.value.text);
+    }
+    fromJSON(value) {
+        // send json to iframe
+    }
+    initialize() {
+        // send data to iframe
+    }
+}
+exports.GalyleoModel = GalyleoModel;
 /**
  * An implementation of a model factory for base64 files.
  */
@@ -53,12 +95,64 @@ class GalyleoModelFactory extends docregistry_1.TextModelFactory {
      * This is a read-only property.
      */
     get fileFormat() {
-        return 'json';
+        return 'text';
+    }
+    createNew(languagePreference, modelDb) {
+        return new GalyleoModel();
     }
 }
 exports.GalyleoModelFactory = GalyleoModelFactory;
-// import { runIcon } from '@jupyterlab/ui-components';
+class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
+    constructor(options) {
+        super(options);
+        this._initMessageListeners();
+        this._documentManager = options.manager;
+    }
+    _initMessageListeners() {
+        // get a hold of the tracker and dispatch to the different widgets
+        const handlers = {
+            'galyleo:writeFile': (evt) => {
+                const doc = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+                doc.context.model.value.text = evt.data.jsonString;
+                doc.content.completeSave(); // signal that save can be finalized
+            },
+            'galyleo:setDirty': (evt) => {
+                const doc = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+                doc.context.model.dirty = evt.data.dirty;
+            }
+        };
+        window.addEventListener('message', evt => {
+            handlers[evt.data.method](evt);
+        });
+    }
+    _getDocumentForFilePath(path) {
+        // since we are coming from an incoming message due to an iframe embedded inside
+        // a widget, that widget still has to be there
+        return this._documentManager.findWidget(path);
+    }
+    /**
+     * Create a new widget given a context.
+     */
+    createNewWidget(context) {
+        const content = new editor_1.GalyleoEditor({ context });
+        content.title.icon = exports.galyleoIcon;
+        const origSave = context.save;
+        // wrap the save function, no better way to do this....
+        context.save = () => __awaiter(this, void 0, void 0, function* () {
+            yield content.requestSave();
+            yield origSave.bind(context)();
+        });
+        const widget = new editor_1.GalyleoDocument({ content, context });
+        return widget;
+    }
+}
+exports.GalyleoStudioFactory = GalyleoStudioFactory;
+exports.galyleoIcon = new ui_components_1.LabIcon({
+    name: 'Galyleopkg:galyleo',
+    svgstr: engageLively_svg_1.default
+});
 /**
+ *
  * Activates the ToC extension.
  *
  * @private
@@ -72,114 +166,69 @@ exports.GalyleoModelFactory = GalyleoModelFactory;
  * @param rendermime - rendered MIME registry
  * @returns table of contents registry
  */
-function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu) {
-    const browserModel = browserFactory.defaultBrowser.model;
-    const editor = new toc_1.GalyleoEditor({
-        docmanager,
-        notebook: notebookTracker,
-        labShell,
-        app,
-        browserModel
-    });
-    editor.title.iconClass = 'jp-TableOfContents-icon jp-SideBar-tabIcon';
-    editor.title.caption = 'Galyleo Editor';
-    editor.id = 'Galyleo Editor';
-    labShell.add(editor, 'right', { rank: 700 });
-    restorer.add(editor, 'jupyterlab-toc');
-    widgets_1.BoxPanel.setStretch(editor.parent, 2);
+function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu, launcher, manager) {
     const modelFactory = new GalyleoModelFactory();
     app.docRegistry.addModelFactory(modelFactory);
+    //app.docRegistry.addWidgetFactory()
     // set up the file extension
     app.docRegistry.addFileType({
         name: 'Galyleo',
-        // icon: runIcon,
+        icon: exports.galyleoIcon,
         displayName: 'Galyleo Dashboard File',
         extensions: ['.gd', '.gd.json'],
-        fileFormat: 'json',
+        fileFormat: 'text',
         contentType: 'file',
-        mimeTypes: ['text/json']
+        mimeTypes: ['application/json']
     });
+    // we need a different factory that returns widgets which
+    // allow us to intercept undo/redo/save commands
+    // this factory only works for files that are purely text based
+    const widgetFactory = new GalyleoStudioFactory({
+        name: 'Galyleo',
+        fileTypes: ['Galyleo'],
+        defaultRendered: ['Galyleo'],
+        defaultFor: ['Galyleo'],
+        modelName: 'galyleo',
+        manager
+    });
+    app.docRegistry.addWidgetFactory(widgetFactory);
     // set up the main menu commands
     const newCommand = 'galyleo-editor:new-dashboard';
-    const saveCommand = 'galyleo-editor:save-dashboard';
-    const loadCommand = 'galyleo-editor:load-dashboard';
-    const saveAsCommand = 'galyleo-editor:save-dashboard-as';
-    const changeRoomCommand = 'galyleo-editor:change-room';
     // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
     // New dashboard command -- tell the docmanager to open up a
     // galyleo dashboard file, and then tell the editor to edit it,
     // sending the pathname to the editor
     app.commands.addCommand(newCommand, {
-        label: 'Open new Galyleo Dashboard',
+        label: 'Galyleo Dashboard',
         caption: 'Open a new Galyleo Dashboard',
+        icon: exports.galyleoIcon,
         execute: (args) => __awaiter(this, void 0, void 0, function* () {
             // Create a new untitled python file
             const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-            const model = yield app.commands.execute('docmanager:new-untitled', {
+            yield app.commands.execute('docmanager:new-untitled', {
                 path: cwd,
                 contentType: 'file',
                 ext: 'gd.json',
                 fileFormat: 'json',
                 type: 'file'
             });
-            editor.newDashboard(model.path);
+            // open that dashboard
         })
     });
-    // Load an existing dashboard command.  Just send the
-    // editor the path to the cwd and the editor will open it in the
-    // dashboard
-    app.commands.addCommand(loadCommand, {
-        label: 'Load a Galyleo Dashboard from file',
-        caption: 'Load a Galyleo Dashboard from file',
-        execute: (args) => {
-            const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-            editor.loadDashboard(cwd);
-        }
+    launcher.add({
+        command: newCommand,
     });
-    // Save the dashboard currently being edited.
-    app.commands.addCommand(saveCommand, {
-        label: 'Save the current Galyleo Dashboard',
-        caption: 'Save the current Galyleo Dashboard',
-        execute: (args) => {
-            editor.saveCurrentDashboard();
-        }
-    });
-    // Save the dashboard currently being edited, asking the user
-    // for the file name
-    app.commands.addCommand(saveAsCommand, {
-        label: 'Save the current Galyleo Dashboard as...',
-        caption: 'Save the current Galyleo Dashboard as...',
-        execute: (args) => {
-            editor.saveCurrentDashboardAndPrompt();
-        }
-    });
-    // Change the Room Name for dashboard and kernels. Note this does not affect the room name
-    // for existing kernels until restated
-    app.commands.addCommand(changeRoomCommand, {
-        label: 'Change the Dashboard Room (Advanced users only...)',
-        caption: 'Change the Dashboard Room (Advanced users only...)',
-        execute: (args) => {
-            editor.changeRoomPrompt();
-        }
-    });
-    /* app.commands.addCommand(renameCommand, {
-      label: 'Rename current Galyleo Dashboard',
-      caption: 'Rename current Galyleo Dashboard',
-      execute: (args: any) => {
-        editor.renameCurrentDashboard();
-      }
-    }) */
+    mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
     // Add the commands to the main menu
     const category = 'Galyleo  Dashboard';
     palette.addItem({ command: newCommand, category: category, args: {} });
-    mainMenu.fileMenu.addGroup([
-        { command: newCommand },
-        { command: loadCommand },
-        { command: saveCommand },
-        { command: saveAsCommand },
-        { command: changeRoomCommand }
-    ]);
-    return editor;
+    // mainMenu.fileMenu.addGroup([
+    //   { command: newCommand }, // handled by all the other default menu entries
+    //   { command: loadCommand }, // handled by double clicking, right click open with command
+    //   { command: saveCommand }, // handled by the already existing file save command
+    //   { command: saveAsCommand }, // we can rename stuff alredy in the extension, this is not needed
+    //   { command: changeRoomCommand } // this should be done from within the extension if at all needed
+    // ]);
 }
 /**
  * Initialization data for the ToC extension.
@@ -200,7 +249,8 @@ const extension = {
         filebrowser_1.IFileBrowserFactory,
         apputils_1.ICommandPalette,
         mainmenu_1.IMainMenu,
-        launcher_1.ILauncher
+        launcher_1.ILauncher,
+        docmanager_1.IDocumentManager
     ],
     activate: activateTOC
 };

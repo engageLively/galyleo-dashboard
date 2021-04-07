@@ -12,4 +12,4 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // Note: keep in alphabetical order...
-__exportStar(require("./toc"), exports);
+__exportStar(require("./editor"), exports);

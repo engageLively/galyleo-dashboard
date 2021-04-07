@@ -16,6 +16,5 @@
     "rootDir": "src",
     "jsx": "react"
   },
-  "files": ["svg.d.ts"],
-  "include": ["src/**/*", "galyleo.js", "svg.d.ts"]
+  "include": ["src/**/*", "galyleo.js", "src/custom.d.ts"]
 }
