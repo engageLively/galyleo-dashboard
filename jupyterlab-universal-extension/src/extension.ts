@@ -53,23 +53,32 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
     return this._dirty;
   }
 
-  set dirty (v) {
-    this._dirty = v;
-    this.stateChanged.emit();
+  set dirty (newValue) {
+    const oldValue = this._dirty;
+    this._dirty = newValue;
+    this.stateChanged.emit({ name: 'dirty', oldValue, newValue });
+  }
+
+  get defaultValue() {
+     return JSON.stringify({"tables":{},"views":{},"charts":{},"filters":{}});
   }
 
   toString(): string {
     return JSON.stringify(this.toJSON());
   }
   fromString(value: string): void {
-    this.fromJSON(JSON.parse(value));
+    if (value == '') value = this.defaultValue;
+    this.value.text = value;
   }
   toJSON(): JSONValue {
-    // get json snapshot from 
-    return JSON.parse(this.value.text);
+    // get json snapshot from
+    let jsonString = this.value.text; 
+    if (jsonString == "")
+      jsonString = this.defaultValue;
+    return JSON.parse(jsonString);
   }
-  fromJSON(value: any): void {
-    // send json to iframe
+  fromJSON(dashboard: any): void {
+    this.fromString(JSON.stringify(dashboard));
   }
   initialize(): void {
     // send data to iframe
@@ -120,7 +129,7 @@ export class GalyleoModelFactory extends TextModelFactory {
  
 }
 
-declare type StudioHandler = 'galyleo:writeFile' | 'galyleo:setDirty';
+declare type StudioHandler = 'galyleo:writeFile' | 'galyleo:setDirty' | 'galyleo:ready';
 
 namespace GalyleoStudioFactory{
   export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
@@ -152,6 +161,10 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, Galy
       'galyleo:setDirty': (evt: MessageEvent) => {
         const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
         doc.context.model.dirty = evt.data.dirty;
+      },
+      'galyleo:ready': (evt: MessageEvent) => {
+        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+        doc.content.loadDashboard(doc.context.model.value.text); // load the dashboard
       }
     }
     window.addEventListener('message', evt => {

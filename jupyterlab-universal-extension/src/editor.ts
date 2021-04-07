@@ -39,27 +39,8 @@ export class GalyleoEditor extends Widget {
     await new Promise((resolve) => this._completeSave = resolve);
   }
 
-  handleEvent(event: Event) {
-    switch (event.type) {
-      case 'mouseout':
-        break;
-      case 'blur':
-        this._evtBlur(event);
-        break;
-      case 'click':
-        this._evtClick(event);
-        break;
-      default:
-        break;
-    }
-  }
- 
-  _evtBlur(evt: Event) {
-    if (document.activeElement != this._iframe) this._iframe.style.pointerEvents = 'none';
-  }
-
-  _evtClick(evt: Event) {
-    this._iframe.style.pointerEvents = 'all';
+  loadDashboard(jsonString: string) {
+    this._iframe.contentWindow?.postMessage({ method: 'galyleo:load', jsonString }, "*");
   }
 
   // we are the receivers of the undo/redo commands
