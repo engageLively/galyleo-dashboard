@@ -30,6 +30,8 @@ export class GalyleoEditor extends Widget {
   });
   }
 
+  get editor() { return this }
+
   completeSave() {
     this._completeSave(true);
   }
@@ -46,11 +48,11 @@ export class GalyleoEditor extends Widget {
   // we are the receivers of the undo/redo commands
 
   undo() {
-    this._iframe.contentWindow?.postMessage('undo', '*');
+    this._iframe.contentWindow?.postMessage({ method: 'galyleo:undo'}, '*');
   }
 
   redo() {
-    this._iframe.contentWindow?.postMessage('redo', '*');
+    this._iframe.contentWindow?.postMessage({ method: 'galyleo:redo'}, '*');
   }
 
   async _render() {

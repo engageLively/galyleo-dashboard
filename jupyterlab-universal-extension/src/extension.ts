@@ -14,7 +14,7 @@ import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { GalyleoDocument, GalyleoEditor } from './editor';
 import '../style/index.css';
-import { ICommandPalette } from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
@@ -56,7 +56,8 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   set dirty (newValue) {
     const oldValue = this._dirty;
     this._dirty = newValue;
-    this.stateChanged.emit({ name: 'dirty', oldValue, newValue });
+    if (oldValue != newValue)
+      this.stateChanged.emit({ name: 'dirty', oldValue, newValue });
   }
 
   get defaultValue() {
@@ -191,7 +192,6 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, Galy
         await origSave.bind(context)();
       }
       const widget = new GalyleoDocument({ content, context });
-     
       return widget;
   }
 }
@@ -229,7 +229,7 @@ function activateTOC(
   palette: ICommandPalette,
   mainMenu: IMainMenu,
   launcher: ILauncher,
-  manager: IDocumentManager
+  manager: IDocumentManager,
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
@@ -259,6 +259,12 @@ function activateTOC(
     modelName: 'galyleo',
     manager
   });
+
+  //const widgetTracker = new WidgetTracker({ namespace: 'galyleo' });
+
+  widgetFactory.widgetCreated.connect((sender, widget) => {
+    (<unknown>editorTracker as WidgetTracker).add(<any>widget); // shut up the compiler
+  })
 
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
 
@@ -333,6 +339,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     IMainMenu,
     ILauncher,
     IDocumentManager
+
   ],
   activate: activateTOC
 };
