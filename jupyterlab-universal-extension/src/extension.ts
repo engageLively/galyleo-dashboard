@@ -265,7 +265,7 @@ function activateTOC(
   widgetFactory.widgetCreated.connect((sender, widget) => {
     (<unknown>editorTracker as WidgetTracker).add(<any>widget); // shut up the compiler
   })
-
+  
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
 
   // set up the main menu commands
