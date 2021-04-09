@@ -32,7 +32,7 @@ export class GalyleoEditor extends Widget {
 
   onAfterShow() {
     // fix the labes in the scene that have bee update while hidden
-    this._iframe.contentWindow?.postMessage({ method: 'galyleo:fixLabels '}, "*");
+    this._iframe.contentWindow?.postMessage({ method: 'galyleo:fixLabels' }, "*");
   }
 
   get editor() { return this }

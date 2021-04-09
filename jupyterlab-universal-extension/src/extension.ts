@@ -284,7 +284,7 @@ function activateTOC(
     execute: async (args: any) => {
       // Create a new untitled python file
       const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
-      await app.commands.execute('docmanager:new-untitled', {
+      const res = await app.commands.execute('docmanager:new-untitled', {
         path: cwd,
         contentType: 'file',
         ext: 'gd.json',
@@ -292,6 +292,10 @@ function activateTOC(
         type: 'file'
       });
       // open that dashboard
+      app.commands.execute('docmanager:open', {
+        path: res.path,
+        factory: widgetFactory.name
+      });
     }
   });
 

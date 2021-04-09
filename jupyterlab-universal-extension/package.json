@@ -30,6 +30,7 @@
     ]
   },
   "dependencies": {
+    "@jupyterlab/ui-components": "^3.0.5",
     "@jupyterlab/application": "^3.0.4",
     "@jupyterlab/apputils": "^3.0.3",
     "@jupyterlab/cells": "^3.0.4",
