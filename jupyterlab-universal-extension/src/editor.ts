@@ -41,8 +41,8 @@ export class GalyleoEditor extends Widget {
     this._completeSave(true);
   }
 
-  async requestSave() {
-    this._iframe.contentWindow?.postMessage({ method: 'galyleo:save' }, "*");
+  async requestSave(path: string) {
+    this._iframe.contentWindow?.postMessage({ method: 'galyleo:save', path }, "*");
     await new Promise((resolve) => this._completeSave = resolve);
   }
 

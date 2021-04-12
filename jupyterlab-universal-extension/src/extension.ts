@@ -188,7 +188,7 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, Galy
       const origSave = context.save;
       // wrap the save function, no better way to do this....
       context.save = async () => {
-        await content.requestSave();
+        await content.requestSave(context.path);
         await origSave.bind(context)();
       }
       const widget = new GalyleoDocument({ content, context });
