@@ -30,11 +30,7 @@ export class GalyleoEditor extends Widget {
       await this._render();
     });
     this._context.pathChanged.connect(
-      newPath =>
-        this._iframe.contentWindow?.postMessage(
-          { method: 'galyleo:rename', newPath },
-          '*'
-        ),
+      (context, newPath) => this.renamePath(newPath),
       this
     );
   }
@@ -66,6 +62,13 @@ export class GalyleoEditor extends Widget {
   loadDashboard(jsonString: string) {
     this._iframe.contentWindow?.postMessage(
       { method: 'galyleo:load', jsonString },
+      '*'
+    );
+  }
+
+  renamePath(newPath: string) {
+    this._iframe.contentWindow?.postMessage(
+      { method: 'galyleo:rename', newPath },
       '*'
     );
   }
