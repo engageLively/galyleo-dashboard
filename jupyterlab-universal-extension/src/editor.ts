@@ -4,6 +4,7 @@
 import { Widget } from '@phosphor/widgets';
 import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
+import { baseURL } from './constants';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
@@ -30,7 +31,7 @@ export class GalyleoEditor extends Widget {
       await this._render();
     });
     this._context.pathChanged.connect(
-      (context, newPath) => this.renamePath(newPath),
+      (context, path) => this.renamePath(path),
       this
     );
   }
@@ -66,9 +67,9 @@ export class GalyleoEditor extends Widget {
     );
   }
 
-  renamePath(newPath: string) {
+  renamePath(path: string) {
     this._iframe.contentWindow?.postMessage(
-      { method: 'galyleo:rename', newPath },
+      { method: 'galyleo:rename', path },
       '*'
     );
   }
@@ -93,8 +94,8 @@ export class GalyleoEditor extends Widget {
     const userComponents = components.filter(comp => comp.indexOf('@') >= 0);
     const user = userComponents.length > 0 ? userComponents[0] : '';
     // assemble the url and load it into the iframe
-    const baseURL =
-      'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/index.html';
+    // const baseURL =
+    //   'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/index.html';
     this._iframe.src = `${baseURL}?dashboard_file=${filePath}&session=${sessionId}&inJupyterLab=true&user=${user}`;
     // wait for session to load
   }
