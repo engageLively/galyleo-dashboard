@@ -95,8 +95,12 @@ export class GalyleoEditor extends Widget {
     const user = userComponents.length > 0 ? userComponents[0] : '';
     // assemble the url and load it into the iframe
     // const baseURL =
-    //   'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/index.html';
-    this._iframe.src = `${baseURL}?dashboard_file=${filePath}&session=${sessionId}&inJupyterLab=true&user=${user}`;
+    //   'https://matt.engagelively.com/users/rick/published/Dashboard%20Studio%20Development/index.html?';
+    // for debug:
+    // const baseURL =
+    //   'https://matt.engagelively.com/worlds/load?name=Dashboard%20Studio%20Development&';
+    // both of these are defined in constants.ts, NOT versioned to avoid bogus changes and stashes.
+    this._iframe.src = `${baseURL}dashboard_file=${filePath}&session=${sessionId}&inJupyterLab=true&user=${user}`;
     // wait for session to load
   }
 }
