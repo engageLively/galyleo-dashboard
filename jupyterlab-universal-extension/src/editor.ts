@@ -29,6 +29,14 @@ export class GalyleoEditor extends Widget {
     void this._context.ready.then(async () => {
       await this._render();
     });
+    this._context.pathChanged.connect(
+      newPath =>
+        this._iframe.contentWindow?.postMessage(
+          { method: 'galyleo:rename', newPath },
+          '*'
+        ),
+      this
+    );
   }
 
   onAfterShow() {
