@@ -6,9 +6,6 @@ import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
 import { baseURL } from './constants';
 import { SessionManager } from '@jupyterlab/services';
-import { IIterator } from '@phosphor/algorithm';
-import { IModel } from '@jupyterlab/services/lib/kernel/restapi';
-import { ISessionConnection } from '@jupyterlab/services/lib/session/session';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 export class GalyleoDocument extends DocumentWidget<
