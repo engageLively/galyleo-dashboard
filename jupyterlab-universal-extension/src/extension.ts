@@ -18,7 +18,11 @@ import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { IMainMenu } from '@jupyterlab/mainmenu';
-import { TextModelFactory, DocumentRegistry, ABCWidgetFactory } from '@jupyterlab/docregistry';
+import {
+  TextModelFactory,
+  DocumentRegistry,
+  ABCWidgetFactory
+} from '@jupyterlab/docregistry';
 import { Contents } from '@jupyterlab/services';
 import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
 import galyleoSvgstr from '../style/engageLively.svg';
@@ -28,8 +32,8 @@ import { Signal } from '@phosphor/signaling';
 import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
 
-export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
-
+export class GalyleoModel extends CodeEditor.Model
+  implements DocumentRegistry.ICodeModel {
   contentChanged: any;
   stateChanged: any;
 
@@ -40,10 +44,10 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
 
   session: string;
   _dirty = false;
-  
+
   constructor(options?: CodeEditor.Model.IOptions) {
-    super(options)
-    this.value // this contains the json as a string as soon as its loaded
+    super(options);
+    this.value; // this contains the json as a string as soon as its loaded
     this.session = UUID.uuid4(); // could be we dont even need that one...
     this.contentChanged = new Signal(this);
     this.stateChanged = new Signal(this);
@@ -53,7 +57,7 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
     return this._dirty;
   }
 
-  set dirty (newValue) {
+  set dirty(newValue) {
     const oldValue = this._dirty;
     this._dirty = newValue;
     if (oldValue != newValue)
@@ -61,7 +65,7 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   }
 
   get defaultValue() {
-     return JSON.stringify({"tables":{},"views":{},"charts":{},"filters":{}});
+    return JSON.stringify({ tables: {}, views: {}, charts: {}, filters: {} });
   }
 
   toString(): string {
@@ -73,9 +77,8 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   }
   toJSON(): JSONValue {
     // get json snapshot from
-    let jsonString = this.value.text; 
-    if (jsonString == "")
-      jsonString = this.defaultValue;
+    let jsonString = this.value.text;
+    if (jsonString == '') jsonString = this.defaultValue;
     return JSON.parse(jsonString);
   }
   fromJSON(dashboard: any): void {
@@ -84,7 +87,6 @@ export class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.I
   initialize(): void {
     // send data to iframe
   }
-
 }
 
 /**
@@ -98,10 +100,8 @@ export class GalyleoModelFactory extends TextModelFactory {
    * This is a read-only property.
    */
   get name() {
-    return 'galyleo'
+    return 'galyleo';
   }
-
-  
 
   /**
    * The type of the file.
@@ -122,77 +122,88 @@ export class GalyleoModelFactory extends TextModelFactory {
     return 'text';
   }
 
-  
-
   createNew(languagePreference?: string | undefined, modelDb?: IModelDB) {
     return new GalyleoModel();
   }
- 
 }
 
-declare type StudioHandler = 'galyleo:writeFile' | 'galyleo:setDirty' | 'galyleo:ready';
+declare type StudioHandler =
+  | 'galyleo:writeFile'
+  | 'galyleo:setDirty'
+  | 'galyleo:ready';
 
-namespace GalyleoStudioFactory{
+namespace GalyleoStudioFactory {
   export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
     manager: IDocumentManager;
   }
-} 
+}
 
-export class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, GalyleoModel> {
+export class GalyleoStudioFactory extends ABCWidgetFactory<
+  GalyleoDocument,
+  GalyleoModel
+> {
   /**
    * Construct a new mimetype widget factory.
    */
-  
+
   private _documentManager: IDocumentManager;
 
   constructor(options: GalyleoStudioFactory.IOptions) {
-      super(options);
-      this._initMessageListeners();
-      this._documentManager = options.manager;
+    super(options);
+    this._initMessageListeners();
+    this._documentManager = options.manager;
   }
 
   _initMessageListeners() {
     // get a hold of the tracker and dispatch to the different widgets
     const handlers = {
       'galyleo:writeFile': (evt: MessageEvent) => {
-        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
-        doc.context.model.value.text =  evt.data.jsonString;
+        const doc: GalyleoDocument = this._getDocumentForFilePath(
+          evt.data.dashboardFilePath
+        );
+        doc.context.model.value.text = evt.data.jsonString;
         doc.content.completeSave(); // signal that save can be finalized
       },
       'galyleo:setDirty': (evt: MessageEvent) => {
-        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+        const doc: GalyleoDocument = this._getDocumentForFilePath(
+          evt.data.dashboardFilePath
+        );
         doc.context.model.dirty = evt.data.dirty;
       },
       'galyleo:ready': (evt: MessageEvent) => {
-        const doc: GalyleoDocument = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+        const doc: GalyleoDocument = this._getDocumentForFilePath(
+          evt.data.dashboardFilePath
+        );
         doc.content.loadDashboard(doc.context.model.value.text); // load the dashboard
       }
-    }
+    };
     window.addEventListener('message', evt => {
       handlers[evt.data.method as StudioHandler](evt);
-    })
+    });
   }
 
   _getDocumentForFilePath(path: string): GalyleoDocument {
     // since we are coming from an incoming message due to an iframe embedded inside
     // a widget, that widget still has to be there
-    return <GalyleoDocument><unknown>this._documentManager.findWidget(path);
+    return <GalyleoDocument>(<unknown>this._documentManager.findWidget(path));
   }
   /**
    * Create a new widget given a context.
    */
   createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>) {
-      
-      const content = new GalyleoEditor({ context });
-      content.title.icon = <any>galyleoIcon;
-      const origSave = context.save;
-      // wrap the save function, no better way to do this....
-      context.save = async () => {
-        await content.requestSave(context.path);
-        await origSave.bind(context)();
-      }
-      const widget = new GalyleoDocument({ content, context });
-      return widget;
+    const content = new GalyleoEditor({
+      context,
+      sessionManager: this._sessionManager
+    });
+    content.title.icon = <any>galyleoIcon;
+    const origSave = context.save;
+    // wrap the save function, no better way to do this....
+    context.save = async () => {
+      await content.requestSave(context.path);
+      await origSave.bind(context)();
+    };
+    const widget = new GalyleoDocument({ content, context });
+    return widget;
   }
 }
 
@@ -229,11 +240,11 @@ function activateTOC(
   palette: ICommandPalette,
   mainMenu: IMainMenu,
   launcher: ILauncher,
-  manager: IDocumentManager,
+  manager: IDocumentManager
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
-  
+
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
 
@@ -249,7 +260,7 @@ function activateTOC(
 
   // we need a different factory that returns widgets which
   // allow us to intercept undo/redo/save commands
-   
+
   // this factory only works for files that are purely text based
   const widgetFactory = new GalyleoStudioFactory({
     name: 'Galyleo',
@@ -263,9 +274,9 @@ function activateTOC(
   //const widgetTracker = new WidgetTracker({ namespace: 'galyleo' });
 
   widgetFactory.widgetCreated.connect((sender, widget) => {
-    (<unknown>editorTracker as WidgetTracker).add(<any>widget); // shut up the compiler
-  })
-  
+    ((<unknown>editorTracker) as WidgetTracker).add(<any>widget); // shut up the compiler
+  });
+
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
 
   // set up the main menu commands
@@ -300,26 +311,15 @@ function activateTOC(
   });
 
   launcher.add({
-    command: newCommand,
+    command: newCommand
   });
 
-  mainMenu.fileMenu.newMenu.addGroup(
-    [{ command: newCommand }],
-    30
-  );
+  mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
 
   // Add the commands to the main menu
 
   const category = 'Galyleo  Dashboard';
   palette.addItem({ command: newCommand, category: category, args: {} });
-
-  // mainMenu.fileMenu.addGroup([
-  //   { command: newCommand }, // handled by all the other default menu entries
-  //   { command: loadCommand }, // handled by double clicking, right click open with command
-  //   { command: saveCommand }, // handled by the already existing file save command
-  //   { command: saveAsCommand }, // we can rename stuff alredy in the extension, this is not needed
-  //   { command: changeRoomCommand } // this should be done from within the extension if at all needed
-  // ]);
 }
 
 /**
@@ -343,7 +343,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     IMainMenu,
     ILauncher,
     IDocumentManager
-
   ],
   activate: activateTOC
 };

@@ -5,6 +5,11 @@ import { Widget } from '@phosphor/widgets';
 import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
 import { baseURL } from './constants';
+import { SessionManager } from '@jupyterlab/services';
+import { IIterator } from '@phosphor/algorithm';
+import { IModel } from '@jupyterlab/services/lib/kernel/restapi';
+import { ISessionConnection } from '@jupyterlab/services/lib/session/session';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
@@ -15,12 +20,17 @@ export class GalyleoEditor extends Widget {
   private _iframe: HTMLIFrameElement;
   private _context: DocumentRegistry.IContext<GalyleoModel>;
   private _completeSave: Function;
+  private _future: Kernel.IFuture<
+    KernelMessage.IExecuteRequestMsg,
+    KernelMessage.IExecuteReplyMsg
+  > | null = null;
 
   constructor(options: GalyleoEditor.IOptions) {
     super();
     this._context = options.context;
     this._iframe = document.createElement('iframe');
     this._iframe.style.cssText = 'width: 100%; height: 100%; border: 0px;';
+
     this.node.appendChild(this._iframe);
     this.node.onmouseleave = () => (this._iframe.style.pointerEvents = 'none');
     this.node.onmousemove = (evt: MouseEvent) => {
@@ -35,6 +45,33 @@ export class GalyleoEditor extends Widget {
       this
     );
   }
+
+  set future(
+    value: Kernel.IFuture<
+      KernelMessage.IExecuteRequestMsg,
+      KernelMessage.IExecuteReplyMsg
+    > | null
+  ) {
+    this._future = value;
+    if (!value) {
+      return;
+    }
+    value.onIOPub = this._onIOPub;
+  }
+
+  private _onIOPub = (msg: KernelMessage.IIOPubMessage): void => {
+    const msgType = msg.header.msg_type;
+    switch (msgType) {
+      case 'execute_result':
+      case 'display_data':
+      case 'update_display_data':
+        console.log(msg.content);
+        break;
+      default:
+        break;
+    }
+    return;
+  };
 
   onAfterShow() {
     // fix the labes in the scene that have bee update while hidden
@@ -118,6 +155,7 @@ export namespace GalyleoEditor {
      */
     // docmanager: IDocumentManager;
     context: DocumentRegistry.IContext<GalyleoModel>;
+    sessionManager: SessionManager;
 
     /**
      * Notebook ref.
