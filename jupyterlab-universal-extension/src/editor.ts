@@ -38,7 +38,7 @@ export class GalyleoEditor extends Widget {
   }
 
   onAfterShow() {
-    // fix the labes in the scene that have bee update while hidden
+    // fix the labs in the scene that have been update while hidden
     this._iframe.contentWindow?.postMessage(
       { method: 'galyleo:fixLabels' },
       '*'
@@ -64,6 +64,14 @@ export class GalyleoEditor extends Widget {
   loadDashboard(jsonString: string) {
     this._iframe.contentWindow?.postMessage(
       { method: 'galyleo:load', jsonString },
+      '*'
+    );
+  }
+
+  loadTable(table: any) {
+    // table is a dictionary, how do we say that?
+    this._iframe.contentWindow?.postMessage(
+      { method: 'galyleo:loadTable', table },
       '*'
     );
   }

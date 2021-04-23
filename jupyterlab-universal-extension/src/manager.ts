@@ -101,6 +101,8 @@ export class GalyleoCommunicationsManager {
 
   public _handleGalyleo(msg: KernelMessage.ICommMsgMsg) {
     const data = msg.content.data;
-    console.log(JSON.stringify(data));
+    if (data['name'] && data['table']) {
+      this._studios.forEach(studio => studio.loadTable(data));
+    }
   }
 }
