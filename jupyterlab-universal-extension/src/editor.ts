@@ -5,8 +5,6 @@ import { Widget } from '@phosphor/widgets';
 import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
 import { baseURL } from './constants';
-import { SessionManager } from '@jupyterlab/services';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
@@ -17,10 +15,6 @@ export class GalyleoEditor extends Widget {
   private _iframe: HTMLIFrameElement;
   private _context: DocumentRegistry.IContext<GalyleoModel>;
   private _completeSave: Function;
-  private _future: Kernel.IFuture<
-    KernelMessage.IExecuteRequestMsg,
-    KernelMessage.IExecuteReplyMsg
-  > | null = null;
 
   constructor(options: GalyleoEditor.IOptions) {
     super();
@@ -42,33 +36,6 @@ export class GalyleoEditor extends Widget {
       this
     );
   }
-
-  set future(
-    value: Kernel.IFuture<
-      KernelMessage.IExecuteRequestMsg,
-      KernelMessage.IExecuteReplyMsg
-    > | null
-  ) {
-    this._future = value;
-    if (!value) {
-      return;
-    }
-    value.onIOPub = this._onIOPub;
-  }
-
-  private _onIOPub = (msg: KernelMessage.IIOPubMessage): void => {
-    const msgType = msg.header.msg_type;
-    switch (msgType) {
-      case 'execute_result':
-      case 'display_data':
-      case 'update_display_data':
-        console.log(msg.content);
-        break;
-      default:
-        break;
-    }
-    return;
-  };
 
   onAfterShow() {
     // fix the labes in the scene that have bee update while hidden
@@ -152,7 +119,6 @@ export namespace GalyleoEditor {
      */
     // docmanager: IDocumentManager;
     context: DocumentRegistry.IContext<GalyleoModel>;
-    sessionManager: SessionManager;
 
     /**
      * Notebook ref.

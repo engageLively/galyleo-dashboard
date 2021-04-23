@@ -30,7 +30,8 @@
     ]
   },
   "dependencies": {
-    "@jupyterlab/ui-components": "^3.0.5",
+    "@jupyter-widgets/base": "^5.0.0-alpha.2",
+    "@jupyter-widgets/base-manager": "^1.0.0-alpha.2",
     "@jupyterlab/application": "^3.0.4",
     "@jupyterlab/apputils": "^3.0.3",
     "@jupyterlab/cells": "^3.0.4",
@@ -45,6 +46,7 @@
     "@jupyterlab/notebook": "^3.0.4",
     "@jupyterlab/rendermime": "^3.0.4",
     "@jupyterlab/services": "^6.0.5",
+    "@jupyterlab/ui-components": "^3.0.5",
     "@lumino/messaging": "^1.4.3",
     "@lumino/widgets": "^1.18.0",
     "@phosphor/algorithm": "^1.1.3",

@@ -1,4 +1,4 @@
-// Copyright (c) Jupyter Development Team.
+// Copyright (c) engageLively
 // Distributed under the terms of the Modified BSD License.
 
 import {
@@ -31,6 +31,7 @@ import { JSONValue } from '@phosphor/coreutils';
 import { Signal } from '@phosphor/signaling';
 import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
+import { GalyleoCommunicationsManager } from './manager';
 
 export class GalyleoModel extends CodeEditor.Model
   implements DocumentRegistry.ICodeModel {
@@ -135,6 +136,7 @@ declare type StudioHandler =
 namespace GalyleoStudioFactory {
   export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
     manager: IDocumentManager;
+    commsManager: GalyleoCommunicationsManager;
   }
 }
 
@@ -147,11 +149,13 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
    */
 
   private _documentManager: IDocumentManager;
+  private _communicationsManager: GalyleoCommunicationsManager;
 
   constructor(options: GalyleoStudioFactory.IOptions) {
     super(options);
     this._initMessageListeners();
     this._documentManager = options.manager;
+    this._communicationsManager = options.commsManager;
   }
 
   _initMessageListeners() {
@@ -192,9 +196,9 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
    */
   createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>) {
     const content = new GalyleoEditor({
-      context,
-      sessionManager: this._sessionManager
+      context
     });
+    this._communicationsManager.addEditor(content);
     content.title.icon = <any>galyleoIcon;
     const origSave = context.save;
     // wrap the save function, no better way to do this....
@@ -203,6 +207,7 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
       await origSave.bind(context)();
     };
     const widget = new GalyleoDocument({ content, context });
+
     return widget;
   }
 }
@@ -244,6 +249,7 @@ function activateTOC(
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
+  const sessionManager = app.serviceManager.sessions;
 
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
@@ -268,7 +274,8 @@ function activateTOC(
     defaultRendered: ['Galyleo'],
     defaultFor: ['Galyleo'],
     modelName: 'galyleo',
-    manager
+    manager,
+    commsManager: new GalyleoCommunicationsManager(sessionManager)
   });
 
   //const widgetTracker = new WidgetTracker({ namespace: 'galyleo' });

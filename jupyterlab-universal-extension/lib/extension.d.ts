@@ -8,6 +8,7 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { CodeEditor } from '@jupyterlab/codeeditor';
 import { JSONValue } from '@phosphor/coreutils';
 import { IModelDB } from '@jupyterlab/observables';
+import { GalyleoCommunicationsManager } from './manager';
 export declare class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
     contentChanged: any;
     stateChanged: any;
@@ -18,11 +19,12 @@ export declare class GalyleoModel extends CodeEditor.Model implements DocumentRe
     _dirty: boolean;
     constructor(options?: CodeEditor.Model.IOptions);
     get dirty(): boolean;
-    set dirty(v: boolean);
+    set dirty(newValue: boolean);
+    get defaultValue(): string;
     toString(): string;
     fromString(value: string): void;
     toJSON(): JSONValue;
-    fromJSON(value: any): void;
+    fromJSON(dashboard: any): void;
     initialize(): void;
 }
 /**
@@ -54,6 +56,7 @@ export declare class GalyleoModelFactory extends TextModelFactory {
 declare namespace GalyleoStudioFactory {
     interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
         manager: IDocumentManager;
+        commsManager: GalyleoCommunicationsManager;
     }
 }
 export declare class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, GalyleoModel> {
@@ -61,6 +64,7 @@ export declare class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocume
      * Construct a new mimetype widget factory.
      */
     private _documentManager;
+    private _communicationsManager;
     constructor(options: GalyleoStudioFactory.IOptions);
     _initMessageListeners(): void;
     _getDocumentForFilePath(path: string): GalyleoDocument;
