@@ -80,7 +80,14 @@ export class GalyleoCommunicationsManager {
       channel.connection?.registerCommTarget(
         'galyleo_data',
         (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => {
-          comm.onMsg = self._handleGalyleo;
+          // have to inline this because nitwit typescript doesn't carry this!
+          // comm.onMsg = self._handleGalyleo;
+          comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
+            const data = msg.content.data;
+            if (data['name'] && data['table']) {
+              self._studios.forEach(studio => studio.loadTable(data));
+            }
+          };
         }
       );
       // const self:GalyleoCommunicationsManager = this; // just to make sure we have a handle on this
