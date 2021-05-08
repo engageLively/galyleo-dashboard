@@ -156,6 +156,7 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
     this._initMessageListeners();
     this._documentManager = options.manager;
     this._communicationsManager = options.commsManager;
+    this._documentManager.autosave = false;
   }
 
   _initMessageListeners() {

@@ -119,6 +119,7 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
         this._initMessageListeners();
         this._documentManager = options.manager;
         this._communicationsManager = options.commsManager;
+        this._documentManager.autosave = false;
     }
     _initMessageListeners() {
         // get a hold of the tracker and dispatch to the different widgets
