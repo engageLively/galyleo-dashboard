@@ -156,7 +156,6 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
     this._initMessageListeners();
     this._documentManager = options.manager;
     this._communicationsManager = options.commsManager;
-    this._documentManager.autosave = false;
   }
 
   _initMessageListeners() {
@@ -199,14 +198,16 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
     const content = new GalyleoEditor({
       context
     });
+    // this._documentManager.autosave = false;
     this._communicationsManager.addEditor(content);
     content.title.icon = <any>galyleoIcon;
-    const origSave = context.save;
+    // const origSave = context.save;
     // wrap the save function, no better way to do this....
-    context.save = async () => {
+    // doesn't need to be done at all!
+    /* context.save = async () => {
       await content.requestSave(context.path);
       await origSave.bind(context)();
-    };
+    }; */
     const widget = new GalyleoDocument({ content, context });
 
     return widget;

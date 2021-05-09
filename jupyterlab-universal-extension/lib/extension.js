@@ -119,7 +119,6 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
         this._initMessageListeners();
         this._documentManager = options.manager;
         this._communicationsManager = options.commsManager;
-        this._documentManager.autosave = false;
     }
     _initMessageListeners() {
         // get a hold of the tracker and dispatch to the different widgets
@@ -154,14 +153,16 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
         const content = new editor_1.GalyleoEditor({
             context
         });
+        // this._documentManager.autosave = false;
         this._communicationsManager.addEditor(content);
         content.title.icon = exports.galyleoIcon;
-        const origSave = context.save;
+        // const origSave = context.save;
         // wrap the save function, no better way to do this....
-        context.save = () => __awaiter(this, void 0, void 0, function* () {
-            yield content.requestSave(context.path);
-            yield origSave.bind(context)();
-        });
+        // doesn't need to be done at all!
+        /* context.save = async () => {
+          await content.requestSave(context.path);
+          await origSave.bind(context)();
+        }; */
         const widget = new editor_1.GalyleoDocument({ content, context });
         return widget;
     }
