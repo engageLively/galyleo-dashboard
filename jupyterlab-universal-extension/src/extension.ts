@@ -78,6 +78,7 @@ export class GalyleoModel extends CodeEditor.Model
   }
   toJSON(): JSONValue {
     // get json snapshot from
+
     let jsonString = this.value.text;
     if (jsonString == '') jsonString = this.defaultValue;
     return JSON.parse(jsonString);
@@ -201,13 +202,12 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
     // this._documentManager.autosave = false;
     this._communicationsManager.addEditor(content);
     content.title.icon = <any>galyleoIcon;
-    // const origSave = context.save;
+    const origSave = context.save;
     // wrap the save function, no better way to do this....
-    // doesn't need to be done at all!
-    /* context.save = async () => {
+    context.save = async () => {
       await content.requestSave(context.path);
       await origSave.bind(context)();
-    }; */
+    };
     const widget = new GalyleoDocument({ content, context });
 
     return widget;

@@ -21,7 +21,6 @@ export class GalyleoEditor extends Widget {
     this._context = options.context;
     this._iframe = document.createElement('iframe');
     this._iframe.style.cssText = 'width: 100%; height: 100%; border: 0px;';
-
     this.node.appendChild(this._iframe);
     this.node.onmouseleave = () => (this._iframe.style.pointerEvents = 'none');
     this.node.onmousemove = (evt: MouseEvent) => {

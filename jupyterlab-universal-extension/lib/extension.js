@@ -156,13 +156,12 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
         // this._documentManager.autosave = false;
         this._communicationsManager.addEditor(content);
         content.title.icon = exports.galyleoIcon;
-        // const origSave = context.save;
+        const origSave = context.save;
         // wrap the save function, no better way to do this....
-        // doesn't need to be done at all!
-        /* context.save = async () => {
-          await content.requestSave(context.path);
-          await origSave.bind(context)();
-        }; */
+        context.save = () => __awaiter(this, void 0, void 0, function* () {
+            yield content.requestSave(context.path);
+            yield origSave.bind(context)();
+        });
         const widget = new editor_1.GalyleoDocument({ content, context });
         return widget;
     }
