@@ -329,7 +329,7 @@ function activateTOC(
       command: 'help:open',
       args: {
         text: 'Galyleo Reference',
-        url: 'https://galyleo-user-docs/readthedocs.io'
+        url: 'https://galyleo-user-docs.readthedocs.io/'
       }
     }
   ]);

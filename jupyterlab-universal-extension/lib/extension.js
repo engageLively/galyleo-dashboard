@@ -249,13 +249,15 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         command: newCommand
     });
     mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
-    mainMenu.helpMenu.addGroup([{
+    mainMenu.helpMenu.addGroup([
+        {
             command: 'help:open',
             args: {
                 text: 'Galyleo Reference',
-                url: 'https://galyleo-user-docs/readthedocs.io'
+                url: 'https://galyleo-user-docs.readthedocs.io/'
             }
-        }]);
+        }
+    ]);
     // Add the commands to the main menu
     const category = 'Galyleo  Dashboard';
     palette.addItem({ command: newCommand, category: category, args: {} });
