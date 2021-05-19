@@ -324,6 +324,15 @@ function activateTOC(
   });
 
   mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
+  mainMenu.helpMenu.addGroup([
+    {
+      command: 'help:open',
+      args: {
+        text: 'Galyleo Reference',
+        url: 'https://galyleo-user-docs/readthedocs.io'
+      }
+    }
+  ]);
 
   // Add the commands to the main menu
 
