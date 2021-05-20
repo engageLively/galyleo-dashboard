@@ -351,7 +351,7 @@ function activateTOC(
       const response = await fetch(args.url);
       if (response.ok) {
         const result = await response.text();
-        widget.loadDashboard(result);
+        widget.content.loadDashboard(result);
       }
       
     }
