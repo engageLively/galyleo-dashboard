@@ -366,8 +366,7 @@ function activateTOC(
     command: 'help:open',
     args: {
       text: 'Galyleo Reference',
-      url: 'https://galyleo-user-docs.readthedocs.io/',
-      icon: galyleoIcon
+      url: 'https://galyleo-user-docs.readthedocs.io/'
     }
   }
 
