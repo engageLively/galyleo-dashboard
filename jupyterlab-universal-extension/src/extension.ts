@@ -350,7 +350,7 @@ function activateTOC(
       });
       const response = await fetch(args.url);
       if (response.ok) {
-        const result = response.text();
+        const result = await response.text();
         widget.loadDashboard(result);
       }
       
@@ -366,7 +366,8 @@ function activateTOC(
     command: 'help:open',
     args: {
       text: 'Galyleo Reference',
-      url: 'https://galyleo-user-docs.readthedocs.io/'
+      url: 'https://galyleo-user-docs.readthedocs.io/',
+      icon: galyleoIcon
     }
   }
 
