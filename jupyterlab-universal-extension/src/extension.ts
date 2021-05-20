@@ -32,6 +32,7 @@ import { Signal } from '@phosphor/signaling';
 import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
 import { GalyleoCommunicationsManager } from './manager';
+import { Menu } from '@lumino/widgets';
 
 export class GalyleoModel extends CodeEditor.Model
   implements DocumentRegistry.ICodeModel {
@@ -319,20 +320,75 @@ function activateTOC(
     }
   });
 
+  const loadSampleCommand = 'galyeo-editor:sample-dashboard';
+
+  
+
+  // Sample dashboard command -- tell the docmanager to open up a
+  // galyleo dashboard file,  then tell the editor to edit it,
+  // sending the pathname to the editor, and then load the contents of
+  // the file from the given url
+
+  app.commands.addCommand(loadSampleCommand, {
+    label: `Open Galyleo Sample ${args.text}`,
+    caption: `Open Galyleo Sample ${args.text}`,
+    icon: galyleoIcon,
+    execute: async (args: any) => {
+      // Create a new untitled python file
+      const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+      const res = await app.commands.execute('docmanager:new-untitled', {
+        path: cwd,
+        contentType: 'file',
+        ext: 'gd.json',
+        fileFormat: 'json',
+        type: 'file'
+      });
+      // open that dashboard
+      const widget = app.commands.execute('docmanager:open', {
+        path: res.path,
+        factory: widgetFactory.name
+      });
+      const response = await fetch(args.url);
+      if (response.ok) {
+        widget.loadDashboard(response.text);
+      
+    }
+  });
+
+
   launcher.add({
     command: newCommand
   });
 
+  const helpCommand = {
+    command: 'help:open',
+    args: {
+      text: 'Galyleo Reference',
+      url: 'https://galyleo-user-docs.readthedocs.io/'
+    }
+  }
+
   mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
   mainMenu.helpMenu.addGroup([
-    {
-      command: 'help:open',
-      args: {
-        text: 'Galyleo Reference',
-        url: 'https://galyleo-user-docs.readthedocs.io/'
-      }
-    }
+    helpCommand
   ]);
+
+  // Add the Galyleo Menu to the main menu
+  const menu = new Menu({ commands: app.commands });
+  menu.title.label = 'Galyleo';
+  menu.addItem({
+    command: newCommand,
+    args: {}
+  });
+  menu.addItem({
+    command: loadSampleCommand,
+    args: {
+      text:'Presidential Election',
+      url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
+    }
+  });
+  menu.addItem(helpCommand);
+  mainMenu.addMenu(menu, { rank: 40 });
 
   // Add the commands to the main menu
 
