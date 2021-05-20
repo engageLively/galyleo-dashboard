@@ -330,8 +330,8 @@ function activateTOC(
   // the file from the given url
 
   app.commands.addCommand(loadSampleCommand, {
-    label: `Open Galyleo Sample ${args.text}`,
-    caption: `Open Galyleo Sample ${args.text}`,
+    label: (args: any) => `Open Galyleo Sample ${args.text}`,
+    caption: 'Open Galyleo Sample',
     icon: galyleoIcon,
     execute: async (args: any) => {
       // Create a new untitled python file
@@ -344,7 +344,7 @@ function activateTOC(
         type: 'file'
       });
       // open that dashboard
-      const widget = app.commands.execute('docmanager:open', {
+      const widget = await app.commands.execute('docmanager:open', {
         path: res.path,
         factory: widgetFactory.name
       });
