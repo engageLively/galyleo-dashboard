@@ -385,8 +385,15 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      text:'Presidential Election',
+      text:'Presidential Election Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
+    }
+  });
+  menu.addItem({
+    command: loadSampleCommand,
+    args: {
+      text:'UFO Sightings Dashboard',
+      url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
     }
   });
   menu.addItem(helpCommand);
