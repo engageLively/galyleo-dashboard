@@ -404,7 +404,7 @@ function activateTOC(
   const category = 'Galyleo  Dashboard';
   palette.addItem({ command: newCommand, category: category, args: {} });
 
-  const examples = {
+  const examples:any = {
     'UFO Sightings': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json',
     'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
   }
@@ -419,7 +419,7 @@ function activateTOC(
       app.commands.execute( newCommand)
     },
     'galyleo:openExample': (evt: MessageEvent) => {
-      const name = evt.data.name;
+      const name:string = evt.data.name;
       const url = examples[name.trim()]
       if (url) {
         app.commands.execute("galyeo-editor:sample-dashboard", {url: url})
