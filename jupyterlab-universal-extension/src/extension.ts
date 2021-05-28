@@ -403,6 +403,28 @@ function activateTOC(
 
   const category = 'Galyleo  Dashboard';
   palette.addItem({ command: newCommand, category: category, args: {} });
+
+  const examples = {
+    'UFO Sightings': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json',
+    'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
+  }'
+  }
+
+  const messageHandlers = {
+    'galyleo:newDashboard': (evt: MessageEvent) => {
+      app.commands.executeCommand( newCommand)
+    },
+    'galyleo:openExample': (evt: MessageEvent) => {
+      const name = evt.data.name;
+      const url = examples[name.trim()]
+      if (url) {
+        app.commands.executeCommand("galyeo-editor:sample-dashboard", {url: url})
+      }
+    },
+    'Galyleo Reference': (evt: MessageEvent) => {
+      app.commands.executeCommand("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/'})
+    }
+  }
 }
 
 /**
