@@ -407,8 +407,12 @@ function activateTOC(
   const examples = {
     'UFO Sightings': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json',
     'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
-  }'
   }
+
+  type CommandHandler = 
+  | 'galyleo:newDashboard'
+  | 'galyleo:openExample'
+  | 'galyleo:openReference';
 
   const messageHandlers = {
     'galyleo:newDashboard': (evt: MessageEvent) => {
@@ -421,11 +425,16 @@ function activateTOC(
         app.commands.executeCommand("galyeo-editor:sample-dashboard", {url: url})
       }
     },
-    'Galyleo Reference': (evt: MessageEvent) => {
+    'galyleo:openReference': (evt: MessageEvent) => {
       app.commands.executeCommand("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/'})
     }
   }
+  window.addEventListener('message', evt => {
+    messageHandlers[evt.data.method as CommandHandler](evt);
+  });
 }
+
+
 
 /**
  * Initialization data for the ToC extension.
