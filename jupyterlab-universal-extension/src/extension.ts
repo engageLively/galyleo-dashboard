@@ -426,7 +426,7 @@ function activateTOC(
       }
     },
     'galyleo:openReference': (evt: MessageEvent) => {
-      app.commands.execute("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/'})
+      app.commands.execute("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/', 'text': 'Galyleo Reference'})
     }
   }
   window.addEventListener('message', evt => {
