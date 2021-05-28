@@ -416,17 +416,17 @@ function activateTOC(
 
   const messageHandlers = {
     'galyleo:newDashboard': (evt: MessageEvent) => {
-      app.commands.executeCommand( newCommand)
+      app.commands.execute( newCommand)
     },
     'galyleo:openExample': (evt: MessageEvent) => {
       const name = evt.data.name;
       const url = examples[name.trim()]
       if (url) {
-        app.commands.executeCommand("galyeo-editor:sample-dashboard", {url: url})
+        app.commands.execute("galyeo-editor:sample-dashboard", {url: url})
       }
     },
     'galyleo:openReference': (evt: MessageEvent) => {
-      app.commands.executeCommand("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/'})
+      app.commands.execute("help:open", {url: 'https://galyleo-user-docs.readthedocs.io/'})
     }
   }
   window.addEventListener('message', evt => {
