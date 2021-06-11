@@ -184,7 +184,9 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
       }
     };
     window.addEventListener('message', evt => {
-      handlers[evt.data.method as StudioHandler](evt);
+      if (evt.data.method in handlers) {
+        handlers[evt.data.method as StudioHandler](evt);
+      }
     });
   }
 
@@ -430,7 +432,9 @@ function activateTOC(
     }
   }
   window.addEventListener('message', evt => {
-    messageHandlers[evt.data.method as CommandHandler](evt);
+    if (evt.data.method in messageHandlers) {
+       messageHandlers[evt.data.method as CommandHandler](evt);
+    }
   });
 }
 
