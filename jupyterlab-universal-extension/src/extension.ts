@@ -398,6 +398,13 @@ function activateTOC(
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
     }
   });
+  menu.addItem({
+    command: loadSampleCommand,
+    args: {
+      text:'Florence Nightingale Dashboard',
+      url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
+    }
+  });
   menu.addItem(helpCommand);
   mainMenu.addMenu(menu, { rank: 40 });
 
