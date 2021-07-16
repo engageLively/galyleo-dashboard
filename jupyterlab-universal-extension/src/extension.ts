@@ -293,6 +293,12 @@ function activateTOC(
 
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
 
+  // make a label
+  let makeLabel = lab => {
+    // return trans.__(lab);
+    return lab;
+  }
+
   // set up the main menu commands
 
   const newCommand = 'galyleo-editor:new-dashboard';
@@ -303,7 +309,7 @@ function activateTOC(
   // sending the pathname to the editor
 
   app.commands.addCommand(newCommand, {
-    label: trans.__('Galyleo Dashboard'),
+    label: makeLabel('Galyleo Dashboard'),
     caption: 'Open a new Galyleo Dashboard',
     icon: galyleoIcon,
     execute: async (args: any) => {
@@ -334,7 +340,7 @@ function activateTOC(
   // the file from the given url
 
   app.commands.addCommand(loadSampleCommand, {
-    label: (args: any) => trans.__(`Open Galyleo Sample ${args.text}`),
+    label: (args: any) => makeLabel(`Open Galyleo Sample ${args.text}`),
     caption: 'Open Galyleo Sample',
     icon: galyleoIcon,
     execute: async (args: any) => {
@@ -369,7 +375,7 @@ function activateTOC(
   const helpCommand = {
     command: 'help:open',
     args: {
-      label: trans.__('Galyleo Reference'),
+      label: makeLabel('Galyleo Reference'),
       text: 'Galyleo Reference',
       url: 'https://galyleo-user-docs.readthedocs.io/'
     }
@@ -390,14 +396,14 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: trans.__('Presidential Election Dashboard'),
+      label: makeLabel('Presidential Election Dashboard'),
       text: 'Presidential Election Dashboard',
       url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
     }
   });
   menu.addItem({
   args: {
-    label: trans.__('Senate Election Dashboard'),
+    label: makeLabel('Senate Election Dashboard'),
     text: 'Senate Election Dashboard',
     url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/senate-elections/senate-elections.gd.json'
   }
@@ -405,7 +411,7 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: trans.__('UFO Sightings Dashboard'),
+      label: makeLabel('UFO Sightings Dashboard'),
       text:'UFO Sightings Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
     }
@@ -413,7 +419,7 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: trans.__('Florence Nightingale Dashboard'),
+      label: makeLabel('Florence Nightingale Dashboard'),
       text:'Florence Nightingale Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
     }
