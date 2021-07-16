@@ -33,7 +33,7 @@ import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
 import { GalyleoCommunicationsManager } from './manager';
 import { Menu } from '@lumino/widgets';
-import { ITranslator, TranslationBundle } from '@jupyterlab/translation'
+import { nullTranslator, ITranslator, TranslationBundle } from '@jupyterlab/translation'
 
 export class GalyleoModel extends CodeEditor.Model
   implements DocumentRegistry.ICodeModel {
@@ -252,11 +252,15 @@ function activateTOC(
   mainMenu: IMainMenu,
   launcher: ILauncher,
   manager: IDocumentManager,
-  trans: TranslationBundle
+  translator: ITranslator
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
   const sessionManager = app.serviceManager.sessions;
+  if (!translator) {
+    translator = nullTranslator;
+  } 
+  const trans = translator.load('jupyterlab');
 
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
@@ -295,8 +299,7 @@ function activateTOC(
 
   // make a label
   let makeLabel = (lab:any) => {
-    // return trans.__(lab);
-    return lab;
+    return trans.__(lab);
   }
 
   // set up the main menu commands
