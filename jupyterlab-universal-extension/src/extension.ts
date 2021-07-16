@@ -252,7 +252,7 @@ function activateTOC(
   mainMenu: IMainMenu,
   launcher: ILauncher,
   manager: IDocumentManager,
-  trans: ITranslator
+  trans: TranslationBundle
 ): void {
   const modelFactory = new GalyleoModelFactory();
   app.docRegistry.addModelFactory(<any>modelFactory);
@@ -406,7 +406,6 @@ function activateTOC(
     command: loadSampleCommand,
     args: {
       label: trans.__('UFO Sightings Dashboard'),
-      Presidential Election Dashboard
       text:'UFO Sightings Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
     }
