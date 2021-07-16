@@ -264,9 +264,7 @@ function activateTOC(
 
   if (translator.load) {
     trans = translator.load('jupyterlab');
-  } else {
-    trans = null;
-  }
+  } 
 
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
