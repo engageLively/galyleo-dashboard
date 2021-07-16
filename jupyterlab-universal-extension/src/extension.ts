@@ -260,7 +260,7 @@ function activateTOC(
   if (!translator) {
     translator = nullTranslator;
   } 
-  const trans = translator.load('jupyterlab');
+  const trans:TranslationBundle = translator.load('jupyterlab');
 
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
