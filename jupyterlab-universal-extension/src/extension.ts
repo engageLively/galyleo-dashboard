@@ -260,10 +260,12 @@ function activateTOC(
   if (!translator) {
     translator = nullTranslator;
   } 
-  let trans:TranslationBundle = null;
+  let trans:TranslationBundle;
 
   if (translator.load) {
     trans = translator.load('jupyterlab');
+  } else {
+    trans = null;
   }
 
   //app.docRegistry.addWidgetFactory()
