@@ -404,14 +404,15 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: makeLabel('Presidential Election Dashboard'),
+      label:'Presidential Election Dashboard',
       text: 'Presidential Election Dashboard',
       url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
     }
   });
   menu.addItem({
+    command: loadSampleCommand,
   args: {
-    label: makeLabel('Senate Election Dashboard'),
+    label: 'Senate Election Dashboard',
     text: 'Senate Election Dashboard',
     url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/senate-elections/senate-elections.gd.json'
   }
@@ -419,7 +420,7 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: makeLabel('UFO Sightings Dashboard'),
+      label: 'UFO Sightings Dashboard',
       text:'UFO Sightings Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
     }
@@ -427,7 +428,7 @@ function activateTOC(
   menu.addItem({
     command: loadSampleCommand,
     args: {
-      label: makeLabel('Florence Nightingale Dashboard'),
+      label: 'Florence Nightingale Dashboard',
       text:'Florence Nightingale Dashboard',
       url:'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
     }
