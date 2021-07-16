@@ -494,8 +494,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     ICommandPalette,
     IMainMenu,
     ILauncher,
-    ITranslator,
-    IDocumentManager
+    IDocumentManager,
+    ITranslator
   ],
   activate: activateTOC
 };
