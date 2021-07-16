@@ -294,7 +294,7 @@ function activateTOC(
   app.docRegistry.addWidgetFactory(<any>widgetFactory);
 
   // make a label
-  let makeLabel = lab => {
+  let makeLabel = (lab:any) => {
     // return trans.__(lab);
     return lab;
   }
