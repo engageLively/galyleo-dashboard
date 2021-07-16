@@ -260,7 +260,11 @@ function activateTOC(
   if (!translator) {
     translator = nullTranslator;
   } 
-  const trans:TranslationBundle = translator.load('jupyterlab');
+  let trans:TranslationBundle = null;
+
+  if (translator.load) {
+    trans = translator.load('jupyterlab');
+  }
 
   //app.docRegistry.addWidgetFactory()
   // set up the file extension
@@ -299,7 +303,8 @@ function activateTOC(
 
   // make a label
   let makeLabel = (lab:any) => {
-    return trans.__(lab);
+    
+    return trans?trans.__(lab):lab;
   }
 
   // set up the main menu commands
