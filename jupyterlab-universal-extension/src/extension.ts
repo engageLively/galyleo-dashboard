@@ -443,7 +443,9 @@ function activateTOC(
 
   const examples:any = {
     'UFO Sightings': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json',
-    'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
+    'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json',
+    'Senate Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/senate-elections/senate-elections.gd.json',
+    'Florence Nightingale': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
   }
 
   type CommandHandler = 
