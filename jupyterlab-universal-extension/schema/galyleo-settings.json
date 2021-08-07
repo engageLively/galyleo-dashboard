@@ -1,0 +1,13 @@
+{
+  "title": "Galyleo",
+  "description": "Settings of the Galyleo extension.",
+  "type": "object",
+  "properties": {
+    "debug": {
+      "type": "boolean",
+      "title": "Debug",
+      "description": "If true, use the debug dashboard",
+      "default": false
+    }
+  }
+}

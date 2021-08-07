@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.galyleoIcon = exports.GalyleoStudioFactory = exports.GalyleoModelFactory = exports.GalyleoModel = void 0;
+exports.PLUGIN_ID = exports.galyleoIcon = exports.GalyleoStudioFactory = exports.GalyleoModelFactory = exports.GalyleoModel = void 0;
 const application_1 = require("@jupyterlab/application");
 const docmanager_1 = require("@jupyterlab/docmanager");
 const fileeditor_1 = require("@jupyterlab/fileeditor");
@@ -30,6 +30,9 @@ const codeeditor_1 = require("@jupyterlab/codeeditor");
 const signaling_1 = require("@phosphor/signaling");
 const coreutils_1 = require("@lumino/coreutils");
 const manager_1 = require("./manager");
+const widgets_1 = require("@lumino/widgets");
+const translation_1 = require("@jupyterlab/translation");
+const settingregistry_1 = require("@jupyterlab/settingregistry");
 class GalyleoModel extends codeeditor_1.CodeEditor.Model {
     constructor(options) {
         super(options);
@@ -119,6 +122,7 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
         this._initMessageListeners();
         this._documentManager = options.manager;
         this._communicationsManager = options.commsManager;
+        this._settings = options.settings;
     }
     _initMessageListeners() {
         // get a hold of the tracker and dispatch to the different widgets
@@ -138,7 +142,9 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
             }
         };
         window.addEventListener('message', evt => {
-            handlers[evt.data.method](evt);
+            if (evt.data.method in handlers) {
+                handlers[evt.data.method](evt);
+            }
         });
     }
     _getDocumentForFilePath(path) {
@@ -151,7 +157,7 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
      */
     createNewWidget(context) {
         const content = new editor_1.GalyleoEditor({
-            context
+            context: context, settings: this._settings
         });
         // this._documentManager.autosave = false;
         this._communicationsManager.addEditor(content);
@@ -186,10 +192,17 @@ exports.galyleoIcon = new ui_components_1.LabIcon({
  * @param rendermime - rendered MIME registry
  * @returns table of contents registry
  */
-function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu, launcher, manager) {
+function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu, launcher, manager, translator, settings) {
     const modelFactory = new GalyleoModelFactory();
     app.docRegistry.addModelFactory(modelFactory);
     const sessionManager = app.serviceManager.sessions;
+    if (!translator) {
+        translator = translation_1.nullTranslator;
+    }
+    let trans;
+    if (translator.load) {
+        trans = translator.load('jupyterlab');
+    }
     //app.docRegistry.addWidgetFactory()
     // set up the file extension
     app.docRegistry.addFileType({
@@ -211,13 +224,18 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         defaultFor: ['Galyleo'],
         modelName: 'galyleo',
         manager,
-        commsManager: new manager_1.GalyleoCommunicationsManager(sessionManager)
+        commsManager: new manager_1.GalyleoCommunicationsManager(sessionManager),
+        settings
     });
     //const widgetTracker = new WidgetTracker({ namespace: 'galyleo' });
     widgetFactory.widgetCreated.connect((sender, widget) => {
         editorTracker.add(widget); // shut up the compiler
     });
     app.docRegistry.addWidgetFactory(widgetFactory);
+    // make a label
+    let makeLabel = (lab) => {
+        return trans ? trans.__(lab) : lab;
+    };
     // set up the main menu commands
     const newCommand = 'galyleo-editor:new-dashboard';
     // const renameCommand = 'galyleo-editor:renameDashboard'; // will add later
@@ -225,11 +243,11 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
     // galyleo dashboard file, and then tell the editor to edit it,
     // sending the pathname to the editor
     app.commands.addCommand(newCommand, {
-        label: 'Galyleo Dashboard',
+        label: makeLabel('Galyleo Dashboard'),
         caption: 'Open a new Galyleo Dashboard',
         icon: exports.galyleoIcon,
         execute: (args) => __awaiter(this, void 0, void 0, function* () {
-            // Create a new untitled python file
+            // Create a new untitled dashboard file
             const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
             const res = yield app.commands.execute('docmanager:new-untitled', {
                 path: cwd,
@@ -245,30 +263,131 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             });
         })
     });
+    const loadSampleCommand = 'galyeo-editor:sample-dashboard';
+    // Sample dashboard command -- tell the docmanager to open up a
+    // galyleo dashboard file,  then tell the editor to edit it,
+    // sending the pathname to the editor, and then load the contents of
+    // the file from the given url
+    app.commands.addCommand(loadSampleCommand, {
+        label: (args) => makeLabel(`Open Galyleo Sample ${args.text}`),
+        caption: 'Open Galyleo Sample',
+        icon: exports.galyleoIcon,
+        execute: (args) => __awaiter(this, void 0, void 0, function* () {
+            // Create a new untitled dashboard file
+            const cwd = args['cwd'] || browserFactory.defaultBrowser.model.path;
+            const res = yield app.commands.execute('docmanager:new-untitled', {
+                path: cwd,
+                contentType: 'file',
+                ext: 'gd.json',
+                fileFormat: 'json',
+                type: 'file'
+            });
+            // open that dashboard
+            const widget = yield app.commands.execute('docmanager:open', {
+                path: res.path,
+                factory: widgetFactory.name
+            });
+            const response = yield fetch(args.url);
+            if (response.ok) {
+                const result = yield response.text();
+                widget.context.model.value.text = result;
+            }
+        })
+    });
     launcher.add({
         command: newCommand
     });
+    const helpCommand = {
+        command: 'help:open',
+        args: {
+            label: makeLabel('Galyleo Reference'),
+            text: 'Galyleo Reference',
+            url: 'https://galyleo-user-docs.readthedocs.io/'
+        }
+    };
     mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
     mainMenu.helpMenu.addGroup([
-        {
-            command: 'help:open',
-            args: {
-                text: 'Galyleo Reference',
-                url: 'https://galyleo-user-docs.readthedocs.io/'
-            }
-        }
+        helpCommand
     ]);
+    // Add the Galyleo Menu to the main menu
+    const menu = new widgets_1.Menu({ commands: app.commands });
+    menu.title.label = 'Galyleo';
+    menu.addItem({
+        command: newCommand,
+        args: {}
+    });
+    menu.addItem({
+        command: loadSampleCommand,
+        args: {
+            label: 'Presidential Election Dashboard',
+            text: 'Presidential Election Dashboard',
+            url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json'
+        }
+    });
+    menu.addItem({
+        command: loadSampleCommand,
+        args: {
+            label: 'Senate Election Dashboard',
+            text: 'Senate Election Dashboard',
+            url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/senate-elections/senate-elections.gd.json'
+        }
+    });
+    menu.addItem({
+        command: loadSampleCommand,
+        args: {
+            label: 'UFO Sightings Dashboard',
+            text: 'UFO Sightings Dashboard',
+            url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json'
+        }
+    });
+    menu.addItem({
+        command: loadSampleCommand,
+        args: {
+            label: 'Florence Nightingale Dashboard',
+            text: 'Florence Nightingale Dashboard',
+            url: 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
+        }
+    });
+    menu.addItem(helpCommand);
+    mainMenu.addMenu(menu, { rank: 40 });
     // Add the commands to the main menu
     const category = 'Galyleo  Dashboard';
     palette.addItem({ command: newCommand, category: category, args: {} });
+    const examples = {
+        'UFO Sightings': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/ufos/ufos.gd.json',
+        'Presidential Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/presidential-elections/elections.gd.json',
+        'Senate Election': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/senate-elections/senate-elections.gd.json',
+        'Florence Nightingale': 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/nightingale/nightingale.gd.json'
+    };
+    const messageHandlers = {
+        'galyleo:newDashboard': (evt) => {
+            app.commands.execute(newCommand);
+        },
+        'galyleo:openExample': (evt) => {
+            const name = evt.data.name;
+            const url = examples[name.trim()];
+            if (url) {
+                app.commands.execute("galyeo-editor:sample-dashboard", { url: url });
+            }
+        },
+        'galyleo:openReference': (evt) => {
+            app.commands.execute("help:open", { url: 'https://galyleo-user-docs.readthedocs.io/', 'text': 'Galyleo Reference' });
+        }
+    };
+    window.addEventListener('message', evt => {
+        if (evt.data.method in messageHandlers) {
+            messageHandlers[evt.data.method](evt);
+        }
+    });
 }
+exports.PLUGIN_ID = '@jupyterlab/lively-universal-extension:galyleo-settings';
 /**
  * Initialization data for the ToC extension.
  *
  * @private
  */
 const extension = {
-    id: 'jupyterlab-toc',
+    id: '@jupyterlab/lively-universal-extension:galyleo-settings',
     autoStart: true,
     requires: [
         docmanager_1.IDocumentManager,
@@ -282,7 +401,9 @@ const extension = {
         apputils_1.ICommandPalette,
         mainmenu_1.IMainMenu,
         launcher_1.ILauncher,
-        docmanager_1.IDocumentManager
+        docmanager_1.IDocumentManager,
+        translation_1.ITranslator,
+        settingregistry_1.ISettingRegistry
     ],
     activate: activateTOC
 };

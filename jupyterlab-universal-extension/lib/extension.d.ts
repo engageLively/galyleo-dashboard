@@ -9,6 +9,7 @@ import { CodeEditor } from '@jupyterlab/codeeditor';
 import { JSONValue } from '@phosphor/coreutils';
 import { IModelDB } from '@jupyterlab/observables';
 import { GalyleoCommunicationsManager } from './manager';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 export declare class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
     contentChanged: any;
     stateChanged: any;
@@ -57,6 +58,7 @@ declare namespace GalyleoStudioFactory {
     interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
         manager: IDocumentManager;
         commsManager: GalyleoCommunicationsManager;
+        settings: ISettingRegistry;
     }
 }
 export declare class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocument, GalyleoModel> {
@@ -65,6 +67,7 @@ export declare class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocume
      */
     private _documentManager;
     private _communicationsManager;
+    private _settings;
     constructor(options: GalyleoStudioFactory.IOptions);
     _initMessageListeners(): void;
     _getDocumentForFilePath(path: string): GalyleoDocument;
@@ -74,6 +77,7 @@ export declare class GalyleoStudioFactory extends ABCWidgetFactory<GalyleoDocume
     createNewWidget(context: DocumentRegistry.IContext<GalyleoModel>): GalyleoDocument;
 }
 export declare const galyleoIcon: LabIcon;
+export declare const PLUGIN_ID = "@jupyterlab/lively-universal-extension:galyleo-settings";
 /**
  * Initialization data for the ToC extension.
  *

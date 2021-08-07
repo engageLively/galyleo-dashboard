@@ -4,7 +4,9 @@
 import { Widget } from '@phosphor/widgets';
 import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
-import { baseURL } from './constants';
+import { PLUGIN_ID } from './extension';
+// import { baseURL } from './constants';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
@@ -15,10 +17,12 @@ export class GalyleoEditor extends Widget {
   private _iframe: HTMLIFrameElement;
   private _context: DocumentRegistry.IContext<GalyleoModel>;
   private _completeSave: Function;
+  private _settings: ISettingRegistry;
 
   constructor(options: GalyleoEditor.IOptions) {
     super();
     this._context = options.context;
+    this._settings = options.settings;
     this._iframe = document.createElement('iframe');
     this._iframe.style.cssText = 'width: 100%; height: 100%; border: 0px;';
     this.node.appendChild(this._iframe);
@@ -92,6 +96,29 @@ export class GalyleoEditor extends Widget {
     this._iframe.contentWindow?.postMessage({ method: 'galyleo:redo' }, '*');
   }
 
+  async _baseUrl(): Promise<string> {
+    const normal =
+      'https://galyleobeta.engageLively.com/users/rick/published/dsd/index.html?';
+    // const jp = 'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?';
+    const debugURL =
+      'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
+    let galyleoSettings: ISettingRegistry.ISettings = <
+      ISettingRegistry.ISettings
+    >(<unknown>undefined);
+    if (this._settings) {
+      galyleoSettings = await this._settings.load(PLUGIN_ID);
+    }
+
+    if (galyleoSettings) {
+      if (galyleoSettings.get('debug').composite as boolean) {
+        return debugURL;
+      } else {
+        return normal;
+      }
+    }
+    return normal;
+  }
+
   async _render() {
     // now set the src accordingly on the iframe....?
     const filePath = this._context.path;
@@ -108,6 +135,7 @@ export class GalyleoEditor extends Widget {
     // const baseURL =
     //   'https://matt.engagelively.com/worlds/load?name=Dashboard%20Studio%20Development&';
     // both of these are defined in constants.ts, NOT versioned to avoid bogus changes and stashes.
+    const baseURL = await this._baseUrl();
     this._iframe.src = `${baseURL}dashboard_file=${filePath}&session=${sessionId}&inJupyterLab=true&user=${user}`;
     // wait for session to load
   }
@@ -126,6 +154,7 @@ export namespace GalyleoEditor {
      */
     // docmanager: IDocumentManager;
     context: DocumentRegistry.IContext<GalyleoModel>;
+    settings: ISettingRegistry;
 
     /**
      * Notebook ref.
