@@ -499,7 +499,7 @@ export const PLUGIN_ID =
  * @private
  */
 const extension: JupyterFrontEndPlugin<void> = {
-  id: '@jupyterlab/lively-universal-extension:galyleo-settings',
+  id: PLUGIN_ID,
   autoStart: true,
   requires: [
     IDocumentManager,

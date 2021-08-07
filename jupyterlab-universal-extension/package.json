@@ -77,6 +77,7 @@
     "access": "public"
   },
   "jupyterlab": {
-    "extension": "lib/extension.js"
+    "extension": "lib/extension.js",
+    "schemaDir": "schema"
   }
 }
