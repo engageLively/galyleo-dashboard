@@ -99,21 +99,32 @@ export class GalyleoEditor extends Widget {
   async _baseUrl(): Promise<string> {
     const normal =
       'https://galyleobeta.engageLively.com/users/rick/published/dsd/index.html?';
-    // const jp = 'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?';
+    const jp =
+      'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?';
     const debugURL =
       'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
     let galyleoSettings: ISettingRegistry.ISettings = <
       ISettingRegistry.ISettings
     >(<unknown>undefined);
+    let languagePreference: ISettingRegistry.ISettings = <
+      ISettingRegistry.ISettings
+    >(<unknown>undefined);
     if (this._settings) {
       galyleoSettings = await this._settings.load(PLUGIN_ID);
+      languagePreference = await this._settings.load(
+        '@jupyterlab/translation-extension:plugin'
+      );
     }
 
     if (galyleoSettings) {
       if (galyleoSettings.get('debug').composite as boolean) {
         return debugURL;
-      } else {
-        return normal;
+      }
+    }
+    if (languagePreference) {
+      const preference = languagePreference.get('locale').composite as string;
+      if (preference == 'ja_JP') {
+        return jp;
       }
     }
     return normal;
