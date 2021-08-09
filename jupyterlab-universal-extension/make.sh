@@ -27,6 +27,15 @@ while getopts ":hd" opt; do
       ;;
   esac
 done
+# Do the build.
+# In debug mode, use the debug package file,
+# which has the schema for the Galyleo settings.  Also set
+# debugMode = true in lib/editor.js.  Note that if we did this in 
+# src/editor.ts, we'd screw up git.  So what we need to do is
+# overwrite the js file AFTER compilation and BEFORE the extension
+# is built
+# in deployment mode, use the deployment package file (no Galyleo settings)
+# and just do a straight build -- by default, debugMode = false 
 if [ "$mode" = "debug" ]; then
    cp package-debug.json package.json
    npm install
