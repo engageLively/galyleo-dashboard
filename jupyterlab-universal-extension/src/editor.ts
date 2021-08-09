@@ -13,6 +13,9 @@ export class GalyleoDocument extends DocumentWidget<
   GalyleoModel
 > {}
 
+// overwritten post-compile and pre-deploy
+const debugMode = false;
+
 export class GalyleoEditor extends Widget {
   private _iframe: HTMLIFrameElement;
   private _context: DocumentRegistry.IContext<GalyleoModel>;
@@ -116,7 +119,7 @@ export class GalyleoEditor extends Widget {
       );
     }
 
-    if (galyleoSettings) {
+    if (galyleoSettings && debugMode) {
       if (galyleoSettings.get('debug').composite as boolean) {
         return debugURL;
       }
