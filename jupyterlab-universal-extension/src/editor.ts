@@ -6,7 +6,10 @@ import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
 import { PLUGIN_ID } from './extension';
 // import { baseURL } from './constants';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import {
+  ISettingRegistry,
+  ISchemaValidator
+} from '@jupyterlab/settingregistry';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
@@ -113,7 +116,12 @@ export class GalyleoEditor extends Widget {
       ISettingRegistry.ISettings
     >(<unknown>undefined);
     if (this._settings) {
-      galyleoSettings = await this._settings.load(PLUGIN_ID);
+      try {
+        galyleoSettings = await this._settings.load(PLUGIN_ID);
+      } catch (error) {
+        galyleoSettings = <ISettingRegistry.ISettings>(<unknown>undefined);
+      }
+
       languagePreference = await this._settings.load(
         '@jupyterlab/translation-extension:plugin'
       );
