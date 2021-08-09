@@ -9,7 +9,7 @@
     "jupyterlab-extension"
   ],
   "license": "BSD-3-Clause",
-  "author": "Robin Schreiber",
+  "author": "Robin Schreiber and Rick McGeer",
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
     "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
