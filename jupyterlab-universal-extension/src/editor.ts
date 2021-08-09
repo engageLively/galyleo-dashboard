@@ -6,10 +6,7 @@ import { DocumentRegistry, DocumentWidget } from '@jupyterlab/docregistry';
 import { GalyleoModel } from './extension';
 import { PLUGIN_ID } from './extension';
 // import { baseURL } from './constants';
-import {
-  ISettingRegistry,
-  ISchemaValidator
-} from '@jupyterlab/settingregistry';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 export class GalyleoDocument extends DocumentWidget<
   GalyleoEditor,
