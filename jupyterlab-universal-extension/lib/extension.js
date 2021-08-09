@@ -157,7 +157,8 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
      */
     createNewWidget(context) {
         const content = new editor_1.GalyleoEditor({
-            context: context, settings: this._settings
+            context: context,
+            settings: this._settings
         });
         // this._documentManager.autosave = false;
         this._communicationsManager.addEditor(content);
@@ -306,9 +307,7 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
         }
     };
     mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
-    mainMenu.helpMenu.addGroup([
-        helpCommand
-    ]);
+    mainMenu.helpMenu.addGroup([helpCommand]);
     // Add the Galyleo Menu to the main menu
     const menu = new widgets_1.Menu({ commands: app.commands });
     menu.title.label = 'Galyleo';
@@ -367,11 +366,14 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
             const name = evt.data.name;
             const url = examples[name.trim()];
             if (url) {
-                app.commands.execute("galyeo-editor:sample-dashboard", { url: url });
+                app.commands.execute('galyeo-editor:sample-dashboard', { url: url });
             }
         },
         'galyleo:openReference': (evt) => {
-            app.commands.execute("help:open", { url: 'https://galyleo-user-docs.readthedocs.io/', 'text': 'Galyleo Reference' });
+            app.commands.execute('help:open', {
+                url: 'https://galyleo-user-docs.readthedocs.io/',
+                text: 'Galyleo Reference'
+            });
         }
     };
     window.addEventListener('message', evt => {
@@ -387,7 +389,7 @@ exports.PLUGIN_ID = '@jupyterlab/lively-universal-extension:galyleo-settings';
  * @private
  */
 const extension = {
-    id: '@jupyterlab/lively-universal-extension:galyleo-settings',
+    id: exports.PLUGIN_ID,
     autoStart: true,
     requires: [
         docmanager_1.IDocumentManager,

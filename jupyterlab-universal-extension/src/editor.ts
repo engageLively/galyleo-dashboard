@@ -13,7 +13,7 @@ export class GalyleoDocument extends DocumentWidget<
   GalyleoModel
 > {}
 
-// overwritten post-compile and pre-deploy
+// overwritten post-compile and pre-deploy.  DO NOT MODIFY IN THIS CODE!  See make.sh in the directory above
 const debugMode = false;
 
 export class GalyleoEditor extends Widget {
