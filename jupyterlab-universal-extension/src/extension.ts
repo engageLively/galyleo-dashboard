@@ -233,7 +233,7 @@ export const galyleoIcon = new LabIcon({
 });
 /**
  *
- * Activates the ToC extension.
+ * Activates the Galyleo extension.
  *
  * @private
  * @param app - Jupyter application
@@ -247,7 +247,7 @@ export const galyleoIcon = new LabIcon({
  * @returns table of contents registry
  */
 
-function activateTOC(
+function activateGalyleo(
   app: JupyterFrontEnd,
   docmanager: IDocumentManager,
   editorTracker: IEditorTracker,
@@ -517,7 +517,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     ITranslator,
     ISettingRegistry
   ],
-  activate: activateTOC
+  activate: activateGalyleo
 };
 
 /**
