@@ -27,8 +27,8 @@ import { Contents } from '@jupyterlab/services';
 import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
 import galyleoSvgstr from '../style/engageLively.svg';
 import { CodeEditor } from '@jupyterlab/codeeditor';
-import { JSONValue } from '@phosphor/coreutils';
-import { Signal } from '@phosphor/signaling';
+import { JSONValue } from '@lumino/coreutils';
+import { Signal } from '@lumino/signaling';
 import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
 import { GalyleoCommunicationsManager } from './manager';
