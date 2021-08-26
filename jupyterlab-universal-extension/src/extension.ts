@@ -33,6 +33,7 @@ import { IModelDB } from '@jupyterlab/observables';
 import { UUID } from '@lumino/coreutils';
 import { GalyleoCommunicationsManager } from './manager';
 import { Menu } from '@lumino/widgets';
+import * as models from '@jupyterlab/shared-models';
 import {
   nullTranslator,
   ITranslator,
@@ -44,6 +45,7 @@ export class GalyleoModel extends CodeEditor.Model
   implements DocumentRegistry.ICodeModel {
   contentChanged: any;
   stateChanged: any;
+  sharedModel: models.ISharedFile;
 
   readOnly = false;
   // we dont need those
