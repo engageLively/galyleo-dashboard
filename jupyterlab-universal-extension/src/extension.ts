@@ -110,9 +110,9 @@ export class GalyleoModelFactory extends TextModelFactory {
    * #### Notes
    * This is a read-only property.
    */
-  /* get name() {
+  get name() {
     return 'galyleo';
-  } */
+  }
 
   /**
    * The type of the file.
@@ -120,20 +120,18 @@ export class GalyleoModelFactory extends TextModelFactory {
    * #### Notes
    * This is a read-only property.
    */
-  /* get contentType(): Contents.ContentType {
+  get contentType(): Contents.ContentType {
     return 'file';
   }
-  */
 
   /**
    * The format of the file.
    *
    * This is a read-only property.
    */
-  /* get fileFormat(): Contents.FileFormat {
+  get fileFormat(): Contents.FileFormat {
     return 'text';
   }
-  */
 
   createNew(languagePreference?: string | undefined, modelDb?: IModelDB) {
     return new GalyleoModel();
