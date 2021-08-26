@@ -23,7 +23,7 @@ import {
   DocumentRegistry,
   ABCWidgetFactory
 } from '@jupyterlab/docregistry';
-// import { Contents } from '@jupyterlab/services';
+import { Contents } from '@jupyterlab/services';
 import { LabIcon } from '@jupyterlab/ui-components'; // WTF???
 import galyleoSvgstr from '../style/engageLively.svg';
 import { CodeEditor } from '@jupyterlab/codeeditor';
