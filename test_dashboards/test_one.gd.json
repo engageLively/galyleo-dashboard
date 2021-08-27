@@ -1,0 +1,158 @@
+{
+    
+  "fill": {
+    "r": 0.1607843137254902,
+    "g": 0.5019607843137255,
+    "b": 0.7254901960784313,
+    "a": 1
+  },
+  "morphs": [
+    
+    {
+      "type": "Image",
+      "name": "anImage",
+      "morphIndex": 2,
+      "morphicProperties": {
+        "rotation": 0,
+        "scale": 1,
+        "clipMode": "visible",
+        "opacity": 1,
+        "position": {
+          "x": 678.040523031158,
+          "y": 167.80912798656618
+        },
+        "extent": {
+          "x": 153.01613101079494,
+          "y": 194.904296875
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 0
+        },
+        "border": {
+          "style": {
+            "top": "solid",
+            "left": "solid",
+            "bottom": "solid",
+            "right": "solid"
+          },
+          "width": {
+            "left": 1,
+            "right": 1,
+            "top": 1,
+            "bottom": 1
+          },
+          "color": {
+            "top": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "left": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "right": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "bottom": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            }
+          },
+          "borderRadius": {
+            "top": 0,
+            "bottom": 0,
+            "right": 0,
+            "left": 0
+          }
+        }
+      },
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Florence_Nightingale._Coloured_lithograph._Wellcome_V0006579.jpg/800px-Florence_Nightingale._Coloured_lithograph._Wellcome_V0006579.jpg"
+    },
+    {
+      "type": "Image",
+      "name": "anImage",
+      "morphIndex": 3,
+      "morphicProperties": {
+        "rotation": 0,
+        "scale": 1,
+        "clipMode": "visible",
+        "opacity": 1,
+        "position": {
+          "x": 638.1640625,
+          "y": 379.8455354572693
+        },
+        "extent": {
+          "x": 1243.119140625,
+          "y": 1232.95578002929688
+        },
+        "fill": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 0
+        },
+        "border": {
+          "style": {
+            "top": "solid",
+            "left": "solid",
+            "bottom": "solid",
+            "right": "solid"
+          },
+          "width": {
+            "left": 1,
+            "right": 1,
+            "top": 1,
+            "bottom": 1
+          },
+          "color": {
+            "top": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "left": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "right": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            },
+            "bottom": {
+              "r": 0.09019607843137255,
+              "g": 0.6274509803921569,
+              "b": 0.984313725490196,
+              "a": 1
+            }
+          },
+          "borderRadius": {
+            "top": 0,
+            "bottom": 0,
+            "right": 0,
+            "left": 0
+          }
+        }
+      },
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Nightingale-mortality.jpg/1920px-Nightingale-mortality.jpg"
+    },
+    
+  ],
+  "numMorphs": 2
+}
