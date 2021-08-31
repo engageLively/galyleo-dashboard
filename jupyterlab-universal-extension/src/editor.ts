@@ -106,6 +106,8 @@ export class GalyleoEditor extends Widget {
       'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?';
     const debugURL =
       'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
+    const debugJP =
+      'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
     let galyleoSettings: ISettingRegistry.ISettings = <
       ISettingRegistry.ISettings
     >(<unknown>undefined);
@@ -124,18 +126,33 @@ export class GalyleoEditor extends Widget {
       );
     }
 
+    let preference: string = 'en';
+    let debug: boolean = false;
+
     if (galyleoSettings && debugMode) {
       if (galyleoSettings.get('debug').composite as boolean) {
-        return debugURL;
+        debug = true;
       }
     }
     if (languagePreference) {
-      const preference = languagePreference.get('locale').composite as string;
+      preference = languagePreference.get('locale').composite as string;
       if (preference == 'ja_JP') {
         return jp;
       }
     }
-    return normal;
+    if (debug) {
+      if (preference == 'ja_JP') {
+        return debugJP;
+      } else {
+        return debugURL;
+      }
+    } else {
+      if (preference == 'ja_JP') {
+        return jp;
+      } else {
+        return normal;
+      }
+    }
   }
 
   async _render() {
