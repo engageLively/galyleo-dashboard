@@ -136,9 +136,6 @@ export class GalyleoEditor extends Widget {
     }
     if (languagePreference) {
       preference = languagePreference.get('locale').composite as string;
-      if (preference == 'ja_JP') {
-        return jp;
-      }
     }
     if (debug) {
       if (preference == 'ja_JP') {
