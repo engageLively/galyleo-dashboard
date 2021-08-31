@@ -107,7 +107,7 @@ export class GalyleoEditor extends Widget {
     const debugURL =
       'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
     const debugJP =
-      'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
+      'https://matt.engagelively.com/worlds/load?name=Dashboard%20Studio%20Development%E3%80%80JP&';
     let galyleoSettings: ISettingRegistry.ISettings = <
       ISettingRegistry.ISettings
     >(<unknown>undefined);
