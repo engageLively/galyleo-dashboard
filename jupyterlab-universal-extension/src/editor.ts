@@ -100,14 +100,6 @@ export class GalyleoEditor extends Widget {
   }
 
   async _baseUrl(): Promise<string> {
-    const normal =
-      'https://galyleobeta.engageLively.com/users/rick/published/dsd/index.html?';
-    const jp =
-      'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?';
-    const debugURL =
-      'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&';
-    const debugJP =
-      'https://matt.engagelively.com/worlds/load?name=Dashboard%20Studio%20Development%E3%80%80JP&';
     let galyleoSettings: ISettingRegistry.ISettings = <
       ISettingRegistry.ISettings
     >(<unknown>undefined);
@@ -126,30 +118,57 @@ export class GalyleoEditor extends Widget {
       );
     }
 
-    let preference: string = 'en';
-    let debug: boolean = false;
+    type languagePreferenceType = {
+      en: string;
+      ja_JP: string;
+    };
+
+    type modeType = {
+      deploy: languagePreferenceType;
+      beta: languagePreferenceType;
+      debug: languagePreferenceType;
+    };
+
+    // Set up the defaults for language and mode
+
+    let preference: keyof languagePreferenceType = 'en';
+    let mode: keyof modeType = 'deploy';
+
+    // URLS by language and mode
+
+    const urls: modeType = {
+      deploy: {
+        en:
+          'https://galyleobeta.engageLively.com/users/rick/published/dsd/index.html?',
+        ja_JP:
+          'https://galyleobeta.engageLively.com/users/rick/published/dsd-jp/index.html?'
+      },
+      beta: {
+        en:
+          'https://matt.engageLively.com/users/rick/published/dsd/index.html?',
+        ja_JP:
+          'https://matt.engageLively.com/users/rick/published/dsd-jp/index.html?'
+      },
+      debug: {
+        en:
+          'https://matt.engageLively.com/worlds/load?name=Dashboard%20Studio%20Development&',
+        ja_JP:
+          'https://matt.engagelively.com/worlds/load?name=Dashboard%20Studio%20Development%E3%80%80JP&'
+      }
+    };
+
+    // read any set values
 
     if (galyleoSettings && debugMode) {
-      if (galyleoSettings.get('debug').composite as boolean) {
-        debug = true;
+      if (galyleoSettings.get('mode').composite as string) {
+        mode = galyleoSettings.get('mode').composite as keyof modeType;
       }
     }
     if (languagePreference) {
-      preference = languagePreference.get('locale').composite as string;
+      preference = languagePreference.get('locale')
+        .composite as keyof languagePreferenceType;
     }
-    if (debug) {
-      if (preference == 'ja_JP') {
-        return debugJP;
-      } else {
-        return debugURL;
-      }
-    } else {
-      if (preference == 'ja_JP') {
-        return jp;
-      } else {
-        return normal;
-      }
-    }
+    return urls[mode][preference];
   }
 
   async _render() {
