@@ -7,7 +7,7 @@
       "type": "string",
       "title": "Mode",
       "description": "If debug, use the debug dashboard; if beta, use the beta  dashboard; if deploy (default) use the deployment dashboard",
-      "default": false
+      "default": "deploy"
     }
   }
 }
