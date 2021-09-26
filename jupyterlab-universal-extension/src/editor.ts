@@ -43,6 +43,10 @@ export class GalyleoEditor extends Widget {
     );
   }
 
+  get model() {
+    return this._context.model;
+  }
+
   onAfterShow() {
     // fix the labs in the scene that have been update while hidden
     this._iframe.contentWindow?.postMessage(
@@ -190,6 +194,10 @@ export class GalyleoEditor extends Widget {
     const baseURL = await this._baseUrl();
     this._iframe.src = `${baseURL}dashboard_file=${filePath}&session=${sessionId}&inJupyterLab=true&user=${user}`;
     // wait for session to load
+  }
+
+  setOption(key: any, value: any): void {
+    // do nothingß
   }
 }
 
