@@ -192,6 +192,13 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
           evt.data.dashboardFilePath
         );
         doc.content.loadDashboard(doc.context.model.value.text); // load the dashboard
+      },
+      'galyleo:requestSave': (evt: MessageEvent) => {
+        // the dashboard uses this to request a save
+        const doc: GalyleoDocument = this._getDocumentForFilePath(
+          evt.data.dashboardFilePath
+        );
+        doc.content.requestSave(evt.data.dashboardFilePath);
       }
     };
     window.addEventListener('message', evt => {
