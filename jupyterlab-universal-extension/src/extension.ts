@@ -193,12 +193,12 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
         );
         doc.content.loadDashboard(doc.context.model.value.text); // load the dashboard
       },
-      'galyleo:requestSave': (evt: MessageEvent) => {
+      'galyleo:requestSave': async (evt: MessageEvent) => {
         // the dashboard uses this to request a save
         const doc: GalyleoDocument = this._getDocumentForFilePath(
           evt.data.dashboardFilePath
         );
-        doc.content.requestSave(evt.data.dashboardFilePath);
+        await doc.content.requestSave(evt.data.dashboardFilePath);
       }
     };
     window.addEventListener('message', evt => {
@@ -472,7 +472,8 @@ function activateGalyleo(
   type CommandHandler =
     | 'galyleo:newDashboard'
     | 'galyleo:openExample'
-    | 'galyleo:openReference';
+    | 'galyleo:openReference'
+    | 'galyleo:requestSave';
 
   const messageHandlers = {
     'galyleo:newDashboard': (evt: MessageEvent) => {

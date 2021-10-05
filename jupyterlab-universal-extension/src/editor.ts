@@ -60,7 +60,9 @@ export class GalyleoEditor extends Widget {
   }
 
   completeSave() {
-    this._completeSave(true);
+    if (this._completeSave) {
+      this._completeSave(true);
+    }
   }
 
   async requestSave(path: string) {
