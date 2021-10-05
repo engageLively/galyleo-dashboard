@@ -472,8 +472,7 @@ function activateGalyleo(
   type CommandHandler =
     | 'galyleo:newDashboard'
     | 'galyleo:openExample'
-    | 'galyleo:openReference'
-    | 'galyleo:requestSave';
+    | 'galyleo:openReference';
 
   const messageHandlers = {
     'galyleo:newDashboard': (evt: MessageEvent) => {
