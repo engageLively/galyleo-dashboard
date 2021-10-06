@@ -199,7 +199,8 @@ export class GalyleoStudioFactory extends ABCWidgetFactory<
         const doc: GalyleoDocument = this._getDocumentForFilePath(
           evt.data.dashboardFilePath
         );
-        await doc.content.requestSave(evt.data.dashboardFilePath);
+        // await doc.content.requestSave(evt.data.dashboardFilePath);
+        await doc.context.save();
       }
     };
     window.addEventListener('message', evt => {
