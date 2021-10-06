@@ -141,7 +141,8 @@ export class GalyleoModelFactory extends TextModelFactory {
 declare type StudioHandler =
   | 'galyleo:writeFile'
   | 'galyleo:setDirty'
-  | 'galyleo:ready';
+  | 'galyleo:ready'
+  | 'galyleo:requestSave';
 
 namespace GalyleoStudioFactory {
   export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
