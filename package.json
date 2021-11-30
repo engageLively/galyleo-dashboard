@@ -1,0 +1,5 @@
+{
+  "name": "galyleo-dashboard",
+  "version": "0.1.0",
+  "main": "studio/index.js"
+}
