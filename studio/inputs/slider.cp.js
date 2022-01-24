@@ -1,8 +1,10 @@
 import { Morph } from 'lively.morphic/morph.js';
-import { pt } from 'lively.graphics/index.js';
+import { pt, rect, Color } from 'lively.graphics/index.js';
 import { signal } from 'lively.bindings/index.js';
+import { component, part } from 'lively.morphic/components/core.js';
+import { Label, TilingLayout, ShadowObject, InputLine, Icon } from 'lively.morphic';
 
-export class Slider extends Morph {
+export class SliderMorph extends Morph {
   /*
   ** A Slider with a knob to set the value.
   ** properties:
@@ -24,7 +26,7 @@ export class Slider extends Morph {
         // Then set the knob position to the right position for this value
         // This is primarily set from the text inputs.
         set (aValue) {
-          if (aValue == this.value) {
+          if (aValue === this.value) {
             return;
           }
           aValue = this._normalizeValue_(aValue);
@@ -275,7 +277,7 @@ class SliderKnob extends Morph {
   }
 }
 
-class SliderWithValue extends Morph {
+class SliderWithValueMorph extends Morph {
   // The only property is a signal which shows the value has changed.  This
   // is connected to the valueChanged property in the contained slider as
   // both a convenience and to permit code using this to access the top-level
@@ -315,7 +317,7 @@ class SliderWithValue extends Morph {
   }
 }
 
-class DoubleSlider extends Morph {
+class DoubleSliderMorph extends Morph {
   /*
   ** A Double Slider with knobs on the max and min.
   ** properties:
@@ -340,8 +342,8 @@ class DoubleSlider extends Morph {
         set (aRange) {
           let minVal = this._normalizeValue_(aRange.min);
           let maxVal = this._normalizeValue_(aRange.max);
-          if (maxVal == minVal) {
-            if (maxVal == this.maxValue) {
+          if (maxVal === minVal) {
+            if (maxVal === this.maxValue) {
               minVal = maxVal - this.increment;
             } else {
               maxVal = minVal + this.increment;
@@ -542,7 +544,7 @@ class DoubleSliderKnob extends Morph {
   }
 }
 
-class DoubleSliderWithValues extends Morph {
+class DoubleSliderWithValuesMorph extends Morph {
   // The only property is a signal which shows the range has changed.  This
   // is connected to the rangeChanged property in the contained slider as
   // both a convenience and to permit code using this to access the top-level
@@ -587,3 +589,188 @@ class DoubleSliderWithValues extends Morph {
     this.getSubmorphNamed('doubleSlider').range = range;
   }
 }
+
+const IncrementButton = component({
+  type: Label,
+  name: 'increment button',
+  fontColor: Color.rgb(151, 154, 154),
+  fontSize: 35,
+  nativeCursor: 'pointer',
+  position: pt(1328.8, 186.3),
+  textAndAttributes: Icon.textAttribute('caret-up')
+});
+
+const IncrementButtonClick = component(IncrementButton, {
+  name: 'increment button/click',
+  fontColor: Color.rgb(112, 123, 124)
+});
+
+const SliderValueLabel = component({
+  name: 'slider value label',
+  type: SliderInputLabel,
+  extent: pt(39.6, 94.4),
+  fill: Color.transparent,
+  layout: new TilingLayout({
+    align: 'center',
+    axis: 'column',
+    axisAlign: 'center',
+    orderByIndex: true,
+    wrapSubmorphs: false
+  }),
+  submorphs: [
+    part(IncrementButton, {
+      name: 'increment button',
+      master: { auto: IncrementButton, click: IncrementButtonClick }
+    }),
+    {
+      type: InputLine,
+      name: 'sliderValue',
+      borderWidth: 3,
+      borderRadius: 3,
+      borderColor: Color.gray,
+      extent: pt(35.3, 29.2),
+      fontSize: 13,
+      fontWeight: 'bold',
+      haloShadow: new ShadowObject({
+        blur: 6,
+        color: Color.fromLiteral({
+          a: 1,
+          b: 0.8588235294117647,
+          g: 0.596078431372549,
+          r: 0.20392156862745098
+        }),
+        distance: 0,
+        rotation: 45
+      }),
+      padding: rect(3, 3, 0, 0),
+      placeholder: 'Enter Value',
+      textAlign: 'center',
+      textAndAttributes: ['1', null]
+    },
+    part(IncrementButton, {
+      name: 'decrement button',
+      rotation: Math.PI,
+      master: { auto: IncrementButton, click: IncrementButtonClick }
+    })
+  ]
+});
+
+// part(Slider).openInWorld()
+const Slider = component({
+  type: SliderMorph,
+  name: 'slider',
+  acceptsDrops: false,
+  borderColor: Color.rgb(23, 160, 251),
+  draggable: true,
+  extent: pt(200, 30),
+  fill: Color.rgba(0, 0, 0, 0),
+  value: 68,
+  submorphs: [{
+    name: 'sliderCenter',
+    borderColor: Color.rgb(23, 160, 251),
+    borderRadius: 3,
+    extent: pt(200, 11.4),
+    fill: Color.rgb(127, 140, 141),
+    position: pt(0, 9),
+    reactsToPointer: false
+  }, {
+    type: SliderKnob,
+    name: 'knob',
+    borderColor: Color.rgb(23, 160, 251),
+    borderRadius: 35,
+    draggable: true,
+    extent: pt(29.7, 30.2),
+    fill: Color.rgb(66, 73, 73),
+    nativeCursor: 'grab',
+    position: pt(116.5, 0)
+  }]
+});
+
+// part(DoubleSlider).openInWorld()
+const DoubleSlider = component({
+  type: DoubleSliderMorph,
+  name: 'double slider',
+  borderColor: Color.rgb(23, 160, 251),
+  draggable: true,
+  extent: pt(200, 30),
+  fill: Color.rgba(0, 0, 0, 0),
+  range: {
+    max: 82,
+    min: 17
+  },
+  submorphs: [{
+    name: 'sliderCenter',
+    borderColor: Color.rgb(23, 160, 251),
+    borderRadius: 3,
+    extent: pt(200, 11.4),
+    fill: Color.rgb(127, 140, 141),
+    position: pt(0, 10.2),
+    reactsToPointer: false
+  }, {
+    type: DoubleSliderKnob,
+    name: 'minKnob',
+    borderColor: Color.rgb(23, 160, 251),
+    borderRadius: 35,
+    draggable: true,
+    extent: pt(29.7, 30.2),
+    fill: Color.rgb(66, 73, 73),
+    nativeCursor: 'grab',
+    position: pt(29,0)
+  }, {
+    type: DoubleSliderKnob,
+    name: 'maxKnob',
+    borderColor: Color.rgb(23, 160, 251),
+    borderRadius: 35,
+    draggable: true,
+    extent: pt(29.7, 30.2),
+    fill: Color.rgb(66, 73, 73),
+    nativeCursor: 'grab',
+    position: pt(139.6,0)
+  }, {
+    name: 'connector',
+    borderColor: Color.rgb(23, 160, 251),
+    extent: pt(110.7,12.3),
+    fill: Color.rgb(66, 73, 73),
+    position: pt(43.8,9),
+    reactsToPointer: false
+  }]
+});
+
+// SliderWithValue.openInWorld()
+const SliderWithValue = component({
+  name: 'slider with value',
+  type: SliderWithValueMorph,
+  extent: pt(250, 100),
+  layout: new TilingLayout({
+    axisAlign: 'center',
+    orderByIndex: true,
+    spacing: 5,
+    wrapSubmorphs: false
+  }),
+  fill: Color.transparent,
+  submorphs: [
+    part(Slider, { name: 'slider' }), part(SliderValueLabel, { name: 'input' })
+  ]
+});
+
+// DoubleSliderWithValues.openInWorld()
+const DoubleSliderWithValues = component({
+  name: 'double slider with values',
+  type: DoubleSliderWithValuesMorph,
+  extent: pt(295, 100),
+  layout: new TilingLayout({
+    axisAlign: 'center',
+    orderByIndex: true,
+    spacing: 5,
+    wrapSubmorphs: false
+  }),
+  fill: Color.transparent,
+  submorphs: [
+    part(SliderValueLabel, { name: 'min input' }),
+    part(DoubleSlider, { name: 'double slider' }),
+    part(SliderValueLabel, { name: 'max input' })
+  ]
+});
+
+// SliderValueLabel.openInWorld()
+export { SliderValueLabel, Slider, DoubleSlider, SliderWithValue, DoubleSliderWithValues };
