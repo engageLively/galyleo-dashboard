@@ -1,10 +1,10 @@
 import { Morph } from 'lively.morphic/morph.js';
 import { pt, rect, Color } from 'lively.graphics/index.js';
 import { signal } from 'lively.bindings/index.js';
-import { component, part } from 'lively.morphic/components/core.js';
+import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { Label, TilingLayout, ShadowObject, InputLine, Icon } from 'lively.morphic';
 
-export class SliderMorph extends Morph {
+export class SliderModel extends ViewModel {
   /*
   ** A Slider with a knob to set the value.
   ** properties:
@@ -31,9 +31,9 @@ export class SliderMorph extends Morph {
           }
           aValue = this._normalizeValue_(aValue);
           const xPos = this._xPosForValue_(aValue);
-          this.whenRendered().then(_ => {
+          if (this.view) {
             this.knob.position = pt(xPos, 0);
-          });
+          }
         },
         // read the  values from the position of the knob.  Make sure
         // that the knob exists (i.e., is rendered) before calling.
@@ -44,6 +44,17 @@ export class SliderMorph extends Morph {
             return this._normalizeValue_((this.maxValue + this.minValue) / 2);
           }
         }
+      },
+      bindings: {
+        get () {
+          return [
+            { target: 'knob', signal: 'position', handler: 'signalValueChanged' },
+            { signal: 'onMouseDown', handler: '_doEvt_', override: true },
+            { signal: 'onDragStart', handler: '_doEvt_', override: true },
+            { signal: 'onDragEnd', handler: '_doEvt_', override: true },
+            { signal: 'onDrag', handler: '_doEvt_', override: true }
+          ];
+        }
       }
     };
   }
@@ -51,7 +62,7 @@ export class SliderMorph extends Morph {
   // convenience to get the knob
 
   get knob () {
-    return this.getSubmorphNamed('knob');
+    return this.ui.knob;
   }
 
   get minPos () {
@@ -70,7 +81,7 @@ export class SliderMorph extends Morph {
   // right-hand edge at the end of the slider.
 
   get maxPos () {
-    return this.extent.x - this.knob.extent.x;
+    return this.view.extent.x - this.knob.extent.x;
   }
 
   // make sure a value is an integer number of increments, and it's between the
@@ -145,7 +156,7 @@ export class SliderMorph extends Morph {
   // A utility called by the drag routines, below
 
   _normalizePosition_ (x) {
-    const normalX = Math.max(this.minPos, Math.min(this.maxPos, x - this.getSubmorphNamed('knob').width / 2));
+    const normalX = Math.max(this.minPos, Math.min(this.maxPos, x - this.knob.width / 2));
     this.knob.position = pt(normalX, 0);
   }
 
@@ -153,24 +164,8 @@ export class SliderMorph extends Morph {
   // of this is just to move the knob in response to mouse actions.  When the
   // user drags the slider, he thinks he's dragging the knob.
 
-  _doEvt_ (evt) {
-    this._normalizePosition_(evt.positionIn(this).x);
-  }
-
-  onMouseDown (evt) {
-    this._doEvt_(evt);
-  }
-
-  onDragStart (evt) {
-    this._doEvt_(evt);
-  }
-
-  onDragEnd (evt) {
-    this._doEvt_(evt);
-  }
-
-  onDrag (evt) {
-    this._doEvt_(evt);
+  _doEvt_ ($super, evt) {
+    this._normalizePosition_(evt.positionIn(this.view).x);
   }
 }
 
@@ -277,47 +272,7 @@ class SliderKnob extends Morph {
   }
 }
 
-class SliderWithValueMorph extends Morph {
-  // The only property is a signal which shows the value has changed.  This
-  // is connected to the valueChanged property in the contained slider as
-  // both a convenience and to permit code using this to access the top-level
-  // valueChanged signal
-  static get properties () {
-    return {
-      valueChanged: { derived: true, isSignal: true, readOnly: true }
-    };
-  }
-
-  // fire the valueChanged signal.  This method should only be
-  // called by the connection to the contained valueChanged signal
-  signalValueChanged () {
-    signal(this, 'valueChanged');
-  }
-
-  // Get the underlying slider's value.  A convenience method for
-  // code which uses this
-  get value () {
-    return this.getSubmorphNamed('slider').value;
-  }
-
-  // A wrapper around Slider to update and read the value from the
-  // input ranges.  This mostly just a couple of connection targets.
-  // updateValue.  This is called when the knob changes position.
-  // connected to the knob position.
-  // Just displays the value of the knob in the  input field
-  updateValue () {
-    this.get('slider label').value = this.getSubmorphNamed('slider').value;
-  }
-
-  // setSliderValue.  This is called when the  inputs is accepted.
-  // onInput from the input morph is hardcoded to this.  Sets the value
-  // of the underlying Slider.
-  setSliderValue () {
-    this.getSubmorphNamed('slider').value = this.get('slider label').value;
-  }
-}
-
-class DoubleSliderMorph extends Morph {
+class DoubleSliderModel extends ViewModel {
   /*
   ** A Double Slider with knobs on the max and min.
   ** properties:
@@ -334,7 +289,7 @@ class DoubleSliderMorph extends Morph {
       maxValue: { defaultValue: 100 },
       increment: { defaultValue: 1 },
       range: {
-        after: ['submorphs', 'minValue', 'maxValue', 'increment'],
+        after: ['minValue', 'maxValue', 'increment'],
         // set the range to the input range.  First, make sure the values are OK,
         // and range.min < range.max by at least increment.  Then set the knob
         // positions to the right positions for this value.  This is primarily
@@ -349,43 +304,56 @@ class DoubleSliderMorph extends Morph {
               maxVal = minVal + this.increment;
             }
           }
-          this.whenRendered().then(_ => {
-            this.minKnob.position = pt(this._xForValue_(minVal), 0);
-            this.maxKnob.position = pt(this._xForValue_(maxVal), 0);
+          if (this.view) {
+            this.ui.minKnob.position = pt(this._xForValue_(minVal), 0);
+            this.ui.maxKnob.position = pt(this._xForValue_(maxVal), 0);
             this.updateConnector();
-          });
+          }
         },
+        get () {
+          return this.view
+            ? {
+                min: this.valueForX(this.ui.minKnob.position.x),
+                max: this.valueForX(this.ui.maxKnob.position.x)
+              }
+            : { min: this.minValue, max: this.maxValue };
+        }
         // read the range values from the positions of the knobs.  Make sure
         // that the minKnob exists (i.e., is rendered) before calling.
+      },
+      expose: { get () { return ['positionRanges', 'updateConnector']; } },
+      bindings: {
         get () {
-          if (this.minKnob) {
-            return {
-              min: this.valueForX(this.minKnob.position.x),
-              max: this.valueForX(this.maxKnob.position.x)
-            };
-          }
+          return [
+            { target: 'max knob', signal: 'position', handler: 'signalRangeChanged' },
+            { target: 'min knob', signal: 'position', handler: 'signalRangeChanged' },
+            { signal: 'onDragStart', handler: '_startDraggingClosestHandle', override: true },
+            { signal: 'onDragEnd', handler: '_stopDraggingHandle', override: true },
+            { signal: 'onDrag', handler: '_dragSelectedKnob', override: true }
+          ];
         }
-
       }
     };
   }
 
+  onRefresh () {
+    this.ui.minKnob.position = pt(this._xForValue_(this.range.min), 0);
+    this.ui.maxKnob.position = pt(this._xForValue_(this.range.max), 0);
+    this.updateConnector();
+  }
+
   updateConnector () {
-    const conn = this.getSubmorphNamed('connector');
-    conn.width = this.maxKnob.center.subPt(this.minKnob.center).x;
-    conn.leftCenter = this.minKnob.center;
+    const { connector: conn, maxKnob, minKnob } = this.ui;
+    conn.width = maxKnob.center.subPt(minKnob.center).x;
+    conn.left = minKnob.center.x;
   }
 
-  // convenience to get the right-hand knob
-
-  get maxKnob () {
-    return this.getSubmorphNamed('maxKnob');
-  }
-
-  // convenience to get the left-hand knob
-
-  get minKnob () {
-    return this.getSubmorphNamed('minKnob');
+  confirm () {
+    const { minKnob, maxKnob } = this.ui;
+    this.range = {
+      min: this.valueForX(minKnob.position.x),
+      max: this.valueForX(maxKnob.position.x)
+    };
   }
 
   // Show that the range has changed.  Since any range change involves moving the knobs, this
@@ -401,17 +369,18 @@ class DoubleSliderMorph extends Morph {
   // right-hand edge at the end of the slider.
 
   get maxPosition () {
-    return this.extent.x - this.maxKnob.width;
+    return this.view.extent.x - this.ui.maxKnob.width;
   }
 
   // Get the range of possible positions for each knob.  the minKnob has its right
   // edge adjacent to the left edge of the maxKnob
 
   get positionRanges () {
+    const { maxKnob, minKnob } = this.ui;
     return {
-      minKnob: { min: 0, max: this.maxKnob.position.x - this.minKnob.width },
-      maxKnob: {
-        min: this.minKnob.position.x + this.minKnob.width,
+      'min knob': { min: 0, max: maxKnob.position.x - minKnob.width },
+      'max knob': {
+        min: minKnob.position.x + minKnob.width,
         max: this.maxPosition
       }
     };
@@ -453,23 +422,27 @@ class DoubleSliderMorph extends Morph {
   // to get the true number, then make sure it lines up with the increments
 
   valueForX (anX) {
-    //
     return this._normalizeValue_(this._proportionalRange_(anX) * this._valueRange_ + this.minValue);
   }
 
-  _startDraggingClosestHandle (evt) {
-    if (evt.positionIn(this.minKnob).r() < evt.positionIn(this.maxKnob).r()) { this._draggedHandle = this.minKnob; } else { this._draggedHandle = this.maxKnob; }
-    // this._draggedHandle.center = evt.positionIn(this).withY(this.height / 2);
+  _startDraggingClosestHandle ($super, evt) {
+    const { minKnob, maxKnob } = this.ui;
+    if (evt.positionIn(minKnob).r() < evt.positionIn(maxKnob).r()) {
+      this._draggedHandle = minKnob;
+    } else {
+      this._draggedHandle = maxKnob;
+    }
   }
 
   _stopDraggingHandle () {
     this._draggedHandle = null;
   }
 
-  _dragSelectedKnob (evt) {
+  _dragSelectedKnob ($super, evt) {
     if (this._draggedHandle) {
       this._draggedHandle.onDrag(evt);
     }
+    this.confirm();
   }
 
   incrementMinValue () {
@@ -490,18 +463,6 @@ class DoubleSliderMorph extends Morph {
   decrementMaxValue () {
     const { min, max } = this.range;
     this.range = { min, max: max - 1 };
-  }
-
-  onDragStart (evt) {
-    this._startDraggingClosestHandle(evt);
-  }
-
-  onDragEnd (evt) {
-    this._stopDraggingHandle();
-  }
-
-  onDrag (evt) {
-    this._dragSelectedKnob(evt);
   }
 }
 
@@ -544,14 +505,116 @@ class DoubleSliderKnob extends Morph {
   }
 }
 
-class DoubleSliderWithValuesMorph extends Morph {
+class SliderWithValueModel extends ViewModel {
+  // The only property is a signal which shows the value has changed.  This
+  // is connected to the valueChanged property in the contained slider as
+  // both a convenience and to permit code using this to access the top-level
+  // valueChanged signal
+  static get properties () {
+    return {
+      valueChanged: { derived: true, isSignal: true, readOnly: true },
+      bindings: {
+        get () {
+          return [
+            { model: 'slider', signal: 'valueChanged', handler: 'signalValueChanged' },
+            { model: 'slider', signal: 'valueChanged', handler: 'updateValue' },
+            {
+              target: 'value input',
+              signal: 'decrement',
+              handler: () => {
+                this.models.slider.decrementValue(); 
+              }
+            },
+            {
+              target: 'value input',
+              signal: 'increment',
+              handler: () => {
+                this.models.slider.incrementValue();
+              }
+            }
+          ];
+        }
+      }
+    };
+  }
+
+  viewDidLoad () {
+    this.updateValue();
+  }
+
+  // fire the valueChanged signal.  This method should only be
+  // called by the connection to the contained valueChanged signal
+  signalValueChanged () {
+    signal(this, 'valueChanged');
+  }
+
+  // Get the underlying slider's value.  A convenience method for
+  // code which uses this
+  get value () {
+    return this.models.slider.value;
+  }
+
+  // A wrapper around Slider to update and read the value from the
+  // input ranges.  This mostly just a couple of connection targets.
+  // updateValue.  This is called when the knob changes position.
+  // connected to the knob position.
+  // Just displays the value of the knob in the  input field
+  updateValue () {
+    this.ui.valueInput.value = this.value;
+  }
+
+  // setSliderValue.  This is called when the  inputs is accepted.
+  // onInput from the input morph is hardcoded to this.  Sets the value
+  // of the underlying Slider.
+  setSliderValue () {
+    this.models.slider.value = this.ui.valueInput.value;
+  }
+}
+
+class DoubleSliderWithValuesModel extends ViewModel {
   // The only property is a signal which shows the range has changed.  This
   // is connected to the rangeChanged property in the contained slider as
   // both a convenience and to permit code using this to access the top-level
   // rangeChanged signal
   static get properties () {
     return {
-      rangeChanged: { derived: true, isSignal: true, readOnly: true }
+      rangeChanged: { derived: true, isSignal: true, readOnly: true },
+      bindings: {
+        get () {
+          return [
+            { model: 'double slider', signal: 'rangeChanged', handler: 'signalRangeChanged' },
+            { model: 'double slider', signal: 'rangeChanged', handler: 'displayRange' },
+            {
+              target: 'min input',
+              signal: 'decrement',
+              handler: () => {
+                this.models.doubleSlider.decrementMinValue(); 
+              }
+            },
+            {
+              target: 'min input',
+              signal: 'increment',
+              handler: () => {
+                this.models.doubleSlider.incrementMinValue();
+              }
+            },
+            {
+              target: 'max input',
+              signal: 'decrement',
+              handler: () => {
+                this.models.doubleSlider.decrementMaxValue();
+              }
+            },
+            {
+              target: 'max input',
+              signal: 'increment',
+              handler: () => {
+                this.models.doubleSlider.incrementMaxValue();
+              }
+            }
+          ];
+        }
+      }
     };
   }
 
@@ -564,7 +627,7 @@ class DoubleSliderWithValuesMorph extends Morph {
   // A convenience method to get the range of the underlying slider, so
   // any user of this doesn't need to dig into the underlying morph
   get range () {
-    return this.getSubmorphNamed('doubleSlider').range;
+    return this.models.doubleSlider.range;
   }
 
   // A wrapper around DoubleSlider to update and read values from the
@@ -573,20 +636,23 @@ class DoubleSliderWithValuesMorph extends Morph {
   // connected to the knob positions.
   // Just displays the values of the knobs in the two input fields
   displayRange () {
-    const range = this.getSubmorphNamed('doubleSlider').range;
-    this.getSubmorphNamed('minInput').value = range.min;
-    this.getSubmorphNamed('maxInput').value = range.max;
+    const { doubleSlider } = this.models;
+    const { minInput, maxInput } = this.ui;
+    const range = doubleSlider.range;
+    minInput.value = range.min;
+    maxInput.value = range.max;
   }
 
   // setRange.  This is called when one of the two inputs is accepted.
   // onInput from each input morph is hardcoded to this.  Sets the range
   // of the underlying doubleSlider.
   setRange () {
+    const { minInput, maxInput } = this.ui;
     const range = {
-      min: this.getSubmorphNamed('minInput').value,
-      max: this.getSubmorphNamed('maxInput').value
+      min: minInput.value,
+      max: maxInput.value
     };
-    this.getSubmorphNamed('doubleSlider').range = range;
+    this.models.doubleSlider.range = range;
   }
 }
 
@@ -657,7 +723,7 @@ const SliderValueLabel = component({
 
 // part(Slider).openInWorld()
 const Slider = component({
-  type: SliderMorph,
+  defaultViewModel: SliderModel,
   name: 'slider',
   acceptsDrops: false,
   borderColor: Color.rgb(23, 160, 251),
@@ -666,7 +732,7 @@ const Slider = component({
   fill: Color.rgba(0, 0, 0, 0),
   value: 68,
   submorphs: [{
-    name: 'sliderCenter',
+    name: 'slider center',
     borderColor: Color.rgb(23, 160, 251),
     borderRadius: 3,
     extent: pt(200, 11.4),
@@ -688,18 +754,14 @@ const Slider = component({
 
 // part(DoubleSlider).openInWorld()
 const DoubleSlider = component({
-  type: DoubleSliderMorph,
+  defaultViewModel: DoubleSliderModel,
   name: 'double slider',
   borderColor: Color.rgb(23, 160, 251),
   draggable: true,
   extent: pt(200, 30),
   fill: Color.rgba(0, 0, 0, 0),
-  range: {
-    max: 82,
-    min: 17
-  },
   submorphs: [{
-    name: 'sliderCenter',
+    name: 'slider center',
     borderColor: Color.rgb(23, 160, 251),
     borderRadius: 3,
     extent: pt(200, 11.4),
@@ -708,38 +770,38 @@ const DoubleSlider = component({
     reactsToPointer: false
   }, {
     type: DoubleSliderKnob,
-    name: 'minKnob',
+    name: 'min knob',
     borderColor: Color.rgb(23, 160, 251),
     borderRadius: 35,
     draggable: true,
     extent: pt(29.7, 30.2),
     fill: Color.rgb(66, 73, 73),
     nativeCursor: 'grab',
-    position: pt(29,0)
+    position: pt(29, 0)
   }, {
     type: DoubleSliderKnob,
-    name: 'maxKnob',
+    name: 'max knob',
     borderColor: Color.rgb(23, 160, 251),
     borderRadius: 35,
     draggable: true,
     extent: pt(29.7, 30.2),
     fill: Color.rgb(66, 73, 73),
     nativeCursor: 'grab',
-    position: pt(139.6,0)
+    position: pt(139.6, 0)
   }, {
     name: 'connector',
     borderColor: Color.rgb(23, 160, 251),
-    extent: pt(110.7,12.3),
+    extent: pt(110.7, 12.3),
     fill: Color.rgb(66, 73, 73),
-    position: pt(43.8,9),
+    position: pt(43.8, 9),
     reactsToPointer: false
   }]
 });
 
-// SliderWithValue.openInWorld()
+// part(SliderWithValue).openInWorld()
 const SliderWithValue = component({
   name: 'slider with value',
-  type: SliderWithValueMorph,
+  defaultViewModel: SliderWithValueModel,
   extent: pt(250, 100),
   layout: new TilingLayout({
     axisAlign: 'center',
@@ -749,14 +811,15 @@ const SliderWithValue = component({
   }),
   fill: Color.transparent,
   submorphs: [
-    part(Slider, { name: 'slider' }), part(SliderValueLabel, { name: 'input' })
+    part(Slider, { name: 'slider' }), part(SliderValueLabel, { name: 'value input' })
   ]
 });
 
 // DoubleSliderWithValues.openInWorld()
+// part(DoubleSliderWithValues).openInWorld()
 const DoubleSliderWithValues = component({
   name: 'double slider with values',
-  type: DoubleSliderWithValuesMorph,
+  defaultViewModel: DoubleSliderWithValuesModel,
   extent: pt(295, 100),
   layout: new TilingLayout({
     axisAlign: 'center',
