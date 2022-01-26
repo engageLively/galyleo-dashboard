@@ -1,9 +1,13 @@
-import { Morph } from 'lively.morphic/morph.js';
-import { obj, string } from 'lively.lang/index.js';
-import { connect, noUpdate, once } from 'lively.bindings/index.js';
-import { resource } from 'lively.resources/src/helpers.js';
 
-export class BugReporter extends Morph {
+import { resource } from 'lively.resources/src/helpers.js';
+import { MenuBarButton, GalyleoWindow, PromptButton } from './shared.cp.js';
+import { GalyleoSearch } from './inputs/search.cp.js';
+import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
+import { Color, pt } from 'lively.graphics';
+import { VerticalLayout, TilingLayout, Text, Label } from 'lively.morphic';
+import { rect } from 'lively.graphics/geometry-2d.js';
+
+export class BugReporterModel extends ViewModel {
   /*
   ** A Bug Reporter.  Very simple: just bundles up the input fields and uses
   ** a POST call to report the bug and file a ticket.  No properties, just
@@ -41,7 +45,7 @@ export class BugReporter extends Morph {
     const user = this.getSubmorphNamed('user').textString;
     const file_path = this.getSubmorphNamed('file_path').textString;
     const message = this.getSubmorphNamed('message').textString;
-    if (message.length == 0) {
+    if (message.length === 0) {
       // no blank messages will be filed
       this.getSubmorphNamed('message').show();
     } else {
@@ -63,7 +67,128 @@ export class BugReporter extends Morph {
   }
 }
 
-export class TableLoader extends Morph {
+// BugReporter.openInWorld()
+const BugReporter = component(GalyleoWindow, {
+  defaultViewModel: BugReporterModel,
+  name: 'bug reporter',
+  extent: pt(415, 459.2),
+  submorphs: [{
+    name: 'window title',
+    textString: 'Report a Bug'
+  }, add({
+    name: 'contents wrapper',
+    layout: new TilingLayout({
+      axis: 'column',
+      axisAlign: 'center',
+      orderByIndex: true,
+      padding: rect(15, 15, 0, 0),
+      resizePolicies: [['header', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['user name input', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['file input', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['message', {
+        height: 'fill',
+        width: 'fill'
+      }], ['footer', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 13,
+      wrapSubmorphs: false
+    }),
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(414.3, 428.3),
+    fill: Color.rgba(215, 219, 221, 0),
+    submorphs: [
+      {
+        name: 'header',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(MenuBarButton, {
+            name: 'close button',
+            extent: pt(90, 35),
+            tooltip: 'Close this dialog without loading',
+            submorphs: [{
+              name: 'label', value: ['CLOSE', null]
+            }, {
+              name: 'icon',
+              extent: pt(14, 14),
+              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            }]
+          })
+        ]
+      },
+      part(GalyleoSearch, {
+        name: 'user name input',
+        placeholder: 'User name',
+        submorphs: [{
+          name: 'placeholder',
+          extent: pt(90, 28.8),
+          textAndAttributes: ['User name', null]
+        }] 
+      }),
+      part(GalyleoSearch, {
+        name: 'file input',
+        placeholder: 'Dashboard file',
+        submorphs: [{
+          name: 'placeholder',
+          extent: pt(114, 28.8),
+          textAndAttributes: ['Dashboard file', null]
+        }] 
+      }),
+      {
+        type: Label,
+        name: 'message label',
+        fontColor: Color.rgb(89, 89, 89),
+        fontWeight: 700,
+        fontSize: 15,
+        textString: 'Message' 
+      },
+      {
+        type: Text,
+        name: 'message',
+        clipMode: 'auto',
+        fill: Color.rgb(190, 190, 190),
+        borderRadius: 20,
+        extent: pt(318, 58.4),
+        fixedWidth: true,
+        fixedHeight: true 
+      },
+      {
+        name: 'footer',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(PromptButton, {
+            name: 'report button',
+            extent: pt(106.5, 30.9),
+            submorphs: [without('icon'), {
+              name: 'label',
+              textAndAttributes: ['Report', null]
+            }] 
+          })
+        ]
+      }
+    ]
+  })]
+});
+
+export class TableLoaderModel extends ViewModel {
   /* A very simple part that just consists of an input string and two buttons,
   ** where an URL is entered and then read and loaded.  The URL must reference
   ** a JSON structure which is a suitable argument to Google DataTable, see:
@@ -74,6 +199,24 @@ export class TableLoader extends Morph {
   ** https://developers.google.com/chart/interactive/docs/dev/gviz_api_lib
   ** The cancel button just invokes this.remove() with a hardcoded connection
   */
+
+  static get properties () {
+    return {
+      bindings: {
+        get () {
+          return [
+            { target: 'close button', signal: 'onMouseDown', handler: 'close' },
+            { target: 'load button', signal: 'onMouseDown', handler: 'loadURL' }
+          ];
+        }
+      }
+    };
+  }
+
+  // closes the prompt
+  close () {
+    this.view.remove();
+  }
 
   // initialize this with the  dashboard to call back.  This is called by D
   // ashboardControl.loadTable after this part has been created in that routine.
@@ -88,8 +231,8 @@ export class TableLoader extends Morph {
   // hardcoded connection.
 
   loadURL () {
-    const url = this.getSubmorphNamed('url');
-    if (url.input.length == 0) {
+    const url = this.ui.url;
+    if (url.input.length === 0) {
       url.indicateError('Please enter url to JSON file');
       return;
     }
@@ -97,3 +240,66 @@ export class TableLoader extends Morph {
     this.remove();
   }
 }
+
+const CloseButton = component(MenuBarButton, {
+  name: 'close button',
+  extent: pt(90, 35),
+  submorphs: [{
+    name: 'label', value: ['CLOSE', null]
+  }, {
+    name: 'icon',
+    extent: pt(14, 14),
+    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+  }]
+});
+
+// part(DataLoader).openInWorld()
+const DataLoader = component(GalyleoWindow, {
+  defaultViewModel: TableLoaderModel,
+  name: 'data loader',
+  extent: pt(340.5, 175.6),
+  submorphs: [{
+    name: 'window title',
+    textString: 'Load Data'
+  }, add({
+    name: 'table loader',
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(311, 135),
+    fill: Color.rgba(215, 219, 221, 0),
+    layout: new VerticalLayout({
+      align: 'right',
+      autoResize: true,
+      direction: 'topToBottom',
+      orderByIndex: true,
+      resizeSubmorphs: false,
+      spacing: 10
+    }),
+    submorphs: [
+      // fixme: the overridden props are not carried over
+      // part(CloseButton, {
+      //   name: 'cancel button',
+      //   tooltip: 'Close this dialog without loading'
+      // }),
+      part(MenuBarButton, {
+        name: 'close button',
+        extent: pt(90, 35),
+        tooltip: 'Close this dialog without loading',
+        submorphs: [{
+          name: 'label', value: ['CLOSE', null]
+        }, {
+          name: 'icon',
+          extent: pt(14, 14),
+          imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+        }]
+      }),
+      part(GalyleoSearch, { name: 'url', placeholder: 'Enter URL to datasource' }),
+      part(PromptButton, {
+        name: 'load button',
+        extent: pt(106.5, 30.9),
+        submorphs: [without('icon')] 
+      })]
+  })]
+});
+
+export { DataLoader, CloseButton, BugReporter };
