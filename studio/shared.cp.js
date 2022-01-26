@@ -1,10 +1,212 @@
-import { component, part } from 'lively.morphic/components/core.js';
+import { component, add, ViewModel, part } from 'lively.morphic/components/core.js';
 import { pt, LinearGradient, Color, rect } from 'lively.graphics';
-import { TilingLayout, ShadowObject, Image, Label, HorizontalLayout, Morph, Text } from 'lively.morphic';
+import { TilingLayout, Icon, VerticalLayout, ShadowObject, Image, Label, HorizontalLayout, Morph, Text } from 'lively.morphic';
 import { arr, obj, num } from 'lively.lang';
-import { MorphList } from 'lively.components';
+import { MorphList, DropDownListModel } from 'lively.components';
+import { connect, noUpdate } from 'lively.bindings';
+import { SystemList } from 'lively.ide/styling/shared.cp.js';
+import { DropDownList } from 'lively.components/list.cp.js';
 
-export default class GalyleoListMorph extends Morph {
+export class SelectableEntryModel extends ViewModel {
+  static get properties () {
+    return {
+      entryName: {
+        // the actual name this entry represents
+      },
+      entryList: {
+        // a reference to the list that manages this entry
+      },
+      orderMode: {
+        // wether or not the element can be reordered via dragging
+        defaultValue: false
+      },
+      isSelected: {
+        // wether or not the item is checked
+      },
+      bindings: {
+        get () {
+          return [];
+        }
+      }
+    };
+  }
+
+  onDrag (evt) {
+    const { absDragDelta } = evt.state;
+    this.shiftOrder(absDragDelta.y, evt);
+  }
+
+  onDragStart (evt) {
+    this.startShifting();
+  }
+
+  onDragEnd (evt) {
+    this.stopShifting();
+  }
+
+  toggleEdit () {
+    // do nothing since we are not editable
+  }
+
+  static wrap (entryName, opts) {
+    const entry = new SelectableEntry({
+      entryName,
+      master: SelectableEntry
+    });
+
+    entry.master.reconcileSubmorphs().then(async () => {
+      entry.master.applyIfNeeded(true);
+      entry.height = 32; // hard fix
+      Object.assign(entry, opts);
+    });
+
+    return { isListItem: true, morph: entry };
+  }
+
+  startShifting () {
+    this.entryList.startShiftingEntry(this);
+    this.master = SelectableEntryDragged;
+  }
+
+  stopShifting () {
+    this.master = SelectableEntry;
+    this.entryList.stopShifting();
+  }
+
+  shiftOrder (verticalOffset, evt) {
+    this.entryList.pushShiftedElementBy(verticalOffset, evt);
+  }
+
+  onRefresh () {
+    const { view, ui: { checkbox, entryName, dragControl } } = this;
+    view.draggable = this.orderMode;
+    view.nativeCursor = this.orderMode ? 'grab' : 'auto';
+    entryName.value = this.entryName;
+    dragControl.draggable = this.orderMode;
+    checkbox.master = this.isSelected ? CheckboxChecked : CheckboxUnchecked;
+    const updateElements = () => {
+      if (checkbox.isLayoutable !== !this.orderMode) {
+        checkbox.isLayoutable = checkbox.visible = !this.orderMode;
+      }
+      if (dragControl.isLayoutable !== !!this.orderMode) {
+        dragControl.isLayoutable = dragControl.visible = !!this.orderMode;
+      }
+    };
+    this.world()
+      ? view.withAnimationDo(updateElements, {
+        duration: 300
+      })
+      : updateElements();
+  }
+
+  onMouseUp (evt) {
+    super.onMouseUp(evt);
+    // toggle checkbox
+    if (this.isComponent) return;
+    this.isSelected = !this.isSelected;
+  }
+}
+
+export class TableEntryMorph extends Morph {
+  static get properties () {
+    return {
+      onDelete: {
+        doc: 'This is a closure that is invoked in response to clicking in the remove button of this entry',
+        serialize: false
+      },
+      onConfig: {
+        doc: 'This is a closure that is invoked in response to clicking in the config or preview button',
+        serialize: false
+      },
+      onData: {
+        doc: 'This is a closure that is invoked in response to clicking on the preview button'
+      },
+      value: {
+        derived: true,
+        set (v) {
+          this.setProperty('value', v);
+        }
+      },
+      editMode: {
+        defaultValue: false,
+        after: ['submorphs'],
+        set (active) {
+          if (this.submorphs.length > 0) { this.toggleEdit(active); }
+        }
+      }
+    };
+  }
+
+  static wrapVisualDataEntry (visualDataEntryName, opts = {}) {
+    const entry = part(TableEntryVisual, { ...opts });
+    entry.value = visualDataEntryName;
+    return { isListItem: true, morph: entry, value: visualDataEntryName };
+  }
+
+  static wrapDataEntry (dataEntryName, opts = {}) {
+    const entry = part(TableEntry, { ...opts });
+    entry.value = dataEntryName;
+    return { isListItem: true, morph: entry, value: dataEntryName };
+  }
+
+  static wrapVisualEntry (filterOrChartName, opts = {}) {
+    const entry = part(TableEntryEdit, { ...opts });
+    entry.value = filterOrChartName;
+    return { isListItem: true, morph: entry, value: filterOrChartName };
+  }
+
+  onMouseUp (evt) {
+    const removeButton = this.getSubmorphNamed('remove button');
+    const configButton = this.getSubmorphNamed('edit config button');
+    const dataButton = this.getSubmorphNamed('edit data button');
+    super.onMouseUp(evt);
+    if (evt.targetMorph === removeButton) {
+      this.delete();
+    }
+    if (evt.targetMorph === configButton) {
+      this.openConfig();
+    }
+    if (evt.targetMorph === dataButton) {
+      this.openData();
+    }
+  }
+
+  delete () {
+    if (this.onDelete) this.onDelete();
+  }
+
+  openConfig () {
+    if (this.onConfig) this.onConfig();
+  }
+
+  openData () {
+    if (this.onData) this.onData();
+  }
+
+  async toggleEdit (active, animated = true) {
+    this.setProperty('editMode', active);
+    const toggle = () => {
+      const removeButton = this.getSubmorphNamed('remove button');
+      const configButton = this.getSubmorphNamed('edit config button');
+      const dataButton = this.getSubmorphNamed('edit data button');
+      removeButton.visible = removeButton.isLayoutable = active;
+      configButton.visible = configButton.isLayoutable = !active;
+      if (dataButton) dataButton.visible = dataButton.isLayoutable = !active;
+    };
+    if (!this.master) return;
+    await this.master.whenApplied();
+    this.master.applyIfNeeded(true);
+    if (animated) {
+      await this.withAnimationDo(toggle, {
+        duration: 300
+      });
+    } else {
+      toggle();
+    }
+  }
+}
+
+export class GalyleoListMorph extends Morph {
   static get properties () {
     return {
       editMode: {
@@ -210,6 +412,101 @@ const GalyleoWindow = component({
   }]
 });
 
+// part(GalyleoDropDownList, { items: ['hello', 'world', 'there']}).openInWorld()
+const GalyleoDropDownList = component(SystemList, {
+  name: 'galyleo/drop down list',
+  fontFamily: 'Barlow',
+  fontSize: 14,
+  fill: Color.rgb(230, 230, 230),
+  selectionFontColor: Color.white,
+  selectionColor: Color.rgb(127, 140, 141),
+  itemBorderRadius: 3
+});
+
+// part(GalyleoDropDown, { viewModel: { placeholder: 'select please...', listAlign: 'selection', listMaster: GalyleoDropDownList, openListInWorld: true, items: [1,2,3] }}).openInWorld()
+// GalyleoDropDown.openInWorld()
+
+class GalyleoDropDownListModel extends DropDownListModel {
+  static get properties () {
+    return {
+      placeholder: {
+        defaultValue: 'Nothing selected'
+      },
+      listMaster: {
+        initialize () {
+          this.listMaster = GalyleoDropDownList;
+        }
+      },
+      items: {
+        derived: true,
+        after: ['listMorph'],
+        get () { return this.listMorph.items; },
+        set (value) {
+          const updateSelection = this.items.find(item => item.value === this.selection);
+          this.listMorph.items = [{
+            isListItem: true,
+            isPlaceholder: true,
+            value: '__no_selection__',
+            label: [this.placeholder, {
+              fontStyle: 'italic', opacity: 0.5
+            }]
+          }, ...value.filter(item => !item.isPlaceholder)];
+          if (updateSelection) {
+            noUpdate(() => {
+              this.selection = this.items[0].value;
+            });
+          }
+        }
+      }
+    };
+  }
+  
+  adjustLableFor (item) {
+    let label = item.label || [item.string, null];
+    this.label = { value: label };
+  }
+}
+
+const GalyleoDropDown = component(DropDownList, {
+  name: 'galyleo/drop down',
+  defaultViewModel: GalyleoDropDownListModel,
+  fill: Color.rgba(0, 0, 0, 0.15),
+  borderWidth: 0,
+  borderRadius: 30,
+  layout: new TilingLayout({
+    align: 'center',
+    axisAlign: 'center',
+    justifySubmorphs: 'spaced',
+    orderByIndex: true,
+    padding: rect(10, 0, 0, 0),
+    spacing: 5,
+    wrapSubmorphs: false
+  }),
+  extent: pt(160, 30),
+  submorphs: [
+    {
+      name: 'label',
+      fontWeight: 800,
+      fontColor: Color.rgb(128, 128, 128)
+    },
+    add({
+      type: Image,
+      name: 'down caret',
+      extent: pt(20, 20),
+      reactsToPointer: false,
+      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/list-icon.svg'
+    })
+  ]
+});
+
+// GalyleoDropDownError.openInWorld()
+const GalyleoDropDownError = component(GalyleoDropDown, {
+  name: 'galyleo/drop down/error',
+  extent: pt(168, 34),
+  borderColor: Color.rgb(205, 0, 0),
+  borderWidth: 4
+});
+
 // GalyleoList.openInWorld()
 const GalyleoList = component({
   type: GalyleoListMorph,
@@ -251,6 +548,8 @@ const GalyleoList = component({
     position: pt(178.8, 8)
   }]
 });
+
+connect(GalyleoList, 'extent', GalyleoList, 'relayout');
 
 const MenuBarButtonDefault = component({
   name: 'menu bar button default',
@@ -345,4 +644,180 @@ const PromptButton = component(PromptButtonAuto, {
   master: { auto: PromptButtonAuto, click: PromptButtonClick }
 });
 
-export { GalyleoWindow, GalyleoList, MenuBarButton, PromptButton };
+const CheckboxChecked = component({
+  name: 'checkbox/checked',
+  borderColor: Color.rgb(127, 140, 141),
+  borderRadius: 2,
+  borderWidth: 1,
+  extent: pt(17, 17),
+  fill: Color.rgba(0, 0, 0, 0),
+  layout: new VerticalLayout({
+    autoResize: true,
+    direction: 'topToBottom',
+    orderByIndex: true,
+    resizeSubmorphs: false,
+    spacing: 2
+  }),
+  position: pt(354.1, 231.8),
+  submorphs: [{
+    name: 'checker',
+    borderColor: Color.rgb(23, 160, 251),
+    extent: pt(13.3, 12.9),
+    fill: Color.rgb(241, 90, 36),
+    nativeCursor: 'pointer'
+  }]
+});
+
+// CheckboxUnchecked.openInWorld()
+const CheckboxUnchecked = component({
+  name: 'checkbox/unchecked',
+  borderColor: Color.rgb(127, 140, 141),
+  borderRadius: 2,
+  borderWidth: 1,
+  extent: pt(17, 17),
+  fill: Color.rgba(0, 0, 0, 0),
+  layout: new VerticalLayout({
+    autoResize: true,
+    direction: 'topToBottom',
+    orderByIndex: true,
+    resizeSubmorphs: false,
+    spacing: 2
+  }),
+  position: pt(388.9, 233.4),
+  submorphs: [{
+    name: 'checker',
+    borderColor: Color.rgb(23, 160, 251),
+    extent: pt(13.3, 12.9),
+    fill: Color.rgb(241, 90, 36),
+    nativeCursor: 'pointer',
+    opacity: 0
+  }]
+});
+
+// part(SelectableEntry).openInWorld()
+const SelectableEntry = component({
+  defaultViewModel: SelectableEntryModel,
+  name: 'selectable entry',
+  nativeCursor: 'grab',
+  borderColor: Color.rgb(23, 160, 251),
+  clipMode: 'hidden',
+  extent: pt(163.9, 32.5),
+  fill: Color.rgba(0, 0, 0, 0),
+  isSelected: false,
+  layout: new HorizontalLayout({
+    align: 'center',
+    autoResize: false,
+    direction: 'leftToRight',
+    orderByIndex: true,
+    padding: {
+      height: 0,
+      width: 0,
+      x: 10,
+      y: 10
+    },
+    reactToSubmorphAnimations: true,
+    renderViaCSS: true,
+    resizeSubmorphs: false,
+    spacing: 10
+  }),
+  position: pt(344.3, 280.5),
+  submorphs: [{
+    // type: DragControl,
+    type: Label,
+    name: 'drag control',
+    fontColor: Color.rgb(81, 90, 90),
+    nativeCursor: 'grab',
+    fill: Color.transparent,
+    padding: rect(3, 5, 0, 0),
+    textAndAttributes: Icon.textAttribute('bars')
+  }, part(CheckboxChecked, { name: 'checkbox' }), {
+    type: Label,
+    name: 'entry name',
+    fontFamily: 'Barlow',
+    textAndAttributes: ['entry', null]
+  }]
+});
+
+// SelectableEntryDragged.openInWorld()
+const SelectableEntryDragged = component(SelectableEntry, {
+  name: 'selectable entry/dragged',
+  nativeCursor: 'grabbing',
+  borderRadius: 5,
+  fill: Color.rgba(0, 0, 0, 0.15)
+});
+
+// TableEntry.openInWorld()
+const TableEntry = component({
+  type: TableEntryMorph,
+  name: 'table entry',
+  layout: new TilingLayout({
+    align: 'center',
+    axisAlign: 'center',
+    justifySubmorphs: 'spaced',
+    orderByIndex: true,
+    padding: rect(5, 0, 0, 0),
+    resizePolicies: [['buffer', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    spacing: 5,
+    wrapSubmorphs: false
+  }),
+  borderColor: Color.rgb(23, 160, 251),
+  extent: pt(200, 32),
+  fill: Color.rgba(0, 0, 0, 0),
+  submorphs: [{
+    type: Image,
+    name: 'remove button',
+    extent: pt(17.4, 27.9),
+    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/delete-icon.png',
+    nativeCursor: 'pointer',
+    naturalExtent: pt(226, 358),
+    visible: true
+  }, {
+    type: Label,
+    name: 'entry name',
+    fontFamily: 'Barlow',
+    textAndAttributes: ['A table entry', null]
+  }, {
+    name: 'buffer',
+    borderColor: Color.rgb(23, 160, 251),
+    extent: pt(79.9, 20.3),
+    fill: Color.rgba(0, 0, 0, 0)
+  }]
+});
+
+// TableEntryEdit.openInWorld()
+const TableEntryEdit = component(TableEntry, {
+  name: 'table entry/edit',
+  submorphs: [
+    add({
+      type: Image,
+      name: 'edit config button',
+      extent: pt(15.2, 15.2),
+      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/preview-icon.svg',
+      nativeCursor: 'pointer',
+      naturalExtent: pt(133, 150)
+    })]
+});
+
+// TableEntryVisual.openInWorld()
+const TableEntryVisual = component(TableEntryEdit, {
+  name: 'table entry/visual',
+  submorphs: [
+    add({
+      type: Image,
+      name: '',
+      extent: pt(15.2, 15.2),
+      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/chart-gear.svg',
+      nativeCursor: 'pointer',
+      naturalExtent: pt(133, 150)
+    }, 'edit config button')
+  ]
+});
+
+export {
+  GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
+  CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError,
+  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown
+};
