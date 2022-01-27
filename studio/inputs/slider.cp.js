@@ -1,6 +1,6 @@
 import { Morph } from 'lively.morphic/morph.js';
 import { pt, rect, Color } from 'lively.graphics/index.js';
-import { signal } from 'lively.bindings/index.js';
+import { signal, connect } from 'lively.bindings/index.js';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { Label, TilingLayout, ShadowObject, InputLine, Icon } from 'lively.morphic';
 
@@ -169,7 +169,7 @@ export class SliderModel extends ViewModel {
   }
 }
 
-class SliderInputLabel extends Morph {
+class SliderInputLabelMorph extends Morph {
   static get properties () {
     return {
       defaultWidth: {
@@ -192,6 +192,10 @@ class SliderInputLabel extends Morph {
         }
       }
     };
+  }
+
+  onInput () {
+    signal(this, 'inputChanged');
   }
 
   relayout () {
@@ -520,11 +524,17 @@ class SliderWithValueModel extends ViewModel {
             { model: 'slider', signal: 'valueChanged', handler: 'updateValue' },
             {
               target: 'value input',
+              signal: 'onInput',
+              handler: 'setSliderValue'
+            },
+            {
+              target: 'value input',
               signal: 'decrement',
               handler: () => {
                 this.models.slider.decrementValue(); 
               }
             },
+            
             {
               target: 'value input',
               signal: 'increment',
@@ -599,6 +609,11 @@ class DoubleSliderWithValuesModel extends ViewModel {
               }
             },
             {
+              target: 'min input',
+              signal: 'onInput',
+              handler: 'setRange'
+            },
+            {
               target: 'max input',
               signal: 'decrement',
               handler: () => {
@@ -611,6 +626,11 @@ class DoubleSliderWithValuesModel extends ViewModel {
               handler: () => {
                 this.models.doubleSlider.incrementMaxValue();
               }
+            },
+            {
+              target: 'max input',
+              signal: 'onInput',
+              handler: 'setRange'
             }
           ];
         }
@@ -628,6 +648,10 @@ class DoubleSliderWithValuesModel extends ViewModel {
   // any user of this doesn't need to dig into the underlying morph
   get range () {
     return this.models.doubleSlider.range;
+  }
+
+  viewDidLoad () {
+    this.displayRange();
   }
 
   // A wrapper around DoubleSlider to update and read values from the
@@ -671,9 +695,9 @@ const IncrementButtonClick = component(IncrementButton, {
   fontColor: Color.rgb(112, 123, 124)
 });
 
-const SliderValueLabel = component({
+const SliderInputLabel = component({
   name: 'slider value label',
-  type: SliderInputLabel,
+  type: SliderInputLabelMorph,
   extent: pt(39.6, 94.4),
   fill: Color.transparent,
   layout: new TilingLayout({
@@ -720,6 +744,8 @@ const SliderValueLabel = component({
     })
   ]
 });
+
+connect(SliderInputLabel.getSubmorphNamed('sliderValue'), 'onInput', SliderInputLabel, 'onInput');
 
 // part(Slider).openInWorld()
 const Slider = component({
@@ -811,7 +837,7 @@ const SliderWithValue = component({
   }),
   fill: Color.transparent,
   submorphs: [
-    part(Slider, { name: 'slider' }), part(SliderValueLabel, { name: 'value input' })
+    part(Slider, { name: 'slider' }), part(SliderInputLabel, { name: 'value input' })
   ]
 });
 
@@ -829,11 +855,11 @@ const DoubleSliderWithValues = component({
   }),
   fill: Color.transparent,
   submorphs: [
-    part(SliderValueLabel, { name: 'min input' }),
+    part(SliderInputLabel, { name: 'min input' }),
     part(DoubleSlider, { name: 'double slider' }),
-    part(SliderValueLabel, { name: 'max input' })
+    part(SliderInputLabel, { name: 'max input' })
   ]
 });
 
 // SliderValueLabel.openInWorld()
-export { SliderValueLabel, Slider, DoubleSlider, SliderWithValue, DoubleSliderWithValues };
+export { SliderInputLabel, Slider, DoubleSlider, SliderWithValue, DoubleSliderWithValues };
