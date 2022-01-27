@@ -517,6 +517,15 @@ class SliderWithValueModel extends ViewModel {
   static get properties () {
     return {
       valueChanged: { derived: true, isSignal: true, readOnly: true },
+      expose: {
+        get () {
+          return [
+            ['value', { model: 'slider' }],
+            ['minValue', { model: 'slider' }],
+            ['maxValue', { model: 'slider' }]
+          ];
+        }
+      },
       bindings: {
         get () {
           return [
@@ -558,19 +567,13 @@ class SliderWithValueModel extends ViewModel {
     signal(this, 'valueChanged');
   }
 
-  // Get the underlying slider's value.  A convenience method for
-  // code which uses this
-  get value () {
-    return this.models.slider.value;
-  }
-
   // A wrapper around Slider to update and read the value from the
   // input ranges.  This mostly just a couple of connection targets.
   // updateValue.  This is called when the knob changes position.
   // connected to the knob position.
   // Just displays the value of the knob in the  input field
   updateValue () {
-    this.ui.valueInput.value = this.value;
+    this.ui.valueInput.value = this.models.slider.value;
   }
 
   // setSliderValue.  This is called when the  inputs is accepted.
@@ -589,6 +592,14 @@ class DoubleSliderWithValuesModel extends ViewModel {
   static get properties () {
     return {
       rangeChanged: { derived: true, isSignal: true, readOnly: true },
+      expose: {
+        get () {
+          return [
+            ['minValue', { model: 'double slider' }],
+            ['maxValue', { model: 'double slider' }],
+            ['range', { model: 'double slider' }]];
+        }
+      },
       bindings: {
         get () {
           return [
@@ -642,12 +653,6 @@ class DoubleSliderWithValuesModel extends ViewModel {
   // called by the connection to the contained rangeChanged signal
   signalRangeChanged () {
     signal(this, 'rangeChanged');
-  }
-
-  // A convenience method to get the range of the underlying slider, so
-  // any user of this doesn't need to dig into the underlying morph
-  get range () {
-    return this.models.doubleSlider.range;
   }
 
   viewDidLoad () {
