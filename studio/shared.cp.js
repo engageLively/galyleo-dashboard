@@ -6,6 +6,7 @@ import { MorphList, DropDownListModel } from 'lively.components';
 import { connect, noUpdate } from 'lively.bindings';
 import { SystemList } from 'lively.ide/styling/shared.cp.js';
 import { DropDownList } from 'lively.components/list.cp.js';
+import { NumberInput } from 'lively.ide/studio/shared.cp.js';
 
 export class SelectableEntryModel extends ViewModel {
   static get properties () {
@@ -138,19 +139,19 @@ export class TableEntryMorph extends Morph {
   }
 
   static wrapVisualDataEntry (visualDataEntryName, opts = {}) {
-    const entry = part(TableEntryVisual, { ...opts });
+    const entry = part(TableEntryVisual, opts);
     entry.value = visualDataEntryName;
     return { isListItem: true, morph: entry, value: visualDataEntryName };
   }
 
   static wrapDataEntry (dataEntryName, opts = {}) {
-    const entry = part(TableEntry, { ...opts });
+    const entry = part(TableEntry, opts);
     entry.value = dataEntryName;
     return { isListItem: true, morph: entry, value: dataEntryName };
   }
 
   static wrapVisualEntry (filterOrChartName, opts = {}) {
-    const entry = part(TableEntryEdit, { ...opts });
+    const entry = part(TableEntryEdit, opts);
     entry.value = filterOrChartName;
     return { isListItem: true, morph: entry, value: filterOrChartName };
   }
@@ -370,9 +371,23 @@ export class GalyleoListMorph extends Morph {
   }
 }
 
+// GalyleoNumberInput.openInWorld()
+const GalyleoNumberInput = component(NumberInput, {
+  name: 'galyleo/number input',
+  fill: Color.rgba(0, 0, 0, 0.15),
+  submorphs: [{
+    name: 'value',
+    fontColor: Color.rgb(63, 63, 63),
+    extent: pt(72, 22)
+  }, {
+    name: 'interactive label',
+    fontColor: Color.rgba(100, 100, 100, .5)
+  }]
+});
+
 // GalyleoWindow.openInWorld()
 const GalyleoWindow = component({
-  name: 'galyleo window',
+  name: 'galyleo/window',
   borderColor: Color.rgb(127, 140, 141),
   borderRadius: 10,
   borderWidth: 2,
@@ -819,5 +834,5 @@ const TableEntryVisual = component(TableEntryEdit, {
 export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError,
-  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown
+  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput
 };
