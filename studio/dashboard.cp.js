@@ -1,20 +1,188 @@
 import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
-/* global google */
-import { Morph } from 'lively.morphic/morph.js';
-import { resource } from 'lively.resources/src/helpers.js';
-import { pt, Rectangle, Point, Color } from 'lively.graphics/index.js';
-import L2LClient from 'lively.2lively/client.js';
+
+import { Morph, morph, ShadowObject, TilingLayout } from 'lively.morphic';
+import { component, without, part, add } from 'lively.morphic/components/core.js';
 import { createMorphSnapshot } from 'lively.morphic/serialization.js';
-import { LoadingIndicator } from 'lively.components/index.js';
-import { string, obj, promise, arr } from 'lively.lang/index.js';
-import { connect, once } from 'lively.bindings/index.js';
+import { resource } from 'lively.resources/src/helpers.js';
+import { pt, Rectangle, Point, Color, rect } from 'lively.graphics/index.js';
+import L2LClient from 'lively.2lively/client.js';
+import { LoadingIndicator } from 'lively.components';
+import { string, obj, promise, arr } from 'lively.lang';
+import { connect } from 'lively.bindings/index.js';
 import { getClassName } from 'lively.serializer2/class-helper.js';
-import { morph } from 'lively.morphic/helpers.js';
-import { ShadowObject, easings } from 'lively.morphic/index.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
+import { GalyleoWindow, PromptButton } from './shared.cp.js';
+import { GalyleoSearch } from './inputs/search.cp.js';
 
 // import './jupiter-drive-resource.js';
 // resource('styleguide://$world/galyleo/side bar/button/selected');
+
+class SaveDialogMorph extends Morph {
+  // Initialize with the file path passed to dashboard
+  // parameters
+  //   dashboard -- the dashboard that invoked this, and which will be called back
+  //   path -- the initial file path, if any, which is the initial value of the
+  //           file input
+  init (dashboard, path) {
+    this.dashboard = dashboard;
+    if (path && path.length > 0) {
+      this.getSubmorphNamed('fileInput').textString = path;
+    }
+  }
+
+  // Save.  This is called from the Save button.  Just gets the path from
+  // the text string, and calls the dashboard back to check it exists and saves it.
+  // If everything worked, dashboard returns true; if not, it took care of
+  // informing the user, and the dialog box stays up to give the user another
+  // shot.
+  async save () {
+    const filePath = this.getSubmorphNamed('fileInput').textString;
+    if (await this.dashboard.checkAndSave(filePath)) {
+      this.remove();
+    }
+  }
+}
+
+const SaveDialog = component(GalyleoWindow, {
+  type: SaveDialogMorph,
+  name: 'save dialog',
+  layout: new TilingLayout({
+    axis: 'column',
+    axisAlign: 'center',
+    orderByIndex: true,
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    spacing: 15,
+    wrapSubmorphs: false
+  }),
+  extent: pt(340.5, 155.8),
+  submorphs: [
+    {
+      name: 'window title',
+      textString: 'Save Dashboard to...'
+    },
+    add(part(GalyleoSearch, { name: 'file input', placeholder: 'path/to/file' })),
+    add({
+      name: 'button wrapper',
+      layout: new TilingLayout({
+        align: 'center',
+        axisAlign: 'center',
+        justifySubmorphs: 'spaced',
+        orderByIndex: true,
+        padding: rect(26, 26, 0, 0)
+      }),
+      borderColor: Color.rgb(23, 160, 251),
+      borderWidth: 0,
+      extent: pt(310.9, 57.7),
+      fill: Color.rgba(0, 0, 0, 0),
+      submorphs: [part(PromptButton, {
+        name: 'save button',
+        extent: pt(81.7, 31.8),
+        master: PromptButton,
+        position: pt(9.6, 8.9),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Save', null]
+        }]
+      }), part(PromptButton, {
+        name: 'cancel button',
+        extent: pt(92.8, 34.2),
+        master: PromptButton,
+        position: pt(174.2, 44.5),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Cancel', null]
+        }]
+      })]
+    })
+  ]
+});
+
+class LoadDialogMorph extends Morph {
+  // Initialize with the file path passed to dashboard
+  // parameters
+  //   dashboard -- the dashboard that invoked this, and which will be called back
+  //   path -- the initial file path, if any, which is the initial value of the
+  //           file input
+  init (dashboard, path) {
+    this.dashboard = dashboard;
+    if (path && path.length > 0) {
+      this.getSubmorphNamed('fileInput').textString = path;
+    }
+  }
+
+  // Load.  This is called from the Load button.  Just gets the path from
+  // the text string, and calls the dashboard back to check it and load it.
+  // If everything worked, dashboard returns true; if not, it took care of
+  // informing the user, and the dialog box stays up to give the user another
+  // shot.
+  async load () {
+    const filePath = this.getSubmorphNamed('fileInput').textString;
+    if (await this.dashboard.checkAndLoad(filePath)) {
+      this.remove();
+    }
+  }
+}
+
+// LoadDialog.openInWorld()
+const LoadDialog = component(GalyleoWindow, {
+  type: LoadDialogMorph,
+  name: 'load dialog',
+  layout: new TilingLayout({
+    axis: 'column',
+    axisAlign: 'center',
+    orderByIndex: true,
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    spacing: 15,
+    wrapSubmorphs: false
+  }),
+  extent: pt(340.5, 155.8),
+  submorphs: [
+    {
+      name: 'window title',
+      textString: 'Load Dashboard from...'
+    },
+    add(part(GalyleoSearch, { name: 'file input', placeholder: 'path/to/file' })),
+    add({
+      name: 'button wrapper',
+      layout: new TilingLayout({
+        align: 'center',
+        axisAlign: 'center',
+        justifySubmorphs: 'spaced',
+        orderByIndex: true,
+        padding: rect(26, 26, 0, 0)
+      }),
+      borderColor: Color.rgb(23, 160, 251),
+      borderWidth: 0,
+      extent: pt(310.9, 57.7),
+      fill: Color.rgba(0, 0, 0, 0),
+      submorphs: [part(PromptButton, {
+        name: 'load button',
+        extent: pt(81.7, 31.8),
+        master: PromptButton,
+        position: pt(9.6, 8.9),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Load', null]
+        }]
+      }), part(PromptButton, {
+        name: 'cancel button',
+        extent: pt(92.8, 34.2),
+        master: PromptButton,
+        position: pt(174.2, 44.5),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Cancel', null]
+        }]
+      })]
+    })
+  ]
+});
 
 export class Dashboard extends Morph {
   /* Properties.
@@ -146,7 +314,7 @@ export class Dashboard extends Morph {
   //    browserModel: the JupyterLab browser.  See: https://jupyterlab.readthedocs.io/en/stable/api/classes/filebrowser.filebrowsermodel-1.html
   //    changedInfo: the current change to the drive.  See https://jupyterlab.readthedocs.io/en/stable/api/interfaces/coreutils.ichangedargs.html
   checkPossibleRenameFromBrowser (browserModel, changedArgs) {
-    if (changedArgs.oldValue.path == window.EXTENSION_INFO.currentFilePath) {
+    if (changedArgs.oldValue.path === window.EXTENSION_INFO.currentFilePath) {
       window.EXTENSION_INFO.currentFilePath = changedArgs.newValue.path;
       this._updateProjectName_();
     }
@@ -163,10 +331,10 @@ export class Dashboard extends Morph {
   //    drive: the JupyterLab drive.  See: https://jupyterlab.readthedocs.io/en/stable/api/classes/services.drive-1.html
   //    changedInfo: the current change to the drive.  See https://jupyterlab.readthedocs.io/en/stable/api/interfaces/services.contents.ichangedargs.html
   checkPossibleRename (drive, changedInfo) {
-    if (changedInfo.type != 'rename') {
+    if (changedInfo.type !== 'rename') {
       return;
     }
-    if (changedInfo.oldValue.path == window.EXTENSIONINFO.currentFilePath) {
+    if (changedInfo.oldValue.path === window.EXTENSIONINFO.currentFilePath) {
       window.EXTENSION_INFO.currentFilePath = changedInfo.newValue.path;
       this._updateProjectName_();
     }
@@ -208,7 +376,7 @@ export class Dashboard extends Morph {
     const jupyterLabURL = resource(`jupyterlab://${filePath}`);
     if (await jupyterLabURL.exists()) {
       const dashboardContents = await jupyterLabURL.read();
-      if (dashboardContents.length == 0) {
+      if (dashboardContents.length === 0) {
         // new file
         this.clear();
         window.EXTENSION_INFO.currentFilePath = filePath;
@@ -290,7 +458,7 @@ export class Dashboard extends Morph {
       }
     }
     if (showDialog) {
-      const dialog = await resource('part://$world/galyleo/loadDialog').read();
+      const dialog = part(LoadDialog);
       dialog.init(this, filePath);
       dialog.openInWorld();
     } else {
@@ -331,11 +499,11 @@ export class Dashboard extends Morph {
   // file path is non-empty, uses the path as an initial value for the save dialog
   // parameters:
   //   showDialog: get the file name to save from the user,
-  async saveDashboardToFile (showDialog) {
+  saveDashboardToFile (showDialog) {
     const filePath = window.EXTENSION_INFO.currentFilePath;
     const needToShowDialog = !(filePath && filePath.length > 0);
     if (showDialog || needToShowDialog) {
-      const dialog = await resource('part://$world/galyleo/saveDialog').read();
+      const dialog = part(SaveDialog);
       dialog.init(this, filePath);
       dialog.openInWorld();
     } else {
@@ -360,7 +528,7 @@ export class Dashboard extends Morph {
     // only do this if one of the registered morphs has changed
     // we shoot ourselves in the knee by dropping other stuff onto
     // here
-    if (!this._restore && change.prop == 'position') {
+    if (!this._restore && change.prop === 'position') {
       this._takeSnapshot();
     }
   }
@@ -424,10 +592,10 @@ export class Dashboard extends Morph {
       morphicProperties: this._getFields_(aMorph, this._morphicFields_),
       complexMorphicProperties: this._complexMorphicFields_(aMorph)
     };
-    if (type == 'Text') {
+    if (type === 'Text') {
       storedForm.textProperties = this._getFields_(aMorph, this._textFields_);
       storedForm.complexTextProperties = this._complexTextFields_(aMorph);
-    } else if (type == 'Image') {
+    } else if (type === 'Image') {
       storedForm.imageUrl = aMorph.imageUrl;
     }
     return storedForm;
@@ -657,10 +825,10 @@ export class Dashboard extends Morph {
         // complexMorphicProperties: this._complexMorphicFields_(morph)
       };
       Object.assign(result.morphicProperties, this._complexMorphicFields_(morph));
-      if (result.type == 'Image') {
+      if (result.type === 'Image') {
         result.imageUrl = morph.imageUrl;
       }
-      if (result.type == 'Text') {
+      if (result.type === 'Text') {
         // result.complexTextProperties = this._complexTextFields_(morph);
         result.textProperties = this._getFields_(morph, this._textFields_);
         Object.assign(result.textProperties, this._complexTextFields_(morph));
@@ -698,12 +866,12 @@ export class Dashboard extends Morph {
     const missingFields = expectedFields.filter(field => fields.indexOf(field) < 0);
     const allFields = expectedFields.concat(optionalFields);
     const newFields = fields.filter(field => allFields.indexOf(field) < 0);
-    if (missingFields.length == 0 && newFields.length == 0) {
+    if (missingFields.length === 0 && newFields.length === 0) {
       return { valid: true };
     } else {
       const missingMessage = `was missing fields ${missingFields}`;
       const unexpectedMessage = `had unexpected fields ${newFields}`;
-      const message = missingFields.length == 0 ? `File ${unexpectedMessage}` : newFields.length == 0 ? `File ${missingMessage}` : `File ${missingMessage} and ${unexpectedMessage}`;
+      const message = missingFields.length === 0 ? `File ${unexpectedMessage}` : newFields.length === 0 ? `File ${missingMessage}` : `File ${missingMessage} and ${unexpectedMessage}`;
       return { valid: false, message: message };
     }
   }
@@ -713,7 +881,7 @@ export class Dashboard extends Morph {
   // parameter:
   //  orderedMorphs, the morphs in their desired order
   _reorderMorphs_ (orderedMorphs) {
-    if (orderedMorphs == null) {
+    if (orderedMorphs === null) {
       return;
     }
     const nonNulls = orderedMorphs.filter(morph => morph);
@@ -804,10 +972,10 @@ export class Dashboard extends Morph {
         this._setFields_(restored, descriptor.morphicProperties, this._morphicFields_);
         restored.position = Point.fromLiteral(descriptor.position);
         restored.extent = Point.fromLiteral(descriptor.extent);
-        if (descriptor.type == 'Image') {
+        if (descriptor.type === 'Image') {
           restored.imageUrl = descriptor.imageUrl;
         }
-        if (descriptor.type == 'Text') {
+        if (descriptor.type === 'Text') {
           this._setFields_(restored, descriptor.textProperties, this._textFields_);
           this._setComplexTextFields_(restored, descriptor.complexTextProperties);
         }
@@ -826,7 +994,7 @@ export class Dashboard extends Morph {
   */
 
   _undoChange () {
-    if (!this._snapshots || this._snapshots.length == 0) return;
+    if (!this._snapshots || this._snapshots.length === 0) return;
     this._changePointer = Math.max(0, this._changePointer - 1);
     this._restoreFromSnapshot_(this._snapshots[this._changePointer]);
   }
@@ -836,7 +1004,7 @@ export class Dashboard extends Morph {
     snapshot at that position.
   */
   _redoChange () {
-    if (!this._snapshots || this._snapshots.length == 0) return;
+    if (!this._snapshots || this._snapshots.length === 0) return;
     this._changePointer = Math.min(this._snapshots.length - 1, this._changePointer + 1);
     this._restoreFromSnapshot_(this._snapshots[this._changePointer]);
   }
@@ -1056,9 +1224,9 @@ export class Dashboard extends Morph {
     const desc_sort = (desc1, desc2) => desc1.descriptor.morphIndex - desc2.descriptor.morphIndex;
     descriptors.sort(desc_sort);
     const morphs = await Promise.all(descriptors.map(async descriptor => {
-      if (descriptor.type == 'chart') {
+      if (descriptor.type === 'chart') {
         return await this._restoreChartFromSaved_(descriptor.chartName, descriptor.descriptor);
-      } else if (descriptor.type == 'filter') {
+      } else if (descriptor.type === 'filter') {
         return await this._restoreFilterFromSaved_(descriptor.filterName, descriptor.descriptor);
       } else {
         return this._restoreMorphFromSaved_(descriptor.descriptor);
@@ -1176,13 +1344,13 @@ export class Dashboard extends Morph {
   //   sender: sender of the original message
   //   message: the payload of the original message
   _processIncomingL2LMessage_ (sender, message) {
-    if (message.eventType == 'table queries') {
+    if (message.eventType === 'table queries') {
       this._addAvailableTablesFromMessage_(message.payload);
       this._sendAck_(sender, message.payload.number);
-    } else if (message.eventType == 'load_table' || message.eventType == 'table response') {
+    } else if (message.eventType === 'load_table' || message.eventType === 'table response') {
       this.__addTableFromMessage__(message.payload);
       this._sendAck_(sender, message.payload._l2l_msgNumber_);
-    } else if (message.eventType == 'ack') {
+    } else if (message.eventType === 'ack') {
       // don't ack an ack.  The worst that will happen is an ack isn't received is
       // that the sender will just keep resending until it gets an ack, which will
       // eventually happen
@@ -1221,7 +1389,7 @@ export class Dashboard extends Morph {
     }
     const originalSender = ackBody.originalSender;
     const originalMessageNumber = ackBody.receivedMessageNumber;
-    const processMessage = originalSender && originalSender == this.l2lclient.socketId &&
+    const processMessage = originalSender && originalSender === this.l2lclient.socketId &&
                             !isNaN(originalMessageNumber) && this._messageQueue_ &&
                             this._messageQueue_.length > 0;
     // If we get here, the message being acknowledged came from us, and we have
@@ -1231,7 +1399,7 @@ export class Dashboard extends Morph {
     // because JavaScript is event-based and single-threaded,
     // so those timing bugs should be impossible.
     if (processMessage) {
-      this._messageQueue_ = this._messageQueue_.filter(queueEntry => queueEntry.number != originalMessageNumber);
+      this._messageQueue_ = this._messageQueue_.filter(queueEntry => queueEntry.number !== originalMessageNumber);
     }
   }
 
@@ -1329,7 +1497,6 @@ export class Dashboard extends Morph {
   _addAvailableTablesFromMessage_ (tableDictList) {
     tableDictList.forEach(entry => {
       if (entry.tableName) {
-        const parametersSpecified = entry.parameters && typeof entry.parameters === 'list';
         const parameters = entry.parameters ? entry.parameters : [];
         this.availableTables[entry.tableName] = parameters;
       }
@@ -1383,7 +1550,7 @@ export class Dashboard extends Morph {
     if (!roomName) {
       return false;
     }
-    if (roomName != this.l2lRoomName) {
+    if (roomName !== this.l2lRoomName) {
       this.l2lRoomName = roomName;
     }
     if (this.l2lclient) {
@@ -1472,7 +1639,7 @@ export class Dashboard extends Morph {
   // this.charts
 
   __getKeys__ (property) {
-    return Object.keys(this[property]).filter(name => name != '_rev');
+    return Object.keys(this[property]).filter(name => name !== '_rev');
   }
 
   // The keys of the tables property
@@ -1556,10 +1723,10 @@ export class Dashboard extends Morph {
 
   async makeFilterMorph (columnName, filterType, filterPart, tableName = null) {
     const morph = await resource(filterPart).read();
-    if (filterType == 'Range') {
+    if (filterType === 'Range') {
       const parameters = this.__getRangeParameters__(columnName, tableName);
       morph.init(columnName, tableName, parameters.min, parameters.max, parameters.increment);
-    } else if (filterType == 'NumericSelect') {
+    } else if (filterType === 'NumericSelect') {
       // Numeric values, with a max, min, and an increment between them.  The
       // idea is that we offer a numeric object, e.g., a slider, which lets
       // the viewer pick any value between max and min, separated by increment
@@ -1581,7 +1748,7 @@ export class Dashboard extends Morph {
       morph.init(columnName, tableName, values[0], values[values.length - 1], differences[0]);
     } else {
       const types = this.__getTypes__(columnName, tableName);
-      const isString = types && types.length == 1 && types[0] == 'string';
+      const isString = types && types.length === 1 && types[0] === 'string';
       const values = this.__getAllValues__(columnName);
       morph.init(columnName, values, tableName, isString);
     }
@@ -1596,9 +1763,9 @@ export class Dashboard extends Morph {
 
   __getTypes__ (columnName, tableName = null) {
     let columns = this.__allColumns__();
-    columns = columns.filter(column => column.name == columnName);
+    columns = columns.filter(column => column.name === columnName);
     if (tableName) {
-      columns = columns.filter(column => column.tableName == tableName);
+      columns = columns.filter(column => column.tableName === tableName);
     }
     const result = [];
     columns.forEach(column => {
@@ -1701,7 +1868,7 @@ export class Dashboard extends Morph {
   //    viewOrTable: the name of the view or table to show the data for.
   async displayPreview (viewOrTable) {
     const dataTable = this.prepareData(viewOrTable);
-    if (dataTable == null) {
+    if (dataTable === null) {
       return;
     }
     const wrapper = new this.gViz.ChartWrapper({
@@ -1751,7 +1918,7 @@ export class Dashboard extends Morph {
     if (fields.indexOf('minValue') >= 0) {
       return fields.indexOf('maxValue') >= 0 && !isNaN(aFilter.minValue) && !isNaN(aFilter.maxValue);
     }
-    return fields.indexOf('value') >= 0 && aFilter.value != undefined && aFilter.value != '__no_selection__';
+    return fields.indexOf('value') >= 0 && aFilter.value !== undefined && aFilter.value !== '__no_selection__';
   }
 
   // get the filters for a view.  A view has a list of named filters, and
@@ -1888,7 +2055,7 @@ export class Dashboard extends Morph {
   //   chart: the chart to make the title for
 
   __makeTitle__ (chart) {
-    if (chart.chartType == 'Table') {
+    if (chart.chartType === 'Table') {
       return;
     }
     let title; const name = chart.viewOrTable;
@@ -1982,7 +2149,7 @@ export class Dashboard extends Morph {
   // parameters:
   //   viewName: name of the view to be removed
   async removeView (viewName) {
-    let usesView = chart => chart.viewOrTable == viewName;
+    let usesView = chart => chart.viewOrTable === viewName;
     let usedBy = Object.keys(this.charts).filter(chartName => usesView(this.charts[chartName]));
     let msg = `${viewName} is used by charts ${usedBy.join(', ')}.  Proceed?`;
     let goAhead = usedBy.length > 0 ? await this.confirm(msg) : true;
@@ -1998,8 +2165,8 @@ export class Dashboard extends Morph {
   // parameters:
   //   tableName: name of the view to be removed
   async removeTable (tableName) {
-    let chartUsesTable = chart => chart.viewOrTable == tableName;
-    let viewUsesTable = view => view.table == tableName;
+    let chartUsesTable = chart => chart.viewOrTable === tableName;
+    let viewUsesTable = view => view.table === tableName;
     let chartUses = Object.keys(this.charts).filter(chartName => chartUsesTable(this.charts[chartName]));
     let viewUses = Object.keys(this.views).filter(viewName => viewUsesTable(this.views[viewName]));
     let usedBy = chartUses.concat(viewUses);
@@ -2095,7 +2262,7 @@ export class Dashboard extends Morph {
   // the externally visible method is (ATM) loadDataFromUrl.
   // ensures that the table dictionary exists, then just stores
   // the table and updates the controller.  Note that if the table
-  // exists (this.tables[tableSpec.name] != null), then the datatable
+  // exists (this.tables[tableSpec.name] !== null), then the datatable
   // is overwritten.
   // parameters:
   // tableSpec: an object of the form {name: <name> table: { columns: <list of the form <name, type>, rows: <list of list of values>}}
@@ -2209,7 +2376,7 @@ export class Dashboard extends Morph {
       const tableColumns = tableName => this.tables[tableName].cols.map(column => column.id);
       // make sure the columns all exist
       const availableColumns = tableColumns(tableName);
-      if (this.views[viewName].columns.length == 0) {
+      if (this.views[viewName].columns.length === 0) {
         addMessage(`View ${viewName} has no selected columns`);
       }
       const missing_columns = this.views[viewName].columns.filter(colName => availableColumns.indexOf(colName) < 0);
@@ -2228,7 +2395,7 @@ export class Dashboard extends Morph {
       // columns
       const filterCheck = (filterName) => {
         const filter = this.filters[filterName];
-        return filter.table ? filter.table == tableName : filter.columnName && availableColumns.indexOf(filter.columnName) >= 0;
+        return filter.table ? filter.table === tableName : filter.columnName && availableColumns.indexOf(filter.columnName) >= 0;
       };
       const existing_filters = this.views[viewName].filterNames.map(filterName => this.filterNames.indexOf(filterName) >= 0);
       existing_filters.forEach(filterName => {
@@ -2273,7 +2440,7 @@ export class Dashboard extends Morph {
     if (!dataTable) return null;
     const filter = this.__prepareChartFilter__(chart.viewOrTable);
     if (!filter) return null;
-    if (!(chart.filter && chart.filter.columnName == filter.columnName)) {
+    if (!(chart.filter && chart.filter.columnName === filter.columnName)) {
       chart.filter = filter;
     }
     const wrapper = new this.gViz.ChartWrapper({
@@ -2291,8 +2458,8 @@ export class Dashboard extends Morph {
     const chart = wrapper.getChart();
     const table = wrapper.getDataTable();
     const selection = chart.getSelection();
-    const row = selection[0].row == null ? null : selection[0].row;
-    const col = selection[0].col == null ? 0 : selection[0].col;
+    const row = selection[0].row === null ? null : selection[0].row;
+    const col = selection[0].col === null ? 0 : selection[0].col;
     const value = table.getValue(row, col);
     if (this.charts[chartName].filter) {
       this.charts[chartName].filter.value = value;
@@ -2428,7 +2595,7 @@ export class Dashboard extends Morph {
   //    the new morph.
 
   async __getChartMorph__ (chartName) {
-    const currentMorphsForChart = this.submorphs.filter(morph => morph.isChart && morph.name == chartName);
+    const currentMorphsForChart = this.submorphs.filter(morph => morph.isChart && morph.name === chartName);
     if (currentMorphsForChart && currentMorphsForChart.length > 0) {
       return currentMorphsForChart[0];
     }
@@ -2478,7 +2645,7 @@ export class Dashboard extends Morph {
   getColumnsOfType (typeList = [], tableName = null) {
     // this.getColumnsOfType(['number'])
     // this.tables
-    const typeMatches = (type, typeList) => typeList.length == 0 || (typeList.indexOf(type) >= 0);
+    const typeMatches = (type, typeList) => typeList.length === 0 || (typeList.indexOf(type) >= 0);
     if (!typeList) {
       typeList = [];
     }
@@ -2487,7 +2654,7 @@ export class Dashboard extends Morph {
     }
     let columns = this.__allColumns__();
     if (tableName) {
-      columns = columns.filter(column => column.tableName == tableName);
+      columns = columns.filter(column => column.tableName === tableName);
     }
     columns = columns.filter(column => typeMatches(column.type, typeList));
     const result = [];
@@ -2511,9 +2678,9 @@ export class Dashboard extends Morph {
 
   __getMatchingColumns__ (columnName, tableName) {
     let columns = this.__allColumns__();
-    columns = columns.filter(column => columnName == column.name);
+    columns = columns.filter(column => columnName === column.name);
     if (tableName) {
-      columns = columns.filter(column => tableName == column.tableName);
+      columns = columns.filter(column => tableName === column.tableName);
     }
     return columns;
   }
@@ -2642,690 +2809,4 @@ export class Dashboard extends Morph {
   }
 }
 
-class TableEntry extends Morph {
-  static get properties () {
-    return {
-      onDelete: {
-        doc: 'This is a closure that is invoked in response to clicking in the remove button of this entry',
-        serialize: false
-      },
-      onConfig: {
-        doc: 'This is a closure that is invoked in response to clicking in the config or preview button',
-        serialize: false
-      },
-      onData: {
-        doc: 'This is a closure that is invoked in response to clicking on the preview button'
-      },
-      value: {
-        derived: true,
-        set (v) {
-          this.setProperty('value', v);
-          this.relayout();
-        }
-      },
-      editMode: {
-        defaultValue: false,
-        after: ['submorphs'],
-        set (active) {
-          if (this.submorphs.length > 0) { this.toggleEdit(active); }
-        }
-      }
-    };
-  }
-
-  // TableEntry.wrapDataEntry().openInWorld()
-
-  setupConnections () {
-    connect(this, 'extent', this, 'relayout');
-  }
-
-  static wrapVisualDataEntry (visualDataEntryName, opts = {}) {
-    const entry = new this({ master: 'styleguide://$world/galyleo/visual data entry', ...opts });
-    entry.master.reconcileSubmorphs().then(() => {
-      entry.value = visualDataEntryName;
-      entry.setupConnections();
-    });
-    return { isListItem: true, morph: entry, value: visualDataEntryName };
-  }
-
-  static wrapDataEntry (dataEntryName, opts = {}) {
-    const entry = new this({ master: 'styleguide://$world/galyleo/data entry/default', ...opts });
-    entry.master.reconcileSubmorphs().then(() => {
-      entry.value = dataEntryName;
-      entry.setupConnections();
-    });
-    return { isListItem: true, morph: entry, value: dataEntryName };
-  }
-
-  static wrapVisualEntry (filterOrChartName, opts = {}) {
-    const entry = new this({ master: 'styleguide://Dashboard Studio Development/galyleo/visual entry/default', ...opts });
-    entry.master.reconcileSubmorphs().then(() => {
-      entry.value = filterOrChartName;
-      entry.setupConnections();
-    });
-    return { isListItem: true, morph: entry, value: filterOrChartName };
-  }
-
-  relayout () {
-    const buffer = this.getSubmorphNamed('buffer');
-    const entryName = this.getSubmorphNamed('entry name');
-    buffer.width = this.width - arr.sum(this.submorphs.filter(m => m.name != 'buffer').map(m => m.width));
-    entryName.value = this.value;
-  }
-
-  onMouseUp (evt) {
-    const removeButton = this.getSubmorphNamed('remove button');
-    const configButton = this.getSubmorphNamed('edit config button');
-    const dataButton = this.getSubmorphNamed('edit data button');
-    super.onMouseUp(evt);
-    if (evt.targetMorph == removeButton) {
-      this.delete();
-    }
-    if (evt.targetMorph == configButton) {
-      this.openConfig();
-    }
-    if (evt.targetMorph == dataButton) {
-      this.openData();
-    }
-  }
-
-  delete () {
-    if (this.onDelete) this.onDelete();
-  }
-
-  openConfig () {
-    if (this.onConfig) this.onConfig();
-  }
-
-  openData () {
-    if (this.onData) this.onData();
-  }
-
-  async toggleEdit (active, animated = true) {
-    this.setProperty('editMode', active);
-    const toggle = () => {
-      const removeButton = this.getSubmorphNamed('remove button');
-      const configButton = this.getSubmorphNamed('edit config button');
-      const dataButton = this.getSubmorphNamed('edit data button');
-      removeButton.visible = removeButton.isLayoutable = active;
-      configButton.visible = configButton.isLayoutable = !active;
-      if (dataButton) dataButton.visible = dataButton.isLayoutable = !active;
-    };
-    if (!this.master) return;
-    await this.master.whenApplied();
-    this.master.applyIfNeeded(true);
-    if (animated) {
-      await this.withAnimationDo(toggle, {
-        duration: 300
-      });
-    } else {
-      toggle();
-    }
-  }
-}
-
-export class DashboardControl extends Morph {
-  static get properties () {
-    return {
-      isHaloItem: { defaultValue: true },
-      isToggled: {
-        derived: true,
-        get () {
-          return Math.abs(Math.floor(this.right) - Math.floor(this.owner.width)) < 5;
-        }
-      }
-    };
-  }
-
-  // On load, simply make sure that the dashboard property is properly
-  // initialized, and then update to ensure that the lists of tables and
-  // charts are up-to-date and the menus in externalFilterCreator are
-  // up-to-date.  Note that this will fail if this.dashboard is null and there
-  // is no morph named dashboard in the world, but at that point things are
-  // really broken anyway.
-
-  async onLoad () {
-    await this.whenRendered();
-    this.init(this.get('dashboard'));
-    this.update();
-  }
-
-  selectTarget (target) {
-    // fixme: filter only some elements to be selectable via halo
-    if (arr.isArray(target)) return;
-    this.slideIn();
-    this.focusMorph(target);
-  }
-
-  async deselectTarget () {
-    // super hacky, but works for now. What we actually want is a state machine that
-    // models the different modes of the halo/top bar/side bar combo appropriately...
-    // if color picker caused the halo to dissappear, do not deselect the target...
-    const controls = this.getControls();
-    const fillPicker = controls.shapeControl.ui.fillPicker;
-    await this.whenRendered();
-    const colorPicker = fillPicker.picker && fillPicker.picker;
-    const currentTarget = this.get('style control').treeData.target;
-    if (colorPicker && colorPicker.world()) {
-      // show halo again
-      once(colorPicker, 'remove', () => this.get('tool bar').showHaloFor(currentTarget));
-      return;
-    }
-    Object.values(controls).forEach(control => control.removeFocus());
-    const tree = this.getSubmorphNamed('style control');
-    // await promise.delay(100);
-    if (this.world().halos().length > 0) return;
-    tree.opacity = 0.5;
-    if (!this._userAskedToStay) { this.slideOut(); }
-  }
-
-  getControls () {
-    const tree = this.getSubmorphNamed('style control');
-    const controls = tree.treeData.root.children.map(m => m.children[0].panel);
-    return {
-      richTextControl: controls[0].submorphs[0],
-      shapeControl: controls[1],
-      borderControl: controls[2],
-      layoutControl: controls[3].submorphs[0]
-    };
-  }
-
-  focusMorph (target) {
-    debugger;
-    const tree = this.getSubmorphNamed('style control');
-    tree.opacity = 1;
-    const { richTextControl, layoutControl, borderControl, shapeControl } = this.getControls();
-
-    if (target.isLabel || target.isText || target.isButton) {
-      richTextControl.focusOn(target, false);
-    } else {
-      // temporary deactivate the rich text interface not to confuse the user
-    }
-
-    tree.treeData.target = target;
-    tree.update(true);
-    [layoutControl, borderControl, shapeControl].forEach(control => control && control.focusOn(target));
-  }
-
-  async selectTab (tabName) {
-    const tabToControl = {
-      'tables tab': 'table control',
-      'filters tab': 'filter control',
-      'charts tab': 'chart control',
-      'views tab': 'view control'
-    };
-    Object.keys(tabToControl).forEach(tab => this.getSubmorphNamed(tab).master = 'styleguide://Dashboard Studio Development/galyleo/title label');
-    this.getSubmorphNamed(tabName).master = 'styleguide://Dashboard Studio Development/galyleo/selected label';
-    const controlFrame = this.getSubmorphNamed('control frame');
-    const selectedControl = this.getSubmorphNamed(tabToControl[tabName]);
-    // await this.withAnimationDo(() => {
-    //   controlFrame.submorphs.filter(m => m != selectedControl).forEach(m => {
-    //     m.visible = m.isLayoutable = false;
-    //   });
-    // }, {
-    //   duration: 300
-    // });
-    // await this.withAnimationDo(() => {
-    //   selectedControl.visible = selectedControl.isLayoutable = true;
-    // }, {
-    //   duration: 300
-    // });
-    controlFrame.submorphs.forEach(m => {
-      m.visible = m.isLayoutable = m == selectedControl;
-    });
-    const styleControl = this.getSubmorphNamed('style control');
-    styleControl.visible = styleControl.isLayoutable = true;
-  }
-
-  // this.selectTab('views tab')
-
-  // Initialize this, with a dashboard.  The dashboard must be an instance
-  // of Dashboard, and there should only be one on a page.  Since the dashboard
-  // pushes information to the controller on a change of state, initialize
-  // the dashboard's dashboardController property to this.
-  // parameters:
-  //      dashboard: the dashboard for the callbacks
-
-  init (dashboard) {
-    this.dashboard = dashboard;
-    this.dashboard.dashboardController = this;
-    // this.getSubmorphNamed('l2lRoomInput').textString = '';
-    this.startStepping(10000, '__updateConnectionStatus__');
-    // this.getSubmorphNamed('external filter creator').init(dashboard);
-  }
-
-  toggleSlide () {
-    if (this.isToggled) {
-      this._userAskedToStay = false;
-      this.slideOut();
-    } else {
-      this._userAskedToStay = true;
-      this.slideIn();
-    }
-  }
-
-  // moves the side bar out of the view
-
-  async slideOut () {
-    const world = this.world();
-    await this.owner.withAnimationDo(() => {
-      const collapseIndicator = this.getSubmorphNamed('collapse indicator');
-      this.getSubmorphNamed('tab switcher').visible = false;
-      const networkIndicator = this.get('top bar network indicator');
-      networkIndicator.width = this.owner.width - networkIndicator.left - 20;
-      collapseIndicator.rotation = 2 * Math.PI;
-      this.left = this.owner.width - collapseIndicator.width - this.borderWidth;
-      this.relayout();
-      this.dashboard.width = this.owner.width - 20;
-      this.dashboard.clipMode = 'auto';
-    }, {
-      easing: easings.inOutExpo,
-      duration: 300
-    });
-    world.halos().forEach(h => h.maskBounds = world.getHaloMask());
-  }
-
-  // moves the sidebar into the view
-
-  async slideIn () {
-    if (this.right == this.owner.width) return;
-    const world = this.world();
-    await this.owner.withAnimationDo(() => {
-      const collapseIndicator = this.getSubmorphNamed('collapse indicator');
-      const networkIndicator = this.owner.getSubmorphNamed('top bar network indicator');
-      networkIndicator.width = this.owner.width - networkIndicator.left - this.width;
-      this.getSubmorphNamed('tab switcher').visible = true;
-      collapseIndicator.rotation = Math.PI;
-      this.right = this.owner.width;
-      this.dashboard.width = this.owner.width - this.width;
-      this.dashboard.clipMode = 'auto';
-      this.relayout();
-    }, {
-      easing: easings.inOutExpo,
-      duration: 300
-    });
-    world.halos().forEach(h => h.maskBounds = world.getHaloMask());
-  }
-
-  relayout () {
-    const collapseIndicator = this.getSubmorphNamed('collapse indicator');
-    const controlFrame = this.getSubmorphNamed('control frame');
-    collapseIndicator.leftCenter = this.innerBounds().insetBy(this.borderWidth).leftCenter();
-    controlFrame.height = this.height - controlFrame.top;
-  }
-
-  // update the status of the connection panel.  This is done every few
-  // seconds.  Just check when the last message was received, what room
-  // we're connected to (if any), when the last message was received, and
-  // if it was parsed properly
-  async __updateConnectionStatus__ () {
-    /* const status = await this.dashboard.checkStatus();
-    if (status == 'Connected') {
-      this.getSubmorphNamed('roomName').textString = this.dashboard.l2lRoomName;
-      this.getSubmorphNamed('connectStatus').fill = Color.green;
-      if (this.dashboard.lastMessageTime) {
-        this.getSubmorphNamed('messageTime').textString = this.dashboard.lastMessageTime.toLocaleTimeString('en-US', { hour12: false });
-        this.getSubmorphNamed('messageStatus').fill = this.dashboard.lastMessageParsed ? Color.green : Color.red;
-      } else {
-        this.getSubmorphNamed('messageTime').textString = 'Message Time';
-        this.getSubmorphNamed('messageStatus').fill = Color.rgba(0, 0, 0, 0);
-      }
-    } else if (status == 'Not Connected') {
-      this.getSubmorphNamed('roomName').textString = this.dashboard.l2lRoomName;
-      this.getSubmorphNamed('connectStatus').fill = Color.red;
-      this.getSubmorphNamed('messageTime').textString = 'Message Time';
-      this.getSubmorphNamed('messageStatus').fill = Color.rgba(0, 0, 0, 0);
-    } else {
-      this.getSubmorphNamed('roomName').textString = 'Room Name';
-      this.getSubmorphNamed('connectStatus').fill = Color.rgba(0, 0, 0, 0);
-      this.getSubmorphNamed('messageTime').textString = 'Message Time';
-      this.getSubmorphNamed('messageStatus').fill = Color.rgba(0, 0, 0, 0);
-    } */
-  }
-
-  // update the information displayed here and the menus of the
-  // external filter creator.  Make sure the tableList is displaying
-  // the current tables, the chartList the current charts, and make
-  // sure the pulldowns on the external filter creator have the right
-  // list of columns.  This is called by the dashboard when the
-  // set of tables or charts are updated, and when this is
-  // initialized, and onLoad.
-
-  __wrapData__ (dataEntries) {
-    return dataEntries.map(d => TableEntry.wrapDataEntry(d));
-  }
-
-  __wrapVisual__ (visualEntries) {
-    return visualEntries.map(v => TableEntry.wrapVisualEntry(v));
-  }
-
-  update () {
-    const tables = this.dashboard.tableNames.map(tableName => {
-      return TableEntry.wrapDataEntry(tableName, {
-        onDelete: () => this.removeTable(tableName),
-        onConfig: () => this._previewViewOrTable(tableName)
-      });
-    });
-    const charts = this.dashboard.chartNames.map(chartName => {
-      return TableEntry.wrapVisualEntry(chartName, {
-        onConfig: () => this.editChart(chartName),
-        onDelete: () => this.removeChart(chartName)
-      });
-    });
-    const views = this.dashboard.viewNames.map(viewName => {
-      return TableEntry.wrapVisualEntry(viewName, {
-        onConfig: () => this.editView(viewName),
-        onDelete: () => this.removeView(viewName)
-      });
-    });
-    const filters = this.dashboard.filterNames.map(filterName => {
-      return TableEntry.wrapVisualDataEntry(filterName, {
-        onConfig: () => this.highlightFilter(filterName),
-        onData: () => this.editFilter(filterName),
-        onDelete: () => this.removeFilter(filterName)
-      });
-    });
-    this.getSubmorphNamed('tableList').items = tables;
-    this.getSubmorphNamed('chartList').items = charts;
-    this.getSubmorphNamed('viewList').items = views;
-    this.getSubmorphNamed('filterList').items = filters;
-    // this.getSubmorphNamed('viewBuilder').init(this.dashboard);
-    // this.getSubmorphNamed('external filter creator').init(this.dashboard);
-  }
-
-  // Join the room chosen.  This is in connected to the fire event on the
-  // join button in the l2l control.
-  async joinRoom () {
-    const roomName = this.getSubmorphNamed('l2lRoomInput').textString;
-    if (roomName && roomName.length > 0) {
-      await this.dashboard.join(roomName);
-      this.__updateConnectionStatus__();
-    } else {
-      this.getSubmorphNamed('l2lRoomInput').show();
-    }
-  }
-
-  // A little utility that takes in a Part URL for a dialog,
-  // reads it, opens it in the world, and positions it off the
-  // top-left corner of the dashboard.  Called by buildChart,
-  // loadTable, and editChart.
-  // parameters:
-  //    dialogPartUrl: the part URL (part://) of the part to be loaded
-  // returns:
-  //    The loaded, positioned part.
-
-  async __openDialog__ (dialogPartUrl) {
-    return await this.dashboard.openDialog(dialogPartUrl);
-  }
-
-  // Load a table from an URL, using the tableLoader.  The tableLoader
-  // will add the loaded table to the table list in the dashboard, so
-  // init with the dashboard to permit the loader to update.
-  // This is called in response to the "Load Table" button
-
-  async loadTable () {
-    const tableBuilder = await this.__openDialog__('part://$world/galyleo/data loader');
-    tableBuilder.init(this.dashboard);
-  }
-
-  // Preview a table or a view.  This is called internally by
-  // previewSelectedTable() and previewSelectedView().  One optimization
-  // we could consider here is to have separate routines to preview
-  // tables and views in dashboard -- ATM, that code has to sort out
-  // which it is looking at.  But charts have to disambiguate too, and it's
-  // exactly the same code in dashboard.  One idea to simplify things is
-  // to attach a trivial view to each table and always preview/chart views
-  // parameters:
-  //    viewOrTableName: name of the table or view to show
-
-  __previewSelectedItem__ (viewOrTableListName) {
-    const viewOrTableList = this.getSubmorphNamed(viewOrTableListName);
-    const selectedItem = viewOrTableList.selection;
-    if (selectedItem) {
-      this.dashboard.displayPreview(selectedItem);
-    } else {
-      viewOrTableList.show();
-    }
-  }
-
-  _previewViewOrTable (viewOrTable) {
-    debugger;
-    this.dashboard.displayPreview(viewOrTable);
-  }
-
-  // Toggles between the view/edit mode of the list of tables
-  // Is is to support the interface envisioned by mahdi, where the
-  // user switches between view and edit mode of the list
-
-  toggleTableEdit () {
-    this.getSubmorphNamed('tableList').toggleEdit();
-  }
-
-  // Preview the table selected in the table list.  This just calls
-  // __previewSelectedItem__ to do this.  This is the target of the
-  // "Preview Table" button.
-
-  previewSelectedTable () {
-    this.__previewSelectedItem__('tableList');
-  }
-
-  // Removes a table from the list of tables.  Perhaps there should be
-  // some cascading effort in the dashboard when this happens.  Since charts
-  // are bound to tables, perhaps charts which reference the deleted table
-  // should be removed.
-  // This is called in response to the "Remove Table" button
-
-  removeSelectedTable () {
-    // fixme: dont do this via selection
-    const tableName = this.getSubmorphNamed('tableList').selection;
-    if (!tableName) {
-      return;
-    }
-    this.removeTable(tableName);
-  }
-
-  removeTable (tableName) {
-    if (this.dashboard.tables[tableName]) {
-      delete this.dashboard.tables[tableName];
-    }
-    this.dashboard.dirty = true;
-    this.update();
-  }
-
-  // Toggles between the view/edit mode of the list of views
-  // Is is to support the interface envisioned by mahdi, where the
-  // user switches between view and edit mode of the list
-
-  toggleViewEdit () {
-    this.getSubmorphNamed('viewList').toggleEdit();
-  }
-
-  // Preview the view selected in the view list.  This just calls
-  // __previewSelectedItem__ to do this.  This is the target of the
-  // "Preview View" button
-
-  previewSelectedView () {
-    this.__previewSelectedItem__('viewList');
-  }
-
-  // Tell the dashboard to edit th selected view.  This is in response to
-  // the "Edit View" button
-  editSelectedView () {
-    // fixme: dont do this via selection
-    const viewName = this.getSubmorphNamed('viewList').selection;
-    if (viewName) {
-      this.editView(viewName);
-    } else {
-      this.getSubmorphNamed('viewList').show();
-    }
-  }
-
-  editView (viewName) {
-    this.dashboard.createViewEditor(viewName);
-  }
-
-  // Tell the dashboard to remove the selected view.  This is in response to
-  // the "Remove View" button
-  removeSelectedView () {
-    // fixme: dont do this via selection
-    const viewName = this.getSubmorphNamed('viewList').selection;
-    if (viewName) {
-      delete this.dashboard.views[viewName];
-      this.update();
-    } else {
-      this.getSubmorphNamed('viewList').show();
-    }
-  }
-
-  // directly delete a view via name
-
-  removeView (viewName) {
-    delete this.dashboard.views[viewName];
-    this.update(); // preserve edit state
-    this.dashboard.dirty = true;
-  }
-
-  async createNewView () {
-    const newViewPrompt = await this.__openDialog__('part://$world/galyleo/view creator');
-    newViewPrompt.init(this.dashboard);
-  }
-
-  // Toggles between the view/edit mode of the list of charts
-  // Is is to support the interface envisioned by mahdi, where the
-  // user switches between view and edit mode of the list
-
-  toggleChartEdit () {
-    this.getSubmorphNamed('chartList').toggleEdit();
-  }
-
-  // open the chart builder in the world, and initialize it with
-  // the dashboard -- the chart builder will call the dashboard back with
-  // the finished part
-  // This is called in response to the "Add Chart" button
-
-  async buildChart () {
-    const chartBuilder = await this.__openDialog__('part://$world/galyleo/chart builder');
-    chartBuilder.init(this.dashboard);
-  }
-
-  // Edit the chart's style.  This is done
-  // through Google's built-in Chart Editor.  The dashboard has the
-  // code to build and open this, so all we do is make sure that
-  // there's a chartName and then turn matters over to the dashboard.
-  // This is called in response to the "Edit Chart Style" button
-
-  editSelectedChart () {
-    // fixme: dont do this via selection
-    const chartName = this.getSubmorphNamed('chartList').selection;
-    if (!chartName) {
-      return;
-    }
-    this.editChart(chartName);
-  }
-
-  editChart (chartName) {
-    this.dashboard.editChartStyle(chartName);
-  }
-
-  // When an item is clicked on the chartList, it is highlighted so the
-  // user can see what the Edit Chart  and Remove Chart  buttons
-  // will be applied to.
-  // This is connected to the selection property of chartList.
-
-  highlightChart () {
-    // fixme: dont do this via selection
-    const chartName = this.getSubmorphNamed('chartList').selection;
-    this.get(chartName).show();
-  }
-
-  // Remove the selected chart from the dashboard.  This is called in response
-  // to the "RemoveChart" button
-  removeSelectedChart () {
-    // fixme: dont do this via selection
-    const chartName = this.getSubmorphNamed('chartList').selection;
-    this.removeChart(chartName);
-  }
-
-  removeChart (chartName) {
-    const chartMorph = this.dashboard.getSubmorphNamed(chartName);
-    this.dashboard.dirty = true;
-    chartMorph.remove();
-  }
-
-  // Toggles between the view/edit mode of the list of filters
-  // Is is to support the interface envisioned by mahdi, where the
-  // user switches between view and edit mode of the list
-
-  toggleFilterEdit () {
-    this.getSubmorphNamed('filterList').toggleEdit();
-  }
-
-  // open the external filter creator in the world, and initialize it with
-  // the dashboard -- the filter creator will call the dashboard back with
-  // the finished part
-  // This is called in response to the "Add Filter" button
-
-  async buildFilter () {
-    const filterBuilder = await this.__openDialog__('part://Dashboard Studio Development/galyleo/filter builder');
-    filterBuilder.init(this.dashboard);
-  }
-
-  // When an item is clicked on the filterList, it is highlighted so the
-  // user can see what the  Remove Filter  buttons
-  // will be applied to.
-  // This is connected to the selection property of filterList.
-
-  highlightSelectedFilter () {
-    // fixme: dont do this via selection
-    const filterName = this.getSubmorphNamed('filterList').selection;
-    this.highlightFilter(filterName);
-  }
-
-  highlightFilter (filterName) {
-    this.get(filterName).show();
-  }
-
-  async editFilter (filterName) {
-    const filterEditor = await this.__openDialog__('part://$world/galyleo/visual filter editor');
-    filterEditor.init(this.dashboard, filterName);
-  }
-
-  // Remove the selected chart from the dashboard.  This is called in response
-  // to the "RemoveFilter" button
-  removeSelectedFilter () {
-    // fixme: dont do this via selection
-    const filterName = this.getSubmorphNamed('filterList').selection;
-    this.removeFilter(filterName);
-  }
-
-  removeFilter (filterName) {
-    const filterMorph = this.dashboard.getSubmorphNamed(filterName);
-    filterMorph.remove();
-    this.update();
-    this.dashboard.dirty = true;
-  }
-}
-
-import { UserFlap } from 'lively.user/morphic/user-ui.js';
-
-export default class DashboardUserFlap extends UserFlap {
-  onLoad () {
-    super.onLoad();
-    this.whenRendered().then(_ => {
-      this.dashboard = this.get('dashboard');
-      /* const labelType = {
-        type: 'label',
-        name: 'room-name',
-        fontSize: 8,
-        fontFamliy: 'Helvetica Neue, Verdana, Sans Serif',
-        fontWeight: 'bold',
-        padding: Rectangle.inset(4),
-        reactsToPointer: false
-      }; */
-    });
-  }
-
-  async updateNetworkIndicator (l2lClient = this.dashboard.l2lclient) {
-
-  }
-}
+export { LoadDialog, SaveDialog };
