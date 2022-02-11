@@ -786,8 +786,8 @@ const DatePicker = component({
   borderColor: Color.rgb(23, 160, 251),
   borderRadius: 6,
   clipMode: 'hidden',
-  extent: pt(161, 245.9),
-  fill: Color.rgb(247, 147, 30),
+  extent: pt(166.6,245.9),
+  fill: Color.rgb(247,180,30),
   position: pt(327.2, 247.1),
   submorphs: [{
     type: Label,

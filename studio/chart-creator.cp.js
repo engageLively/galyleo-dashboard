@@ -208,6 +208,7 @@ export class ChartBuilderModel extends ViewModel {
 // ChartBuilder.openInWorld()
 const ChartBuilder = component(GalyleoWindow, {
   name: 'chart builder',
+  defaultViewModel: ChartBuilderModel,
   extent: pt(340.5, 199.9),
   layout: new TilingLayout({
     axis: 'column',
@@ -221,7 +222,6 @@ const ChartBuilder = component(GalyleoWindow, {
     }]],
     wrapSubmorphs: false
   }),
-  defaultViewModel: ChartBuilderModel,
   submorphs: [
     { name: 'window title', textString: 'Chart builder' },
     add({
