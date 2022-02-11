@@ -842,7 +842,19 @@ const SliderWithValue = component({
   }),
   fill: Color.transparent,
   submorphs: [
-    part(Slider, { name: 'slider' }), part(SliderInputLabel, { name: 'value input' })
+    part(Slider, {
+      name: 'slider',
+      submorphs: [{
+        name: 'knob',
+        position: pt(84.4,0)
+      }] 
+    }), part(SliderInputLabel, { name: 'value input' }), {
+      name: 'indicator',
+      borderColor: Color.rgb(23, 160, 251),
+      borderRadius: 31,
+      extent: pt(49.5, 47.8),
+      fill: Color.rgba(255,76,76,0.54)
+    }
   ]
 });
 
