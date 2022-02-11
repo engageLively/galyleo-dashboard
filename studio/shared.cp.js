@@ -1,4 +1,4 @@
-import { component, add, ViewModel, part } from 'lively.morphic/components/core.js';
+import { component, without, add, ViewModel, part } from 'lively.morphic/components/core.js';
 import { pt, LinearGradient, Color, rect } from 'lively.graphics';
 import { TilingLayout, Icon, VerticalLayout, ShadowObject, Image, Label, HorizontalLayout, Morph, Text } from 'lively.morphic';
 import { arr, obj, num } from 'lively.lang';
@@ -6,7 +6,11 @@ import { MorphList, DropDownListModel } from 'lively.components';
 import { connect, noUpdate } from 'lively.bindings';
 import { SystemList } from 'lively.ide/styling/shared.cp.js';
 import { DropDownList } from 'lively.components/list.cp.js';
-import { NumberInput } from 'lively.ide/studio/shared.cp.js';
+import { NumberInput, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
+import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
+import { Scrubber } from 'lively.ide/value-widgets.cp.js';
+import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
+import { ButtonModel } from 'lively.components/buttons.js';
 
 export class SelectableEntryModel extends ViewModel {
   static get properties () {
@@ -50,9 +54,10 @@ export class SelectableEntryModel extends ViewModel {
   }
 
   static wrap (entryName, opts) {
-    const entry = new SelectableEntry({
-      entryName,
-      master: SelectableEntry
+    const entry = part(SelectableEntry, {
+      viewModel: {
+        entryName
+      }
     });
 
     entry.master.reconcileSubmorphs().then(async () => {
@@ -371,17 +376,99 @@ export class GalyleoListMorph extends Morph {
   }
 }
 
+const GalyleoTextInput = component(TextInput, {
+  name: 'galyleo/text input',
+  borderColor: Color.rgbHex('8E9B9B'),
+  borderWidth: 1,
+  fontSize: 14,
+  padding: rect(2, 2, 0, 0),
+  fill: Color.rgba(0, 0, 0, 0.15),
+  fontColor: Color.black
+});
+
+// GalyleoValueInput.openInWorld()
+const GalyleoValueInput = component(Scrubber, { name: 'galyleo/value input', fontColor: Color.black });
+
 // GalyleoNumberInput.openInWorld()
+// GalyleoNumberInput.get('value').master.auto
 const GalyleoNumberInput = component(NumberInput, {
   name: 'galyleo/number input',
+  borderColor: Color.rgbHex('8E9B9B'),
+  borderWidth: 1,
   fill: Color.rgba(0, 0, 0, 0.15),
   submorphs: [{
-    name: 'value',
-    fontColor: Color.rgb(63, 63, 63),
-    extent: pt(72, 22)
-  }, {
     name: 'interactive label',
     fontColor: Color.rgba(100, 100, 100, .5)
+  }, {
+    name: 'value',
+    readOnly: false,
+    master: GalyleoValueInput
+  }]
+});
+
+const GalyleoAddButtonDefault = component(AddButton, {
+  name: 'galyleo/add button/default',
+  fontColor: Color.rgb(66, 73, 73)
+});
+
+const GalyleoAddButtonHovered = component(AddButton, {
+  name: 'galyleo/add button/hovered',
+  fontColor: Color.rgb(66, 73, 73),
+  fill: Color.black.withA(.1)
+});
+
+// GalyleoAddButton.openInWorld()
+const GalyleoAddButton = component(AddButton, {
+  name: 'galyleo/add button',
+  master: { hover: GalyleoAddButtonDefault, hover: GalyleoAddButtonHovered },
+  fontColor: Color.rgb(66, 73, 73)
+});
+
+// GalyleoPropertyLabel.openInWorld();
+const GalyleoPropertyLabel = component(PropertyLabel, {
+  name: 'galyleo/property label',
+  fontColor: Color.rgb(66, 73, 73)
+});
+
+// GalyleoPropertyLabelActive.openInWorld();
+const GalyleoPropertyLabelActive = component(PropertyLabelActive, {
+  name: 'galyleo/property label/active',
+  fontColor: Color.rgb(255, 255, 255),
+  fill: Color.rgb(251, 140, 0),
+  extent: pt(31.2, 34)
+});
+
+// GalyleoPropertyLabelHovered.openInWorld();
+const GalyleoPropertyLabelHovered = component(PropertyLabelHovered, {
+  name: 'galyleo/property label/hovered',
+  fill: Color.rgb(172, 172, 172),
+  fontColor: Color.rgb(66, 73, 73)
+});
+
+// ColorInput.openInWorld()
+// part(GalyleoColorInput).openInWorld()
+const GalyleoColorInput = component(ColorInput, {
+  name: 'galyleo/color input',
+  layout: new TilingLayout({
+    axisAlign: 'center',
+    orderByIndex: true,
+    padding: rect(20, 2, -10, 0),
+    resizePolicies: [['hex input', {
+      height: 'fill',
+      width: 'fixed'
+    }], ['opacity input', {
+      height: 'fill',
+      width: 'fixed'
+    }]],
+    spacing: 10,
+    wrapSubmorphs: false
+  }),
+  submorphs: [{
+    name: 'hex input',
+    master: GalyleoTextInput
+  }, {
+    name: 'opacity input',
+    master: GalyleoNumberInput
   }]
 });
 
@@ -486,7 +573,8 @@ const GalyleoDropDown = component(DropDownList, {
   name: 'galyleo/drop down',
   defaultViewModel: GalyleoDropDownListModel,
   fill: Color.rgba(0, 0, 0, 0.15),
-  borderWidth: 0,
+  borderWidth: 1,
+  borderColor: Color.rgbHex('8E9B9B'),
   borderRadius: 30,
   layout: new TilingLayout({
     align: 'center',
@@ -499,6 +587,11 @@ const GalyleoDropDown = component(DropDownList, {
   }),
   extent: pt(160, 30),
   submorphs: [
+    add({
+      type: Label,
+      name: 'interactive label',
+      fontColor: Color.rgb(128, 128, 128)
+    }),
     {
       name: 'label',
       fontWeight: 800,
@@ -568,6 +661,7 @@ connect(GalyleoList, 'extent', GalyleoList, 'relayout');
 
 const MenuBarButtonDefault = component({
   name: 'menu bar button default',
+  defaultViewModel: ButtonModel,
   borderColor: Color.rgb(23, 160, 251),
   borderRadius: 5,
   extent: pt(127.8, 38.2),
@@ -831,8 +925,74 @@ const TableEntryVisual = component(TableEntryEdit, {
   ]
 });
 
+// part(GalyleoConfirmPrompt).openInWorld().activate()
+const GalyleoConfirmPrompt = component(GalyleoWindow, {
+  name: 'galyleo/confirm prompt',
+  defaultViewModel: ConfirmPromptModel,
+  extent: pt(340.5, 248.4),
+  layout: new TilingLayout({
+    axis: 'column',
+    orderByIndex: true,
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['prompt content', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['button wrapper', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    wrapSubmorphs: false
+  }),
+  submorphs: [add({
+    type: Text,
+    name: 'prompt title',
+    fontSize: 15,
+    borderColor: Color.rgb(23, 160, 251),
+    borderWidth: 0,
+    extent: pt(341, 142.8),
+    padding: rect(20, 10, 0, 0),
+    fill: Color.rgba(0, 0, 0, 0),
+    fixedHeight: true,
+    fixedWidth: true,
+    lineWrapping: true,
+    readOnly: true,
+    textString: 'This is something to confirm or not....'
+  }), add({
+    name: 'button wrapper',
+    layout: new TilingLayout({
+      align: 'center',
+      axisAlign: 'center',
+      justifySubmorphs: 'spaced',
+      orderByIndex: true,
+      padding: rect(20, 0, 0, 0)
+    }),
+    borderColor: Color.rgb(23, 160, 251),
+    borderWidth: 0,
+    extent: pt(341, 72.4),
+    fill: Color.rgba(0, 0, 0, 0),
+    submorphs: [part(PromptButton, {
+      name: 'cancel button',
+      position: pt(18.1, 11.8),
+      submorphs: [{
+        name: 'label',
+        textAndAttributes: ['Cancel', null]
+      }, without('icon')]
+    }), part(PromptButton, {
+      name: 'ok button',
+      position: pt(18.1, 11.8),
+      submorphs: [{
+        name: 'label',
+        textAndAttributes: ['Accept', null]
+      }, without('icon')]
+    })]
+  })]
+});
+
 export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError,
-  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput
+  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput,
+  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt
 };
