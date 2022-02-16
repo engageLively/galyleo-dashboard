@@ -1,7 +1,7 @@
 import { ViewModel, without, part, add, component } from 'lively.morphic/components/core.js';
 import { GalyleoWindow, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
 import { pt, Color } from 'lively.graphics';
-import { TilingLayout } from 'lively.morphic';
+import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { rect } from 'lively.graphics/geometry-2d.js';
 
@@ -289,4 +289,98 @@ const ChartBuilder = component(GalyleoWindow, {
   ]
 });
 
-export { ChartBuilder };
+export class GoogleChartHolderMorph extends HTMLMorph {
+  /*
+  ** A morph which draws a Google Chart.  Very simple, because almost all
+  ** the work is done by the dashboard.  The central routine in this is drawChart(),
+  ** which just asks a ChartWrapper created by the Dashboard to draw the chart
+  ** in this object's DOM node .  See:
+  ** https://developers.google.com/chart/interactive/docs/reference#chartwrapperobject
+  ** for documentation on the ChartWrapper.
+  ** Properties:
+  ** 1. the chartDiv.  Just a property which encapsulates the DOM node.  This is
+  **    passed to the wrapper as the place to draw the chart
+  ** 2. defaultHTML: overrides the parent node property to ensure that this
+  **    DOM node has a referenceable ID.
+  ** Check to see if the wrapper should be made a property.  The only reason to do
+  ** this would be if the thing doesn't redraw properly on load.
+  */
+  static get properties () {
+    return {
+      chartDiv: { // The node where the chart lives.
+        derived: true,
+        get () {
+          return this.domNode;
+        }
+      },
+      defaultHTML: {
+        derived: true,
+        get () {
+          return `<div id="chart-container-${this.id}"></div>`;
+        }
+      }
+    };
+  }
+
+  // An indicator that this morph is a chart, which the dashboard uses
+  // to manipulate and organize the chart morphs in the dashboard.
+
+  get isChart () {
+    return true;
+  }
+
+  // Initialize.  Just set the morph name to the name of the chart on the
+  // dashboard, a technique the dashboard uses to keep track of which charts
+  // belong to which morphs.  Also initialize the dashboard instance variable and
+  // set the html to an initial value -- drawChart overwrites the HTML.  Called
+  // by dashboard.__getChartMorph__()
+
+  init (chartName) {
+    this.name = chartName;
+    this.html = this.defaultHTML;
+    delete this.wrapper; // make sure this is clean;
+    this.requestRedraw();
+    this.getSubmorphNamed('resizer').bottomRight = this.innerBounds().bottomRight();
+  }
+
+  // Redraw, using the stored wrapper if any.  This is hardwired to this.extent, so
+  // when the shape of the morph changes the chart is redrawn.  The default
+  // options for charts include {width: "100%", height: "100%"}, so the wrapper
+  // code adjusts the chart size to exactly fill the morph.  The effect of all of
+  // this is that the chart seamlessly resizes when the morph is resized.
+  // This is why we cleaned up any lingering this.wrapper on init, and just to
+  // make sure we don't get bogus calls we only draw when we have a stored wrapper
+
+  async requestRedraw () {
+    if (this.wrapper) {
+      await this.whenRendered(); // ensure width is propagated
+      this.drawChart(this.wrapper);
+    }
+  }
+
+  // Actually draw the chart.  We first make sure that width and height are set
+  // to 100% -- we do this in ChartBuilder.__makeOptions__ as well, so this is
+  // suspenders-and-belt, and then we just tell the wrapper to draw the chart
+  // in this div.
+
+  drawChart (wrapper) {
+    wrapper.setOption('width', '100%');
+    wrapper.setOption('height', '100%');
+    wrapper.draw(this.chartDiv);
+    this.wrapper = wrapper;
+  }
+
+  // Resize the chart in response to a drag event
+
+  resizeChart (evt) {
+    this.resizeBy(evt.state.dragDelta);
+    this.requestRedraw();
+  }
+}
+
+const GoogleChartHolder = component({
+  name: 'google chart holder',
+  type: GoogleChartHolderMorph
+});
+
+export { ChartBuilder, GoogleChartHolder };
