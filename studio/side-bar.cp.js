@@ -2,7 +2,7 @@ import { PropertiesPanel } from 'lively.ide/studio/properties-panel.cp.js';
 import { component, part } from 'lively.morphic/components/core.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
-import { GalyleoColorInput, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoPropertyLabel, GalyleoAddButton, GalyleoDropDown, TableEntry, GalyleoNumberInput } from './shared.cp.js';
+import { GalyleoColorInput, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoPropertyLabel, GalyleoAddButton, GalyleoDropDown, TableEntry, GalyleoNumberInput } from './shared.cp.js';
 import { Morph, ShadowObject, TilingLayout, HorizontalLayout, easings } from 'lively.morphic';
 import { arr } from 'lively.lang';
 import { once } from 'lively.bindings';
@@ -45,7 +45,65 @@ const GalyleoMiniLayoutPreview = component(MiniLayoutPreview, {
 // GalyleoLayoutFlap.openInWorld()
 const GalyleoLayoutFlap = component(AutoLayoutAlignmentFlap, {
   name: 'galyleo/layout flap',
-  fill: Color.darkgray
+  fill: Color.rgb(215, 219, 221),
+  submorphs: [
+    {
+      name: 'padding and spacing',
+      submorphs: [
+        {
+          name: 'container placeholder',
+          submorphs: [{
+            name: 'mini bar 1',
+            fill: Color.rgb(255, 152, 0)
+          }, {
+            name: 'mini bar 2',
+            fill: Color.rgb(255, 152, 0)
+          }, {
+            name: 'mini bar 3',
+            fill: Color.rgb(255, 152, 0)
+          }]
+        },
+        {
+          name: 'spacing preview',
+          submorphs: [{
+            name: 'mini bar 1',
+            fill: Color.rgb(255, 152, 0)
+          }, {
+            name: 'mini bar 2',
+            fill: Color.rgb(255, 152, 0)
+          }, {
+            name: 'mini bar 3',
+            fill: Color.rgb(255, 152, 0)
+          }]
+        },
+        {
+          name: 'padding top',
+          master: GalyleoNumberInput,
+          borderWidth: 0
+        },
+        {
+          name: 'padding bottom',
+          master: GalyleoNumberInput,
+          borderWidth: 0
+        },
+        {
+          name: 'padding left',
+          master: GalyleoNumberInput,
+          borderWidth: 0
+        },
+        {
+          name: 'padding right',
+          master: GalyleoNumberInput,
+          borderWidth: 0
+        }
+      ]
+    },
+    {
+      name: 'spacing selector',
+      master: GalyleoDropDown,
+      extent: pt(156, 25)
+    }
+  ]
 });
 
 // GalyleoMiniLayoutPreviewActive.openInWorld()
@@ -702,22 +760,8 @@ export class DashboardControl extends Morph {
 }
 
 // GalyleoPropertiesPanel.openInWorld()
-// m = part(GalyleoPropertiesPanel)
-// c = m.get('background fill input')
-// m.openInWorld()
-// o = c.get('opacity input')
-// o.master._overriddenProps.get(o.get('value')){
-//   cursorColor: true,
-//   extent: true,
-//   fixedWidth: true,
-//   fontColor: true,
-//   fontSize: true,
-//   master: true
-// }
-
 const GalyleoPropertiesPanel = component(PropertiesPanel, {
   name: 'galyleo/properties panel',
-  // fill: Color.rgb(189, 195, 199),
   fill: Color.rgb(215, 219, 221),
   extent: pt(255.4, 917.3),
   submorphs: [{
@@ -766,6 +810,11 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
       { name: 'independent corner toggle', master: GalyleoAddButton },
       {
         name: 'clip mode selector',
+        viewModel: new GalyleoDropDownListModel({
+          items: ['visible', 'hidden', 'scroll', 'auto'],
+          listAlign: 'selection',
+          openListInWorld: true
+        }),
         master: GalyleoDropDown,
         submorphs: [
           { name: 'interactive label', fontColor: Color.rgb(128, 128, 128) }
@@ -790,10 +839,20 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
         submorphs: [
           {
             name: 'font family selector',
-            master: GalyleoDropDown
+            master: GalyleoDropDown,
+            viewModel: new GalyleoDropDownListModel({
+              items: ['Comic Sans'],
+              listAlign: 'selection',
+              openListInWorld: true
+            })
           },
           {
             name: 'font weight selector',
+            viewModel: new GalyleoDropDownListModel({
+              items: ['bold', 'normal'],
+              listAlign: 'selection',
+              openListInWorld: true
+            }),
             master: GalyleoDropDown
           },
           {
@@ -843,6 +902,11 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
           },
           {
             name: 'line wrapping selector',
+            viewModel: new GalyleoDropDownListModel({
+              items: ['wrap'],
+              listAlign: 'selection',
+              openListInWorld: true
+            }),
             master: GalyleoDropDown
           }
         ]
@@ -851,6 +915,16 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
   }, {
     name: 'layout control',
     visible: true,
+    viewModel: {
+      controlFlapComponent: GalyleoLayoutFlap,
+      buttonActiveComponent: GalyleoAddButtonHovered,
+      buttonInactiveComponent: GalyleoAddButton
+    },
+    // master: {
+    //   scoped: {
+    //          controlFlapComponent: GalyleoLayoutFlap 
+    //   }
+    // },
     submorphs: [
       {
         name: 'h floater',
@@ -873,7 +947,9 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
           { name: 'spacing input', master: GalyleoNumberInput },
           { name: 'total padding input', master: GalyleoNumberInput }, {
             name: 'mini layout preview',
-            master: GalyleoMiniLayoutPreview
+            master: GalyleoMiniLayoutPreview,
+            activeComponent: GalyleoMiniLayoutPreviewActive,
+            inactiveComponent: GalyleoMiniLayoutPreview
           }
         ]
       },

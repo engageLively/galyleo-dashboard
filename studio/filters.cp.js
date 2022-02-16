@@ -667,6 +667,7 @@ export class NamedFilterMorph extends Morph {
 }
 
 const NamedFilter = component(VisualFilter, {
+  type: NamedFilterMorph,
   fill: Color.rgba(0, 0, 0, 0.05),
   borderWidth: 1,
   submorphs: [

@@ -402,6 +402,7 @@ const GalyleoNumberInput = component(NumberInput, {
   }, {
     name: 'value',
     readOnly: false,
+    cursorColor: Color.black,
     master: GalyleoValueInput
   }]
 });
@@ -528,7 +529,7 @@ const GalyleoDropDownList = component(SystemList, {
 // part(GalyleoDropDown, { viewModel: { placeholder: 'select please...', listAlign: 'selection', listMaster: GalyleoDropDownList, openListInWorld: true, items: [1,2,3] }}).openInWorld()
 // GalyleoDropDown.openInWorld()
 
-class GalyleoDropDownListModel extends DropDownListModel {
+export class GalyleoDropDownListModel extends DropDownListModel {
   static get properties () {
     return {
       placeholder: {
@@ -569,8 +570,8 @@ class GalyleoDropDownListModel extends DropDownListModel {
   }
 }
 
-const GalyleoDropDown = component(DropDownList, {
-  name: 'galyleo/drop down',
+const GalyleoDropDownAuto = component(DropDownList, {
+  name: 'galyleo/drop down/auto',
   defaultViewModel: GalyleoDropDownListModel,
   fill: Color.rgba(0, 0, 0, 0.15),
   borderWidth: 1,
@@ -605,6 +606,16 @@ const GalyleoDropDown = component(DropDownList, {
       imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/list-icon.svg'
     })
   ]
+});
+
+const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
+  name: 'galyleo/drop down/clicked',
+  fill: Color.darkGray
+});
+
+const GalyleoDropDown = component(GalyleoDropDown, {
+  name: 'galyleo/drop down',
+  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }  
 });
 
 // GalyleoDropDownError.openInWorld()
