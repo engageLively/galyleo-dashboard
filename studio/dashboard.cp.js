@@ -6,7 +6,7 @@ import { component, ViewModel, without, part, add } from 'lively.morphic/compone
 import { createMorphSnapshot } from 'lively.morphic/serialization.js';
 import { resource } from 'lively.resources/src/helpers.js';
 import { pt, Rectangle, Point, Color, rect } from 'lively.graphics/index.js';
-import L2LClient from 'lively.2lively/client.js';
+
 import { LoadingIndicator } from 'lively.components';
 import { obj, promise, arr } from 'lively.lang';
 import { connect } from 'lively.bindings/index.js';
@@ -257,7 +257,16 @@ export class Dashboard extends ViewModel {
           return [
             'clear', 'checkAndLoad', 'checkPossibleRenameFromBrowser', 'checkPossibleRename', 'dependencyGraph', 'testDashboards',
             'loadTestDashboard', 'loadDashboardFromFile', 'checkAndSave', 'saveDashboardToFile', 'prepareJSONForm',
-            'openDialog', 'confirm', 'isDirty', 'clearSnapshots'
+            'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
+            'tables', 'views', 'filters', 'charts'
+          ];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { signal: 'onSubmorphChange', handler: 'onSubmorphChange' },
+            { signal: 'onDrag', handler: 'onDrag', override: true }
           ];
         }
       }
@@ -265,7 +274,6 @@ export class Dashboard extends ViewModel {
   }
 
   onSubmorphChange (change, submorph) {
-    super.onSubmorphChange(change, submorph);
     // only do this if one of the registered morphs has changed
     // we shoot ourselves in the knee by dropping other stuff onto
     // here
@@ -273,6 +281,8 @@ export class Dashboard extends ViewModel {
       this._takeSnapshot();
     }
   }
+
+  onDrag (evt) { /* prevent default */ }
 
   get commands () {
     return [
@@ -291,8 +301,6 @@ export class Dashboard extends ViewModel {
     ];
   }
 
-  onDrag (evt) { /* prevent default */ }
-
   get dependencyGraph () {
     const result = {
       charts: {}, views: {}
@@ -307,6 +315,10 @@ export class Dashboard extends ViewModel {
       };
     });
     return result;
+  }
+
+  init (controller) {
+    this.dashboardController = controller;
   }
   
   /**
@@ -395,7 +407,6 @@ export class Dashboard extends ViewModel {
     this.chartNames.forEach(chartName => {
       this.charts[chartName].chartMorph.remove();
     });
-    this.removeAllMorphs();
     this.charts = {};
     this.canvas.removeAllMorphs();
     this.dirty = false;
@@ -428,7 +439,6 @@ export class Dashboard extends ViewModel {
         this.restoreFromJSONForm(dashboardContents);
         this._updateProjectName(filePath);
         this.l2lRoomName = filePath;
-        this._rejoinL2LRoom();
         return true;
       } else {
         $world.alert(check.message);
@@ -1349,342 +1359,6 @@ export class Dashboard extends ViewModel {
       this._setFields(restoredMorph, morphDescriptor.textProperties, this._textFields);
       this._setComplexTextFields(restoredMorph, complexTextFieldsSource);
     }
-  }
-
-  /* -- L2L Client Initialization and Code -- */
-
-  // FIXME: Is this really used at all any more?
-  
-  /**  
-   * Services exported from an L2L client.  In this case, the only
-   * service ATM is in response to an [el-jupyter] message, and
-   * the service is loading data contained in the package.
-   */
-  get l2lDashboardServices () {
-    const self = this;
-    return {
-      '[el-jupyter] message' (tracker, { sender, data }, ackFn, socket) {
-        self.__logEntry(`message ${data.entryType} from ${sender}`);
-        self.__lastMessage__ = data.payload;
-        self._processIncomingL2LMessage(sender, data);
-      }
-    };
-  }
-  
-  /**
-   * Process an incoming L2L message from the Notebook.  This will be one of three:
-   * a response to a request for information on what tables the underlying
-   * Notebook offers, a table, or an acknowledgement of a sent message. In the
-   * case of an acknowledgement, delete the acknowledged message from the
-   * send queue (see _sendQueuedMessages_). In the case of a table, just add it;
-   * in the case of an information supply, update the availableTables dictionary
-   * with the response
-   * @param { object } sender - Sender of the original message.
-   * @param { object } message - The payload of the original message.
-   */
-  _processIncomingL2LMessage (sender, message) {
-    if (message.eventType === 'table queries') {
-      this._addAvailableTablesFromMessage(message.payload);
-      this._sendAck(sender, message.payload.number);
-    } else if (message.eventType === 'load_table' || message.eventType === 'table response') {
-      this._addTableFromMessage(message.payload);
-      this._sendAck(sender, message.payload._l2l_msgNumber_);
-    } else if (message.eventType === 'ack') {
-      // don't ack an ack.  The worst that will happen is an ack isn't received is
-      // that the sender will just keep resending until it gets an ack, which will
-      // eventually happen
-      this._processAck(sender, message.payload);
-    } else {
-      this._logEntry(`Unrecognized message event type ${message.eventType}`);
-    }
-  }
-  
-  /**
-   * Send an acknowledgment to a received message. Just send a simple message.
-   * @param { string } sender - Id of the sender.
-   * @param { number } messageNumber - Number of the incoming message.
-   */
-  _sendAck (sender, messageNumber) {
-    this.__logEntry(`Acknowledged message ${messageNumber} from ${sender}`);
-    const payload = { originalSender: sender, receivedMessageNumber: messageNumber };
-    this._rawSendMessage({ event_type: 'ack', data: payload });
-  }
-  
-  /**
-   * Process an acknowledgement message.  Just go through the message queue and
-   * see if it matches a message wairing to be sent; if so, it's been sent and
-   * received by the room, so remove it from the queue.
-   * FIXME: ATM, removes if it's been seen by ONE receiver; we are assuming
-   * two-party communication.  Revisit when we have multiple parties in the room.
-   * And is this the responsibility of the client or the server?
-   * @param {string} sender - Sender of the acknowledgement.
-   * @param { object } ackBody - the body of an acknowledgement message; the fields we are interested in is sender (the sender of the message being acked), and receivedMessageNumber (number of the message being acked)
-   */
-  _processAck (sender, ackBody) {
-    if (!ackBody) {
-      return;
-    }
-    const originalSender = ackBody.originalSender;
-    const originalMessageNumber = ackBody.receivedMessageNumber;
-    const processMessage = originalSender && originalSender === this.l2lclient.socketId &&
-                            !isNaN(originalMessageNumber) && this._messageQueue_ &&
-                            this._messageQueue_.length > 0;
-    // If we get here, the message being acknowledged came from us, and we have
-    // messages waiting for ack, so just remove this message from the queue.
-    // Subtle timing issue: should we (and _sendMessage_, and
-    // _sendQueuedMessages_) lock the message queue?  I don't think so,
-    // because JavaScript is event-based and single-threaded,
-    // so those timing bugs should be impossible.
-    if (processMessage) {
-      this._messageQueue_ = this._messageQueue_.filter(queueEntry => queueEntry.number !== originalMessageNumber);
-    }
-  }
-  
-  /**
-   * A utility to to log entries.  The entries are activity-specific.
-   * Just shoves the given entry on the log, with the time that it happened.
-   * @param { string|object } entry - A string or object that is the log entry.
-   */
-  _logEntry (entry) {
-    if (!this._log) {
-      this._log = [];
-    }
-    this._log.push({ entry: entry, time: new Date() });
-  }
-
-  /**
-   * Show the log.  I just got sick of looking for this...
-   */
-  _showLog () {
-    window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
-  }
-  
-  /**
-   * Send message to the current room, adding a message number and ensuring it
-   * is acknowledged by all participants.  Also adds the message to the queue to be
-   * resent, with the time it was sent and the message number.
-   * @param {string} message - message to be sent
-   */
-  _sendMessage (message) {
-    const msgNumber = this._currentMessageNumber;
-    this._messageQueue_.push({ number: msgNumber, message: message, time: Date.now() });
-    this._rawSendMessage(message, msgNumber);
-    ++this._currentMessageNumber;
-  }
-  
-  /**
-   * Send a message. This is the only method that should actually ask l2lclient to
-   * broadcast an [el-jupyter] message.  If it is given a number, as the second parameter,
-   * puts _l2l_msgNumber_ in the message payload.
-   * @param { object } message - message to send, as an object
-   * @param { number } [msgNumber] - Number to put in the _l2l_msgNumber_ field.  If undefined, omitted
-   */
-  _rawSendMessage (message, msgNumber = undefined) {
-    const sendMessage = isNaN(msgNumber) ? {} : { _l2l_msgNumber_: msgNumber };
-    Object.assign(sendMessage, message);
-    this.l2lclient.broadcast(this.l2lRoomName, '[el-jupyter] message', sendMessage);
-  }
-
-  /**
-   * Time, in milliseconds.  To allow for an ack.  Set (currently) to 200 ms to allow
-   * for wide-area delays.  Messages which are older than this will be resent
-   */
-  get _msgTimeOut () { return 200; }
-
-  get _updateInterval () { return 5000; }
-  
-  /**
-   * Send the messages that have been waiting in the queue; if we haven't received
-   * an ack they still need to be sent. This is a stepping script that runs
-   * every _msgTimeOut_ milliseconds. Updates the network flap every _updateInterval_ milliseconds
-   */
-  async _sendQueuedMessages () {
-    if (isNaN(this._intervalCount_)) {
-      this._intervalCount_ = 0;
-    } else {
-      this._intervalCount_++;
-    }
-    try {
-      const currentTime = Date.now();
-      if (this._messageQueue && this._messageQueue_length > 0 && this.l2lRoomName) {
-        if (this.l2lclient.isOnline()) {
-          this._messageQueue.forEach(messageSpec => {
-            if (currentTime - messageSpec.time >= this._msgTimeOut) {
-              this._rawSendMessage(messageSpec.message, messageSpec.number);
-            }
-          });
-        }
-      }
-      try {
-        if (this._intervalCount > this._updateInterval / this._msgTimeOut) {
-          await this.get('user flap').updateNetworkIndicator(this.l2lclient);
-          this._intervalCount = 0;
-        }
-      } catch (error) {
-        this.__logEntry(`Error in update network indicator: ${error}`);
-      }
-    } catch (error) {
-      try {
-        this.__logEntry(`Error in _sendQueuedMessages_: ${error}`);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  }
-  
-  /**
-   * Add entries to the AvailableTables dictionary
-   * @param { object[] } tableDictList - a list of the form {tableName: tableName, parameters: <list of parameter names>}
-   */
-  _addAvailableTablesFromMessage (tableDictList) {
-    tableDictList.forEach(entry => {
-      if (entry.tableName) {
-        const parameters = entry.parameters ? entry.parameters : [];
-        this.availableTables[entry.tableName] = parameters;
-      }
-    });
-  }
-  
-  /**
-   * This is the body of the stuff to do on receipt of a message from the Notebook.
-   * Broken out so that we can independently test, catch errors, and so on.
-   * The only action, ATM, is to add a table in response to a specification.
-   * @param { object } payload 
-   */
-  _addTableFromMessage (payload) {
-    try {
-      this.addTable(payload);
-      this.lastMessageParsed = true;
-    } catch (err) {
-      this.lastMessageParsed = false;
-      this.__logEntry({ error: err, action: `Parsing ${payload}` });
-    }
-  }
-  
-  /**
-   * The messages that are pending.
-   */
-  get unsentMessages () {
-    return this._messageQueue_ && this._messageQueue_.length > 0;
-  }
-  
-  /**
-   * Returns the current status of the l2l connection.
-   */
-  async checkStatus () {
-    if (!this.l2lclient) {
-      return 'No client';
-    }
-    if (!this.l2lRoomName) {
-      return 'No room';
-    }
-    const rooms = await this.l2lclient.listRoomMembers(this.l2lRoomName);
-    const connected = Object.keys(rooms.sockets).filter(socket => socket);
-    return connected.indexOf(this.l2lclient.socketId) >= 0 ? 'Connected' : 'Not Connected';
-  }
-  
-  /**
-   * Initialize the L2L Dashboard Services to read an [el-jupyter] message
-   */
-  __initServices () {
-    this.l2lclient.addServices(this.l2lDashboardServices);
-    this.servicesRun = true;
-  }
-  
-  /**
-   * Rejoin the L2L Room, by default this.l2lRoomName.  Very simple --
-   * checks to make sure that we haven't yet joined the room, and if we
-   * haven't, join it.  This will be called when we initialize the L2L client
-   * and on reconnection.
-   * @param { string } roomName 
-   */
-  async _rejoinL2LRoom (roomName = this.l2lRoomName) {
-    if (!roomName) {
-      return false;
-    }
-    if (roomName !== this.l2lRoomName) {
-      this.l2lRoomName = roomName;
-    }
-    if (this.l2lclient) {
-      const inRoom = async (roomName) => await Object.keys(await this.l2lclient.joinedRooms()).indexOf(roomName) >= 0;
-      /* if (await inRoom(roomName)) {
-        return true;
-      } */
-      await this.l2lclient.joinRoom(this.l2lRoomName);
-      return (await inRoom(roomName));
-    }
-  }
-  
-  /**
-   * Initialize the Lively2Lively Client to receive data from the Jupyter Notebook
-   * Sets the room name to window.EXTENSION_INFO.room if it exists (IOW, if this
-   * is running in JupyterLab), tells the client to rejoin the room on reconnection,
-   * initializes the services to receive [el-jupyter] message, then joins the room
-   * logs it and updates the status on the controller.
-   */
-  async _initClient () {
-    const c = L2LClient.ensure({
-      url: resource(window.SERVER_URL || System.baseURL).join('/lively-socket.io').url,
-      namespace: 'l2l',
-      info: { type: 'lively.morphic browser' }
-    });
-    this.l2lclient = c;
-    this._currentMessageNumber_ = 0;
-    if (!this.l2lRoomName) {
-      this.l2lRoomName = window.EXTENSION_INFO ? window.EXTENSION_INFO.room : 'dashboard room';
-    }
-    const dashboardClient = this;
-    this.l2lclient.onReconnect = async _ => {
-      const dateString = new Date().toLocaleDateString();
-      console.log(`Reconnected at ${dateString}`);
-      return await dashboardClient._rejoinL2LRoom();
-    };
-    this.__initServices();
-    this.l2lclient.debug = true;
-    this._messageQueue_ = [];
-    this.startStepping(1000, '_sendQueuedMessages_');
-
-    c.whenRegistered().then(async () => {
-      const status = await this._rejoinL2LRoom();
-      if (this.dashboardController) {
-        this.dashboardController.__updateConnectionStatus();
-      }
-      const message = status ? 'Successfully joined ' : 'Failed to Join ';
-
-      this.__logEntry(message + this.l2lRoomName);
-    }
-    );
-  }
-
-  // Prompt to join a new L2L Room.  This is called from the extension
-  // code in response to a user choosing a new room from the menu
-  // async promptRoom () {
-  //   const prompt = part(RoomDialog);
-  //   prompt.init(this);
-  //   prompt.openInWorld();
-  // }
-  
-  /**
-   * Join a new L2L Room.  This is called from updateRoomName() in RoomPrompt
-   * @param { string } newRoom - The name of the room to join.
-   */
-  async join (newRoom) {
-    if (this.l2lRoomName) {
-      if (this.l2lclient) {
-        await this.l2lclient.leaveRoom(this.l2lRoomName);
-      }
-    }
-    this.l2lRoomName = newRoom;
-    await this._initClient();
-  }
-  
-  /**
-   * Ask a room for available tables.  No return, the result will be in
-   * a table_queries message
-   */
-  askForAvailableTables () {
-    this._sendMessage({ eventType: 'get data' });
-    this._logEntry('Requested available tables');
   }
 
   /* -- Utility code to explore the global data structures  -- */
