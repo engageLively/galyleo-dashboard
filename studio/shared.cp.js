@@ -349,21 +349,25 @@ export class GalyleoListMorph extends Morph {
     const scrollBar = this.getSubmorphNamed('scroll bar');
     // scrollY = list.scroll.y;
     const padding = 8;
-    scrollBar.top = num.interpolate(num.clamp(scrollY / (list.scrollExtent.y - list.height), 0, 1), padding, list.height - scrollBar.height - 3 * padding);
-    scrollBar.right = this.width - padding;
+    this.withMetaDo({ skipReconciliation: true }, () => {
+      scrollBar.top = num.interpolate(num.clamp(scrollY / (list.scrollExtent.y - list.height), 0, 1), padding, list.height - scrollBar.height - 3 * padding);
+      scrollBar.right = this.width - padding;
+    });
   }
 
   async relayout () {
-    const list = this.getSubmorphNamed('item list');
-    const scrollBar = this.getSubmorphNamed('scroll bar');
+    this.withMetaDo({ skipReconciliation: true }, async () => {
+      const list = this.getSubmorphNamed('item list');
+      const scrollBar = this.getSubmorphNamed('scroll bar');
 
-    list.extent = this.extent.addXY(20, 20);
-    scrollBar.height = (list.height - 25) * list.height / list.scrollExtent.y;
-    this._positionScrollbar(list.scroll.y);
-    await Promise.all(this.items.map(({ morph }) => morph.master && morph.master.whenReady()));
-    this.items.map(m => {
-      m.morph.width = this.width - 10;
-      if (m.editMode !== this.editMode) m.editMode = this.editMode;
+      list.extent = this.extent.addXY(20, 20);
+      scrollBar.height = (list.height - 25) * list.height / list.scrollExtent.y;
+      this._positionScrollbar(list.scroll.y);
+      await Promise.all(this.items.map(({ morph }) => morph.master && morph.master.whenReady()));
+      this.items.map(m => {
+        m.morph.width = this.width - 10;
+        if (m.editMode !== this.editMode) m.editMode = this.editMode;
+      });
     });
   }
 
@@ -386,11 +390,10 @@ const GalyleoTextInput = component(TextInput, {
   fontColor: Color.black
 });
 
-// GalyleoValueInput.openInWorld()
-const GalyleoValueInput = component(Scrubber, { name: 'galyleo/value input', fontColor: Color.black });
+const GalyleoValueInput = component(Scrubber, { name: 'galyleo/value input', cursorColor: Color.black, fontColor: Color.black });
 
-// GalyleoNumberInput.openInWorld()
-// GalyleoNumberInput.get('value').master.auto
+// m = part(NumberInput).openInWorld()
+// m.master = GalyleoNumberInput
 const GalyleoNumberInput = component(NumberInput, {
   name: 'galyleo/number input',
   borderColor: Color.rgbHex('8E9B9B'),
@@ -403,7 +406,7 @@ const GalyleoNumberInput = component(NumberInput, {
     name: 'value',
     readOnly: false,
     cursorColor: Color.black,
-    master: GalyleoValueInput
+    fontColor: Color.black
   }]
 });
 
@@ -416,6 +419,13 @@ const GalyleoAddButtonHovered = component(AddButton, {
   name: 'galyleo/add button/hovered',
   fontColor: Color.rgb(66, 73, 73),
   fill: Color.black.withA(.1)
+});
+
+// GalyleoAddButtonActive.openInWorld()
+const GalyleoAddButtonActive = component(GalyleoAddButtonHovered, {
+  name: 'galyleo/add button/active',
+  fontColor: Color.white,
+  fill: Color.rgbHex('F57F17')
 });
 
 // GalyleoAddButton.openInWorld()
@@ -447,6 +457,7 @@ const GalyleoPropertyLabelHovered = component(PropertyLabelHovered, {
 });
 
 // ColorInput.openInWorld()
+// part(GalyleoNumberInput).openInWorld()
 // part(GalyleoColorInput).openInWorld()
 const GalyleoColorInput = component(ColorInput, {
   name: 'galyleo/color input',
@@ -613,7 +624,7 @@ const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
   fill: Color.darkGray
 });
 
-const GalyleoDropDown = component(GalyleoDropDown, {
+const GalyleoDropDown = component(GalyleoDropDownAuto, {
   name: 'galyleo/drop down',
   master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }  
 });
@@ -1004,6 +1015,6 @@ const GalyleoConfirmPrompt = component(GalyleoWindow, {
 export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError,
-  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput,
+  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive,
   GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt
 };
