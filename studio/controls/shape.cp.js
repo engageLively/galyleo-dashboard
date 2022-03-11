@@ -2,9 +2,21 @@ import { component } from 'lively.morphic/components/core.js';
 import { ShapeControl } from 'lively.ide/studio/controls/shape.cp.js';
 import { GalyleoAddButtonDefault, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton, GalyleoNumberInput, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
 import { Color } from 'lively.graphics';
+import { GalyleoPropertySection } from './section.cp.js';
+import { pt, rect } from 'lively.graphics/geometry-2d.js';
+import { TilingLayout } from 'lively.morphic';
 
+// GalyleoShapeControl.openInWorld()
 const GalyleoShapeControl = component(ShapeControl, {
   name: 'galyleo/shape control',
+  layout: new TilingLayout({
+    axisAlign: 'center',
+    hugContentsVertically: true,
+    orderByIndex: true,
+    padding: rect(20, 20, 0, 0),
+    spacing: 16
+  }),
+  fill: Color.transparent,
   viewModel: {
     propertyLabelComponent: GalyleoAddButtonDefault,
     propertyLabelComponentHover: GalyleoAddButtonHovered,

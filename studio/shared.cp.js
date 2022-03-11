@@ -11,6 +11,7 @@ import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { Scrubber } from 'lively.ide/value-widgets.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
+import { PropertySection } from 'lively.ide/studio/controls/section.cp.js';
 
 export class SelectableEntryModel extends ViewModel {
   static get properties () {
@@ -431,7 +432,7 @@ const GalyleoAddButtonActive = component(GalyleoAddButtonHovered, {
 // GalyleoAddButton.openInWorld()
 const GalyleoAddButton = component(AddButton, {
   name: 'galyleo/add button',
-  master: { hover: GalyleoAddButtonDefault, hover: GalyleoAddButtonHovered },
+  master: { auto: GalyleoAddButtonDefault, hover: GalyleoAddButtonHovered },
   fontColor: Color.rgb(66, 73, 73)
 });
 
@@ -574,13 +575,14 @@ export class GalyleoDropDownListModel extends DropDownListModel {
       }
     };
   }
-  
+
   adjustLableFor (item) {
     let label = item.label || [item.string, null];
     this.label = { value: label };
   }
 }
 
+// GalyleoDropDownAuto.openInWorld()
 const GalyleoDropDownAuto = component(DropDownList, {
   name: 'galyleo/drop down/auto',
   defaultViewModel: GalyleoDropDownListModel,
@@ -599,11 +601,6 @@ const GalyleoDropDownAuto = component(DropDownList, {
   }),
   extent: pt(160, 30),
   submorphs: [
-    add({
-      type: Label,
-      name: 'interactive label',
-      fontColor: Color.rgb(128, 128, 128)
-    }),
     {
       name: 'label',
       fontWeight: 800,
@@ -624,9 +621,10 @@ const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
   fill: Color.darkGray
 });
 
+// GalyleoDropDown.openInWorld()
 const GalyleoDropDown = component(GalyleoDropDownAuto, {
   name: 'galyleo/drop down',
-  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }  
+  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }
 });
 
 // GalyleoDropDownError.openInWorld()
