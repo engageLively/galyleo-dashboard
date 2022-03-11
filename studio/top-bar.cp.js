@@ -1,10 +1,8 @@
-import { TopBar } from 'lively.ide/studio/top-bar.cp.js';
-import { component, add, without, part } from 'lively.morphic/components/core.js';
+import { TopBar, TopBarModel } from 'lively.ide/studio/top-bar.cp.js';
+import { component, add, without } from 'lively.morphic/components/core.js';
 import { Color } from 'lively.graphics/color.js';
-import { pt, rect } from 'lively.graphics/geometry-2d.js';
+import { pt } from 'lively.graphics/geometry-2d.js';
 import { Image } from 'lively.morphic/morph.js';
-import { GalyleoColorInput } from 'galyleo-dashboard/studio/shared.cp.js';
-import { TilingLayout } from 'lively.morphic';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user/morphic/user-ui.js';
@@ -31,10 +29,14 @@ export default class DashboardUserFlap extends UserFlap {
   }
 }
 
+class GalyleoTopBarModel extends TopBarModel {
+  
+}
 // GalyleoTopBar.openInWorld()
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',
   fill: Color.rgb(208, 211, 212),
+  defaultViewModel: GalyleoTopBarModel,
   submorphs: [
     {
       name: 'horizontal layout',
@@ -70,25 +72,7 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Report a bug'
-        }),
-        add(part(GalyleoColorInput, {
-          name: 'background color input',
-          extent: pt(193.8, 27),
-          layout: new TilingLayout({
-            axisAlign: 'center',
-            orderByIndex: true,
-            padding: rect(0, 2, 10, 0),
-            resizePolicies: [['hex input', {
-              height: 'fill',
-              width: 'fixed'
-            }], ['opacity input', {
-              height: 'fill',
-              width: 'fixed'
-            }]],
-            spacing: 10,
-            wrapSubmorphs: false
-          })
-        })), {
+        }), {
           name: 'shape mode button',
           extent: pt(47.9, 24.7)
         }
