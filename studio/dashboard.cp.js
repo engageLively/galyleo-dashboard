@@ -32,7 +32,7 @@ class SaveDialogMorph extends Morph {
       this.getSubmorphNamed('fileInput').textString = path;
     }
   }
-  
+
   /**
    * Save. This is called from the Save button. Just gets the path from
    * the text string, and calls the dashboard back to check it exists and saves it.
@@ -117,7 +117,7 @@ class LoadDialogMorph extends Morph {
       this.getSubmorphNamed('fileInput').textString = path;
     }
   }
-  
+
   /**
    * Load. This is called from the Load button. Just gets the path from
    * the text string, and calls the dashboard back to check it and load it.
@@ -320,7 +320,7 @@ export class Dashboard extends ViewModel {
   init (controller) {
     this.dashboardController = controller;
   }
-  
+
   /**
    * Update the file name in the top bar with the current file path.
    * This is called whenever the name changes and on initialization
@@ -332,7 +332,7 @@ export class Dashboard extends ViewModel {
   /* -- Code to deal with JupyterLab and the extension.  This has to do with
         detecting changes made to the storage system by JupyterLab services,
         and ensuring consistency with those -- */
-  
+
   /**
    * Initialize JupyterLab callbacks.  This is called from onLoad() and is used
    * to reliably register events with JupyterLab components.  Why this is easier
@@ -352,7 +352,7 @@ export class Dashboard extends ViewModel {
       }, this);
     }
   }
-  
+
   /**
    * check to see if the file we're working on has been moved or renamed
    * This is called from the extension code, so the extension info variable
@@ -369,7 +369,7 @@ export class Dashboard extends ViewModel {
       this._updateProjectName(changedArgs.newValue.path);
     }
   }
-  
+
   /**
    * check to see if the file we're working on has been moved or renamed
    * This is called from the extension code, so the extension info variable
@@ -391,7 +391,7 @@ export class Dashboard extends ViewModel {
   }
 
   /* -- Code which clears, stores, and loads dashboards from file -- */
-  
+
   /**
    * Clear the dashboard of all charts, views, tables, and filters.  This
    * is used in new, and also internally by restoreFromJSONForm.
@@ -414,7 +414,7 @@ export class Dashboard extends ViewModel {
       this.dashboardController.update();
     }
   }
-  
+
   /**
    * converts the filePath into a jupyterlab:// resource, checks if
    * the file exists, and checks to ensure if its contents are a valid
@@ -451,7 +451,7 @@ export class Dashboard extends ViewModel {
       return false;
     }
   }
-  
+
   /**
    * The current set of test dashboards.  To load a test,
    * this.loadDashboardFromURL(this.testDashboards.name)
@@ -464,7 +464,7 @@ export class Dashboard extends ViewModel {
     dashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
     return result;
   }
-  
+
   /**
    * Convenience method to load a test dashboard easily by name
    * @param { string } dashboardName - The name of the test dashboard.
@@ -494,7 +494,7 @@ export class Dashboard extends ViewModel {
       $world.alert(`Error loading from ${anURL}`);
     }
   }
-  
+
   /**
    * Load a dashboard, optionally from a given path, and optionally
    * prompting from a file dialog.  Uses checkAndLoad to do the heavy lifting
@@ -518,7 +518,7 @@ export class Dashboard extends ViewModel {
       this.checkAndLoad(filePath);
     }
   }
-  
+
   /**
    * Converts the filePath into a jupyterlab:// resource, checks if
    * the file exists.  If it doesn't  but the directory exists, create
@@ -543,7 +543,7 @@ export class Dashboard extends ViewModel {
     this.dirty = false;
     return true;
   }
-  
+
   /**
    * Save a dashboard,  optionally
    * prompting from a file dialog.  Uses checkAndSave to do the heavy lifting
@@ -605,7 +605,7 @@ export class Dashboard extends ViewModel {
     this._snapshots = [];
     this._changePointer = 0;
   }
-  
+
   /**
    * Convert a random morph into a declarative description suitable for storing it inside a dashboard file
    * @param { Morph } aMorph - The morph to derive the description from.
@@ -630,13 +630,13 @@ export class Dashboard extends ViewModel {
     }
     return storedForm;
   }
-  
+
   /**
    * Returns a dashboard file structure for the current configuration of the dashboard.
    */
   _takeSnapshot () {
     const { canvas } = this;
-    
+
     if (!this._snapshots) this._snapshots = [];
 
     if (typeof this._changePointer === 'undefined') {
@@ -703,7 +703,7 @@ export class Dashboard extends ViewModel {
     const { dashboardFilePath } = this.ui.galyleo;
     window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
   }
-  
+
   /**
    * Get a field from an object, making sure it's valid, and returning the default if it isn't.
    * @param { object } source - The source object containing the field
@@ -713,7 +713,7 @@ export class Dashboard extends ViewModel {
     const value = source[field.name];
     return field.validCheck(value) ? value : field.default;
   }
-  
+
   /**
    * Get fields from an object.  This is a utility used by _prepareSerialization_
    * to pull out morphic and text properties.  The return type is used for assignment if it's valid.
@@ -725,7 +725,7 @@ export class Dashboard extends ViewModel {
     fields.forEach(field => result[field.name] = this._getFieldValue(object, field));
     return result;
   }
-  
+
   /**
    * The simple fields to pull from a morph/put into a morph.  These are rotation, scale, clipMode, and opacity.  clipMode
    * must be one of 'hidden', 'visible', 'auto', 'scroll', the other three are numbers.  scale must be positive
@@ -741,7 +741,7 @@ export class Dashboard extends ViewModel {
       { name: 'opacity', validCheck: opacity => !isNaN(opacity) && opacity >= 0 && opacity <= 1, default: 1 }
     ];
   }
-  
+
   /**
    * The simple fields to pull from/put into a textMorph.  fixedHeight and fixedWidth must be booleans, The various
    * enums (fontStyle, fontWeight, lineWrapping, textAlign, textDecoration) have their values taken from the
@@ -767,7 +767,7 @@ export class Dashboard extends ViewModel {
       { name: 'textString', validCheck: str => true, default: '' } // this one needs to be checked
     ];
   }
-  
+
   /**
    * Get the morphic fields that must be set by function rather than
    * simply assigned.  This includes position, extent, fill, and border.
@@ -787,7 +787,7 @@ export class Dashboard extends ViewModel {
     }
     return result;
   }
-  
+
   /**
    * Get the text fields that must be set by function rather than
    * simply assigned.  This includes fontColor and padding
@@ -800,7 +800,7 @@ export class Dashboard extends ViewModel {
       textAndAttributes: aMorph.textAndAttributes
     };
   }
-  
+
   /**
    * Prepare the properties as a JSON document. This is to support
    * load/save/save as and persist the tables. Just involves the JSON of
@@ -884,7 +884,7 @@ export class Dashboard extends ViewModel {
     resultObject.numMorphs = canvas.submorphs.length;
     return resultObject;
   }
-  
+
   /**
    * Make sure a JSON form is OK.  This parses a JSON string into an object and
    * uses checkIntermediateForm to see that the parsed object is OK
@@ -894,7 +894,7 @@ export class Dashboard extends ViewModel {
     const dashboardObject = JSON.parse(string);
     return this.checkIntermediateForm(dashboardObject);
   }
-  
+
   /**
    * Make sure a JSON form is OK.  This makes sure the parsed object
    * has Tables, Views, Filters, and Charts and no extraneous fields
@@ -922,7 +922,7 @@ export class Dashboard extends ViewModel {
       return { valid: false, message: message };
     }
   }
-  
+
   /**
    * Reorder morphs to mirror their stored order, in the parameter orderedMorphs.  This is so morphs on the
    * dashboard retain their z-index (effectively, their morph order)
@@ -945,7 +945,7 @@ export class Dashboard extends ViewModel {
       this.addMorph(m);
     });
   }
-  
+
   /**
    * A helper routine for _restoreFromSnapshot_ to turn charts, filters, and
    * morphs into an array of descriptors, suitable for restoration by
@@ -970,7 +970,7 @@ export class Dashboard extends ViewModel {
     });
     return descriptors;
   }
-  
+
   /**
    * Restore the saved form from a snapshot (see _takeSnapshot).  This is experimental code ATM.
    * Looks very similar to _restoreFromSaved_, and in fact the principal difference is that the
@@ -1053,7 +1053,7 @@ export class Dashboard extends ViewModel {
     this._changePointer = Math.min(this._snapshots.length - 1, this._changePointer + 1);
     this._restoreFromSnapshot(this._snapshots[this._changePointer]);
   }
-  
+
   /**
    * A little utility to turn an RGBA struct (four fields, r, g, b, a, each
    * in the range [0,1]) into a Color, since Color.rgba requires r, g, b
@@ -1076,7 +1076,7 @@ export class Dashboard extends ViewModel {
       return defaultColor;
     }
   }
-  
+
   /**
    * Return a point, which is either the first argument if it's valid or
    * the default, which is not checked and must be valid.  Called from
@@ -1096,7 +1096,7 @@ export class Dashboard extends ViewModel {
       return defaultVal;
     }
   }
-  
+
   /**
    * Return a valid number of at least value min (the numbers we're interested in
    * don't have an upper bound), returning defaultVal if the number is a NaN or
@@ -1115,7 +1115,7 @@ export class Dashboard extends ViewModel {
     }
     return number >= minVal ? number : defaultVal;
   }
-  
+
   /**
    * Set the complexMorphicFields of a morph: these are recorded as
    * static data but must be restored through function calls
@@ -1150,7 +1150,7 @@ export class Dashboard extends ViewModel {
       }
     }
   }
-  
+
   /**
    * Set the complex text fields (fontColor and padding) of a text morph
    * from a descriptor.
@@ -1166,7 +1166,7 @@ export class Dashboard extends ViewModel {
       textMorph.textAndAttributes = descriptor.textAndAttributes;
     }
   }
-  
+
   /**
    * Copy fields from a descriptor to a morph.  This is the mirror of _getFields_.
    * Similar to Object.assign() but copies only specific fields
@@ -1178,7 +1178,7 @@ export class Dashboard extends ViewModel {
   _setFields (morph, descriptor, fields) {
     fields.forEach(field => morph[field.name] = this._getFieldValue(descriptor, field));
   }
-  
+
   /**
    * Restore from JSON form.  This involves parsing the JSON string and
    * restoring the tables, views, filters, and charts from the saved description
@@ -1188,7 +1188,7 @@ export class Dashboard extends ViewModel {
   async restoreFromJSONForm (storedForm) {
     await this._restoreFromSaved(JSON.parse(storedForm));
   }
-  
+
   /**
    * The actual body of restoreFromJSONForm.  Broken out as a separate
    * routine for testing. 
@@ -1258,7 +1258,7 @@ export class Dashboard extends ViewModel {
     }
     this._restore = false;
   }
-  
+
   /**
    * Restore morphs from their descriptors, which were retrieved in _restoreFromSaved_
    * and _restoreFromSnapshot_.  Each descriptor is of the form
@@ -1285,7 +1285,7 @@ export class Dashboard extends ViewModel {
     this.dirty = false;
     return morphs;
   }
-  
+
   /**
    * Restore an internal filter from a saved form
    * @param { object } savedFilter
@@ -1293,7 +1293,7 @@ export class Dashboard extends ViewModel {
   async _restoreInternalFilterFromSaved (savedFilter) {
     return await this.makeFilterMorph(savedFilter.columnName, savedFilter.filterType, savedFilter.part, savedFilter.tableName);
   }
-  
+
   /**
    * Restore the morphic properties to a morph from a saved form.
    * this is called from _restoreFilterFromSaved_, _restoreChartFromSaved_,
@@ -1306,7 +1306,7 @@ export class Dashboard extends ViewModel {
     this._setComplexFields(morph, complexPropertySource);
     this._setFields(morph, savedForm.morphicProperties, this._morphicFields_);
   }
-  
+
   /**
    * Restore an external filter from a saved form.
    * @param { string } filterName - Name of the filter to be restored
@@ -1340,7 +1340,7 @@ export class Dashboard extends ViewModel {
     await chartMorph.whenRendered();
     return chartMorph;
   }
-  
+
   /**
    * Restores a morph from a saved form.
    * @param { object } morphDescriptor - Saved form of the morph
@@ -1362,7 +1362,7 @@ export class Dashboard extends ViewModel {
   }
 
   /* -- Utility code to explore the global data structures  -- */
-  
+
   /**
    * The serializer sticks in a bogus _rev entry into each object, and this filters
    * it out.  Use this to get the keys of the dictionaries in the properties
@@ -1373,28 +1373,28 @@ export class Dashboard extends ViewModel {
   _getKeys (property) {
     return Object.keys(this[property]);
   }
-  
+
   /**
    * The keys of the tables property
    */
   get tableNames () {
     return this._getKeys('tables');
   }
-  
+
   /**
    * The keys of the filters property
    */
   get filterNames () {
     return this._getKeys('filters');
   }
-  
+
   /**
    * The keys of the views property
    */
   get viewNames () {
     return this._getKeys('views');
   }
-  
+
   /**
    * The keys of the charts property
    */
@@ -1403,7 +1403,7 @@ export class Dashboard extends ViewModel {
   }
 
   /* -- Code which deals with the creation and use of filters -- */
-  
+
   /**
    * All names.  This is internal, for the use of nameOK -- it's just all the
    * names that have been taken in this dashboard, of filters, charts, and
@@ -1413,7 +1413,7 @@ export class Dashboard extends ViewModel {
     const names = this.canvas.submorphs.map(m => m.name);
     return names.concat(this.filterNames).concat(this.chartNames);
   }
-  
+
   /**
    * Check if `name` is a valid name for a new filter.
    * @param { strsing } aName - The name to check.
@@ -1421,7 +1421,7 @@ export class Dashboard extends ViewModel {
   nameOK (aName) {
     return this.__allNames__.indexOf(aName) < 0;
   }
-  
+
   /**
    * Create an externalFilter.  The code for this was moved from
    * ExternalFilterCreator (it was the second half of createFilter).
@@ -1454,7 +1454,7 @@ export class Dashboard extends ViewModel {
     this.canvas.addMorph(namedFilterMorphProto);
     return namedFilterMorphProto;
   }
-  
+
   /**
    * Make a filter.  This will be in one of two types: a Range Filter,
    * with a min and a max, or a select filter, which chooses a specific
@@ -1500,7 +1500,7 @@ export class Dashboard extends ViewModel {
     }
     return morph;
   }
-  
+
   /**
    * gGet all the types associated with the column columnName in table
    * tableName.  Called by _makeFilterMorph().
@@ -1521,7 +1521,7 @@ export class Dashboard extends ViewModel {
     });
     return result;
   }
-  
+
   /**
    * Get the number of columns for a view or a table
    * Called by the chart builder to figure out which chart types
@@ -1575,7 +1575,7 @@ export class Dashboard extends ViewModel {
     }
     editor.center = $world.innerBounds().center();
   }
-  
+
   /**
    * Initialize a view editor.  Just register it as the viewBuilder for this
    * view, open it in the world, position it in the center, and initialize it
@@ -1590,7 +1590,7 @@ export class Dashboard extends ViewModel {
     editor.center = this.canvas.globalBounds().center();
     editor.init(viewName, this);
   }
-  
+
   /**
    * Prepare the data for a view or a table.  This is used by
    * displayPreview and drawChart, to get the data ready to be plotted
@@ -1606,7 +1606,7 @@ export class Dashboard extends ViewModel {
       return null;
     }
   }
-  
+
   /**
    * Preview a view or table
    * Shows the data in the Table/View in a window, using the Google Table
@@ -1628,7 +1628,7 @@ export class Dashboard extends ViewModel {
     tableMorph.openInWindow();
     tableMorph.drawChart(wrapper);
   }
-  
+
   /**
    * Get a filter for a name.  The name is either the name of a filter
    * or the name of a chart, and so check both lists and return the filter
@@ -1645,7 +1645,7 @@ export class Dashboard extends ViewModel {
       return null;
     }
   }
-  
+
   /**
    * Check to see if a filter is valid: is non-null, and if a Select filter,
    * has a value property, and if a range filter, a max and a min that
@@ -1666,7 +1666,7 @@ export class Dashboard extends ViewModel {
     }
     return fields.indexOf('value') >= 0 && aFilter.value !== undefined && aFilter.value !== '__no_selection__';
   }
-  
+
   /**
    * Get the filters for a view.  A view has a list of named filters, and
    * a filterList of internal filters (filters whose value is set when the
@@ -1681,7 +1681,7 @@ export class Dashboard extends ViewModel {
     const filters = view.filterNames.map(name => this._getFilterForName(name));
     return filters.filter(filter => this._filterValid(filter));
   }
-  
+
   /**
    * Prepare the data for a view.  A view has an underlying table,
    * named filters, a list of internal filters.  This method takes
@@ -1719,7 +1719,7 @@ export class Dashboard extends ViewModel {
 
   /* -- Code that deals with Charts.  This takes care of prepping chart titles,
        calling the View code to get the data, and displaying the char  -- */
-  
+
   /**
    * Make the header string for a chart title.  This is called from
    * `_makeTitleForTable` and `_makeTitleForView`.  If there
@@ -1737,7 +1737,7 @@ export class Dashboard extends ViewModel {
       return viewOrTableName;
     }
   }
-  
+
   /**
    * Make the title corresponding to a table.  This is used by a chart
    * when the chart is drawn.  Called by __makeTitle__.  Returns a string
@@ -1750,7 +1750,7 @@ export class Dashboard extends ViewModel {
     const seriesColumns = aTable.cols.slice(1).map(col => col.id);
     return this.__makeHeaderString(aTable.cols[0].id, seriesColumns, tableName);
   }
-  
+
   /**
    * Make the title corresponding to a view.  This is used by a chart
    * when the chart is drawn.  Called by `_makeTitle`.  Returns a string
@@ -1785,7 +1785,7 @@ export class Dashboard extends ViewModel {
       return headerString;
     }
   }
-   
+
   /**
     * make a title for the chart.  This will product a title of the form:
     * "<Data Series List> v <X Axis Name> where <filterValues>", where
@@ -1810,7 +1810,7 @@ export class Dashboard extends ViewModel {
     }
     chart.options.title = title;
   }
-  
+
   /**
    * Check to see if a filter is used in any view.  This is used by
    * `_removeFilterOrChart` to see if the filter/chart is being used
@@ -1824,7 +1824,7 @@ export class Dashboard extends ViewModel {
     };
     return Object.keys(this.views).filter(viewName => filterUsedInView(viewName));
   }
-  
+
   /**
    * Remove a filter or chart, first checking that it isn't being used, and if
    * it is, prompting the user to confirm.  This is internal (as witness the _
@@ -1851,7 +1851,7 @@ export class Dashboard extends ViewModel {
       }
     }
   }
-  
+
   /**
    * Delete a filter, first checking to see if it's used in any View.
    * @param { string } filterName - The name of the filter to be removed.
@@ -1859,7 +1859,7 @@ export class Dashboard extends ViewModel {
   removeFilter (filterName) {
     this._removeFilterOrChart(filterName, this.filters);
   }
-  
+
   /**
    * Delete a chart, first checking to see if it's used as a filter in any View.
    * @param { string } chartName - The name of the chart to be removed
@@ -1867,7 +1867,7 @@ export class Dashboard extends ViewModel {
   removeChart (chartName) {
     this.__removeFilterOrChart(chartName, this.charts);
   }
-  
+
   /**
    * Override the removeMorph method.  We do this so that removal of a
    * chart morph or a named filter morph will also remove the relevant
@@ -1884,7 +1884,7 @@ export class Dashboard extends ViewModel {
       super.removeMorph(aMorph);
     }
   }
-  
+
   /**
    * Remove a View, first checking if it is used in any chart
    * If it is, ask the user for confirmation first.  If the view is removed,
@@ -1901,7 +1901,7 @@ export class Dashboard extends ViewModel {
       this.dashboardController.update();
     }
   }
-  
+
   /**
    * Remove a Table, first checking if it is used in any chart or View
    * If it is, ask the user for confirmation first.  If the Table is removed,
@@ -1922,7 +1922,7 @@ export class Dashboard extends ViewModel {
       this.dashboardController.update();
     }
   }
-  
+
   /**
    * Update the l2lRoomName.  This is called from `onLoad` and whenever
    * the file name changes.  Note that this doesn't initialize the client or
@@ -1934,7 +1934,7 @@ export class Dashboard extends ViewModel {
     const user = this.get('galyleo').user;
     this.l2lRoomName = user && user.length > 0 ? `${user}:${filePath}` : filePath;
   }
-  
+
   /**
    * First, reset the error log to empty, wait for rendering, load
    * the google chart packages and make sure that the dictionaries are
@@ -1985,10 +1985,9 @@ export class Dashboard extends ViewModel {
   }
 
   __after_deserialize__ (snapshot, ref, pool) {
-    super.__after_deserialize__(snapshot, ref, pool);
     this.tables = JSON.parse(this.tables);
   }
-  
+
   /**
    * Load the Google chart packages.  Only called internally
    * Note: we're going to have to drop the mapsApiKey at some point.
@@ -1998,7 +1997,7 @@ export class Dashboard extends ViewModel {
     await promise.waitFor(20 * 1000, () => !!window.google);
     await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
   }
-  
+
   /**
    * Each datatable is represented as a Google Chart Data Table
    * and a name, which identifies it here.  This is called internally;
@@ -2031,7 +2030,7 @@ export class Dashboard extends ViewModel {
     }
     this.dirty = true;
   }
-  
+
   /**
    * Load a table from the URL given.  This should do a little more error-checking
    * than it does.  In particular, it should check to make sure that tableSpec
@@ -2047,7 +2046,7 @@ export class Dashboard extends ViewModel {
     r.readJson().then(tableSpec => this.addTable(tableSpec),
       err => this.__logEntry({ activity: `loading url ${url}`, error: err }));
   }
-  
+
   /**
    * Add a named filter.  This is called by ExternalFilterCreator.createFilter, and
    * that takes care of properly formatting the spec, creating the morph, adding
@@ -2064,7 +2063,7 @@ export class Dashboard extends ViewModel {
     }
     this.dirty = true;
   }
-  
+
   /**
    * Add a view with a spec.  This simply adds the view, then calls
    * update on the dashboardController so that the view list is kept
@@ -2079,7 +2078,7 @@ export class Dashboard extends ViewModel {
     }
     this.dirty = true;
   }
-  
+
   /**
    * A simple routine to consistency-check a dashboard.   This should
    * be called:
@@ -2153,7 +2152,7 @@ export class Dashboard extends ViewModel {
     // will do filters later
     return result;
   }
-  
+
   /**
    * A convenience function which redraws all the charts on the page.
    * this is called when a filter has changed value. This is done through
@@ -2164,7 +2163,7 @@ export class Dashboard extends ViewModel {
     const chartNames = this.chartNames;
     chartNames.forEach(name => this.drawChart(name));
   }
-  
+
   /**
    * Make a wrapper for the chart.  This is the penultimate step before drawing;
    * a wrapper is the data structure Google Charts uses for editing and drawing
@@ -2198,7 +2197,7 @@ export class Dashboard extends ViewModel {
     this.gViz.events.addListener(wrapper, 'select', e => { this._updateChartFilter(e, wrapper, chartName); });
     return wrapper;
   }
-  
+
   /**
    * Log chart events
    * @param { Event } e - The event to respond to.
@@ -2224,7 +2223,7 @@ export class Dashboard extends ViewModel {
       this._chartEvents.push(record);
     }
   }
-  
+
   /**
    * Draw a chart. This routine is very simple: get the chart for chartName,
    * make its title (this can't be made until just before the chart is drawn,
@@ -2242,7 +2241,7 @@ export class Dashboard extends ViewModel {
       chart.chartMorph.drawChart(wrapper);
     }
   }
-  
+
   /**
    * Edit the chart's type and physical appearance, using the Google Chart Editor
    * Simple.  First, create the editor, then get the chart corresponding to
@@ -2271,7 +2270,7 @@ export class Dashboard extends ViewModel {
     });
     editor.openDialog(wrapper);
   }
-  
+
   /**
    * Add a chart, given a specification.  The specification is an entry in the
    * charts table (see the description under properties at the top).  Steps:
@@ -2333,7 +2332,7 @@ export class Dashboard extends ViewModel {
     }
     return filter;
   }
-  
+
   /**
    * Get a morph for the chart with name chartName.  This is called by addChart.
    * It's essentially just building the chart from the googleChartMorph resource,
@@ -2353,7 +2352,7 @@ export class Dashboard extends ViewModel {
     chartMorph.position = pt(0, 0);
     return chartMorph;
   }
-  
+
   /**
    * Get all the columns for all of the tables in the dashboard.  Returns a list
    * of objects, each of the form
@@ -2372,7 +2371,7 @@ export class Dashboard extends ViewModel {
     });
     return result;
   }
-  
+
   /**
    * Get all the columns that have a type which appears in typelist.  Optionally,
    * the table name is specified as well.
@@ -2406,7 +2405,7 @@ export class Dashboard extends ViewModel {
     });
     return result;
   }
-  
+
   /**
    * Return the records for all of the columns with a specific name (records in
    * the form returned by `_allColumns`), and if tableName is non-null,
@@ -2424,7 +2423,7 @@ export class Dashboard extends ViewModel {
     }
     return columns;
   }
-  
+
   /**
    * Get the maximum and minimum values of the column with name columnName, and compute
    * an increment for a slider or other range finder over this column.  If
@@ -2455,7 +2454,7 @@ export class Dashboard extends ViewModel {
     result.increment = powerOf10(minDiff);
     return result;
   }
-  
+
   /**
    * Get all the values of a column.  The column here is a record of the form
    * output from `_allColumns`, which has (among other things), fields tableName
@@ -2480,7 +2479,7 @@ export class Dashboard extends ViewModel {
     });
     return result.sort();
   }
-  
+
   /**
    * Get all the values for column(s) with name columnName.  If tableName is non-null,
    * restrict to the column with name columnName in that table. Simple and inefficient.

@@ -55,16 +55,19 @@ export class BooleanFilterMorph extends Morph {
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
+        serialize: false,
         get () {
           return 'Boolean';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'toggle';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return BooleanFilter[Symbol.for('lively-module-meta')];
         } 
@@ -180,16 +183,19 @@ export class DateFilterMorph extends Morph {
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
+        serialize: false,
         get () {
           return 'DateSelect';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'DatePicker';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return DateFilter[Symbol.for('lively-module-meta')];
         } 
@@ -313,16 +319,19 @@ export class DoubleSliderFilterMorph extends Morph {
       maxVal: { defaultValue: null },
       signalEnabled: { defaultValue: false },
       filterType: {
+        serialize: false,
         get () {
           return 'Range';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'doubleSliderWithValues';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return DoubleSliderFilter[Symbol.for('lively-module-meta')];
         } 
@@ -475,16 +484,19 @@ export class ListFilterMorph extends Morph {
       tableName: { defaultValue: null },
       columnName: { defaultValue: null },
       filterType: {
+        serialize: false,
         get () {
           return 'Select';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'list';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return ListFilter[Symbol.for('lively-module-meta')];
         } 
@@ -713,16 +725,19 @@ export class RangeFilterMorph extends Morph {
       maxVal: { defaultValue: null },
       signalEnabled: { defaultValue: false },
       filterType: {
+        serialize: false,
         get () {
           return 'Range';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'minMax';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return RangeFilter[Symbol.for('lively-module-meta')];
         } 
@@ -972,16 +987,19 @@ export class SelectFilterMorph extends Morph {
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
+        serialize: false,
         get () {
           return 'Select';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'dropdown';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return SelectFilter[Symbol.for('lively-module-meta')];
         } 
@@ -1111,16 +1129,19 @@ export class SliderFilterMorph extends Morph {
       maxVal: { defaultValue: null },
       signalEnabled: { defaultValue: false },
       filterType: {
+        serialize: false,
         get () {
           return 'NumericSelect';
         }
       },
       widgetType: {
+        serialize: false,
         get () {
           return 'SliderWithValue';
         } 
       },
       part: {
+        serialize: false,
         get () {
           return SliderFilter[Symbol.for('lively-module-meta')];
         } 

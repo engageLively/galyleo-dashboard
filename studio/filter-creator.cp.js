@@ -596,8 +596,6 @@ export default class ExternalFilterCreator extends Morph {
    * @returns { string[] } A list of column names which match the types the filter can accept.
    */
   getColumns (filterType) {
-    // const typeArray = { Range: ['number'], Select: [] };
-    // return this.dashboard.getColumnsOfType(typeArray[filterType]);
     return this.dashboard ? this.dashboard.getColumnsOfType([]) : [];
   }
 
