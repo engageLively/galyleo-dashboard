@@ -1,5 +1,5 @@
 #!/bin/bash 
-# usage: build <-h> <-d>
+# usage: make <-h> <-d>
 # build -h: print message and extension
 # build -d: enable debug mode
 # NOTE: MUST BE RUN IN THE jupyterlab-universal-extension directory!
