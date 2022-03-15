@@ -1,7 +1,7 @@
 #!/bin/bash 
 # usage: make <-h> <-d>
-# build -h: print message and extension
-# build -d: enable debug mode
+# make -h: print message and extension
+# make -d: enable debug mode
 # NOTE: MUST BE RUN IN THE jupyterlab-universal-extension directory!
 mode="deploy"
 while getopts ":hd" opt; do
