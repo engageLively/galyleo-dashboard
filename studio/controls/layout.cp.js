@@ -1,8 +1,20 @@
 import { component } from 'lively.morphic/components/core.js';
 import { MiniLayoutPreview, LayoutControl, MiniLayoutPreviewActive, AutoLayoutAlignmentFlap } from 'lively.ide/studio/controls/layout.cp.js';
 import { Color, pt } from 'lively.graphics';
-import { GalyleoNumberInput, GalyleoPropertyLabel, GalyleoAddButton, GalyleoAddButtonHovered, GalyleoDropDown } from '../shared.cp.js';
+import { GalyleoNumberInput, GalyleoDropDownList, GalyleoPropertyLabel, GalyleoAddButton, GalyleoAddButtonHovered, GalyleoDropDown } from '../shared.cp.js';
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './section.cp.js';
+import { CheckboxActive, CheckboxInactive } from 'lively.ide/studio/shared.cp.js';
+
+const GalyleoCheckboxActive = component(CheckboxActive, {
+  name: 'galyleo/checkbox/active',
+  fill: Color.rgb(245, 127, 23)
+});
+
+const GalyleoCheckboxInactive = component(CheckboxInactive, {
+  name: 'galyleo/checkbox/inactive',
+  borderColor: Color.black
+});
+
 // GalyleoMiniLayoutPreview.openInWorld()
 const GalyleoMiniLayoutPreview = component(MiniLayoutPreview, {
   name: 'galyleo/mini layout preview',
@@ -83,6 +95,9 @@ const GalyleoLayoutFlap = component(AutoLayoutAlignmentFlap, {
     {
       name: 'spacing selector',
       master: GalyleoDropDown,
+      viewModel: {
+        listMaster: GalyleoDropDownList
+      },
       extent: pt(156, 25)
     }
   ]
@@ -123,13 +138,17 @@ const GalyleoLayoutControl = component(LayoutControl, {
     },
     {
       name: 'wrap submorphs checkbox',
-      submorphs: [{
-        name: 'checkbox',
-        fill: Color.rgb(245, 127, 23)
-      }, {
-        name: 'prop label',
-        fontColor: Color.rgb(66, 73, 73)
-      }]
+      activeCheckboxComponent: GalyleoCheckboxActive,
+      inactiveCheckboxComponent: GalyleoCheckboxInactive,
+      submorphs: [
+        {
+          name: 'checkbox',
+          master: GalyleoCheckboxActive
+        },
+        {
+          name: 'prop label',
+          fontColor: Color.rgb(66, 73, 73)
+        }]
     }]
 });
 
