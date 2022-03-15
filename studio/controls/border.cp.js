@@ -1,13 +1,25 @@
 import { component, part, add, without } from 'lively.morphic/components/core.js';
-import { BorderPopup, BorderControl } from 'lively.ide/studio/controls/border.cp.js';
+import { BorderPopup, BorderPopupWindow, BorderControl } from 'lively.ide/studio/controls/border.cp.js';
 import { Color, pt, rect } from 'lively.graphics';
 import { GalyleoAddButtonDefault, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButton, MenuBarButton, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
 import { TilingLayout } from 'lively.morphic';
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './section.cp.js';
-// GalyleoBorderPopup.openInWorld()
+
+// fix the binding by custom overriding the view model....
+// ... but a real fix would be for the components to properly handle
+// swapped out submorphs.
+class GalyleoPopupModel extends BorderPopupWindow {
+  get bindings () {
+    return [...super.bindings, {
+      target: 'close button new', signal: 'onMouseDown', handler: 'close'
+    }];
+  }
+}
+
 const GalyleoBorderPopup = component(BorderPopup, {
   name: 'galyleo/border popup',
   fill: Color.rgb(215, 219, 221),
+  defaultViewModel: GalyleoPopupModel,
   viewModel: {
     propertyLabelComponent: GalyleoAddButtonDefault,
     propertyLabelComponentHover: GalyleoAddButtonHovered,
@@ -27,7 +39,7 @@ const GalyleoBorderPopup = component(BorderPopup, {
     submorphs: [{
       name: 'title',
       fontColor: Color.rgb(255, 255, 255)
-    }, without('close button')]
+    }, without('close button')] // this should also disqualify the master from traversing other newly added morphs with the same name
   },
   add({
     name: 'h float',
@@ -38,7 +50,6 @@ const GalyleoBorderPopup = component(BorderPopup, {
     }),
     fill: Color.rgba(255, 255, 255, 0),
     submorphs: [
-      // fixme: this newly introduced morph should not be altered
       part(MenuBarButton, {
         tooltip: 'Close this dialog without loading',
         name: 'close button new',
@@ -85,7 +96,10 @@ const GalyleoBorderPopup = component(BorderPopup, {
         extent: pt(10, 62),
         submorphs: [{
           name: 'border color input',
-          master: GalyleoColorInput
+          master: GalyleoColorInput,
+          viewModel: {
+            activeColor: Color.gray
+          }
         }, {
           name: 'border width control',
           layout: new TilingLayout({
@@ -103,7 +117,14 @@ const GalyleoBorderPopup = component(BorderPopup, {
             },
             {
               name: 'border style selector',
-              master: GalyleoDropDown
+              master: GalyleoDropDown,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              },
+              submorphs: [{
+                name: 'interactive label',
+                fontColor: Color.rgb(128, 128, 128)
+              }]
             }
           ]
         }]
@@ -111,8 +132,24 @@ const GalyleoBorderPopup = component(BorderPopup, {
   }]
 });
 
+// GalyleoBorderControl.openInWorld()
 const GalyleoBorderControl = component(BorderControl, {
-  name: 'border control',
+  name: 'galyleo/border control',
+  layout: new TilingLayout({
+    axis: 'column',
+    hugContentsVertically: true,
+    orderByIndex: true,
+    padding: rect(0, 10, 0, 0),
+    resizePolicies: [['h floater', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['elements wrapper', {
+      width: 'fill'
+    }]],
+    spacing: 10,
+    wrapSubmorphs: false
+  }),
+  extent: pt(288.1, 96.7),
   visible: true,
   master: GalyleoPropertySection,
   viewModel: {
@@ -120,13 +157,21 @@ const GalyleoBorderControl = component(BorderControl, {
     inactiveSectionComponent: GalyleoPropertySectionInactive,
     propertyLabelComponent: GalyleoAddButtonDefault,
     propertyLabelComponentHover: GalyleoAddButtonHovered,
-    propertyLabelComponentActive: GalyleoAddButtonActive
+    propertyLabelComponentActive: GalyleoAddButtonActive,
+    borderPopupComponent: GalyleoBorderPopup
   },
   submorphs: [
     {
       name: 'elements wrapper',
+      layout: new TilingLayout({
+        hugContentsVertically: true,
+        orderByIndex: true,
+        spacing: 10
+      }),
+      extent: pt(275.9, 102),
       submorphs: [{
         name: 'border color input',
+        extent: pt(288.4, 27),
         master: GalyleoColorInput
       }, {
         name: 'border width control',

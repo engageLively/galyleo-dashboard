@@ -2,15 +2,34 @@ import { RichTextControl } from 'lively.ide/studio/controls/text.cp.js';
 import { component } from 'lively.morphic/components/core.js';
 import { GalyleoAddButtonHovered, GalyleoColorInput, GalyleoNumberInput, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton } from '../shared.cp.js';
 import { Color } from 'lively.graphics';
+import { TilingLayout } from 'lively.morphic';
+import { rect } from 'lively.graphics/geometry-2d.js';
 
+// GalyleoRichTextControl.openInWorld()
 const GalyleoRichTextControl = component(RichTextControl, {
   name: 'galyleo/rich text control',
+  layout: new TilingLayout({
+    axis: 'column',
+    hugContentsVertically: true,
+    orderByIndex: true,
+    padding: rect(0, 10, 0, 0),
+    resizePolicies: [['h floater', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['font color input', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    spacing: 10,
+    wrapSubmorphs: false
+  }),
   visible: true,
   // scoped components should be also carried over by master components
   viewModel: {
     hoveredButtonComponent: GalyleoAddButtonHovered,
     activeButtonComponent: GalyleoAddButton
   },
+  fill: Color.transparent,
   submorphs: [
     {
       name: 'h floater',
