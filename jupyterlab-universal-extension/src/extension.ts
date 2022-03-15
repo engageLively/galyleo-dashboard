@@ -410,6 +410,7 @@ function activateGalyleo(
   mainMenu.helpMenu.addGroup([helpCommand]);
 
   // Add the Galyleo Menu to the main menu
+  //@ts-ignore
   const menu = new Menu({ commands: app.commands });
   menu.title.label = 'Galyleo';
   menu.addItem({

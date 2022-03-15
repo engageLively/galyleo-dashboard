@@ -6,13 +6,15 @@ import { TextModelFactory, DocumentRegistry, ABCWidgetFactory } from '@jupyterla
 import { Contents } from '@jupyterlab/services';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { CodeEditor } from '@jupyterlab/codeeditor';
-import { JSONValue } from '@phosphor/coreutils';
+import { JSONValue } from '@lumino/coreutils';
 import { IModelDB } from '@jupyterlab/observables';
 import { GalyleoCommunicationsManager } from './manager';
+import * as models from '@jupyterlab/shared-models';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 export declare class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
     contentChanged: any;
     stateChanged: any;
+    sharedModel: models.ISharedFile;
     readOnly: boolean;
     defaultKernelName: string;
     defaultKernelLanguage: string;

@@ -34,6 +34,7 @@ export class GalyleoEditor extends Widget {
       if (document.getElementsByClassName('lm-Menu-content').length == 0)
         this._iframe.style.pointerEvents = 'auto';
     };
+
     void this._context.ready.then(async () => {
       await this._render();
     });

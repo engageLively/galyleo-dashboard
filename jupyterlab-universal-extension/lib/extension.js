@@ -27,7 +27,7 @@ const docregistry_1 = require("@jupyterlab/docregistry");
 const ui_components_1 = require("@jupyterlab/ui-components"); // WTF???
 const engageLively_svg_1 = require("../style/engageLively.svg");
 const codeeditor_1 = require("@jupyterlab/codeeditor");
-const signaling_1 = require("@phosphor/signaling");
+const signaling_1 = require("@lumino/signaling");
 const coreutils_1 = require("@lumino/coreutils");
 const manager_1 = require("./manager");
 const widgets_1 = require("@lumino/widgets");
@@ -139,7 +139,13 @@ class GalyleoStudioFactory extends docregistry_1.ABCWidgetFactory {
             'galyleo:ready': (evt) => {
                 const doc = this._getDocumentForFilePath(evt.data.dashboardFilePath);
                 doc.content.loadDashboard(doc.context.model.value.text); // load the dashboard
-            }
+            },
+            'galyleo:requestSave': (evt) => __awaiter(this, void 0, void 0, function* () {
+                // the dashboard uses this to request a save
+                const doc = this._getDocumentForFilePath(evt.data.dashboardFilePath);
+                // await doc.content.requestSave(evt.data.dashboardFilePath);
+                yield doc.context.save();
+            })
         };
         window.addEventListener('message', evt => {
             if (evt.data.method in handlers) {
@@ -180,7 +186,7 @@ exports.galyleoIcon = new ui_components_1.LabIcon({
 });
 /**
  *
- * Activates the ToC extension.
+ * Activates the Galyleo extension.
  *
  * @private
  * @param app - Jupyter application
@@ -193,7 +199,7 @@ exports.galyleoIcon = new ui_components_1.LabIcon({
  * @param rendermime - rendered MIME registry
  * @returns table of contents registry
  */
-function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu, launcher, manager, translator, settings) {
+function activateGalyleo(app, docmanager, editorTracker, labShell, restorer, markdownViewerTracker, notebookTracker, rendermime, browserFactory, palette, mainMenu, launcher, manager, translator, settings) {
     const modelFactory = new GalyleoModelFactory();
     app.docRegistry.addModelFactory(modelFactory);
     const sessionManager = app.serviceManager.sessions;
@@ -309,6 +315,7 @@ function activateTOC(app, docmanager, editorTracker, labShell, restorer, markdow
     mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
     mainMenu.helpMenu.addGroup([helpCommand]);
     // Add the Galyleo Menu to the main menu
+    //@ts-ignore
     const menu = new widgets_1.Menu({ commands: app.commands });
     menu.title.label = 'Galyleo';
     menu.addItem({
@@ -407,7 +414,7 @@ const extension = {
         translation_1.ITranslator,
         settingregistry_1.ISettingRegistry
     ],
-    activate: activateTOC
+    activate: activateGalyleo
 };
 /**
  * Exports.
