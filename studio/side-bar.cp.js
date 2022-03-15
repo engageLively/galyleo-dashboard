@@ -1,18 +1,17 @@
 import { PropertiesPanel } from 'lively.ide/studio/properties-panel.cp.js';
-import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
-import { GalyleoColorInput, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
-import { Polygon, ShadowObject, TilingLayout, HorizontalLayout, easings } from 'lively.morphic';
+import {
+  Polygon, ShadowObject, TilingLayout,
+  HorizontalLayout, easings, Image, Label
+} from 'lively.morphic';
+import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
-
-import { Label } from 'lively.morphic/text/label.js';
+import { GalyleoColorInput, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
 import { ViewCreator } from './view-creator.cp.js';
 import { ChartBuilder } from './chart-creator.cp.js';
 import { FilterBuilder, FilterEditor } from './filter-creator.cp.js';
 import { DataLoader } from './helpers.cp.js';
-
-import { Image } from 'lively.morphic/morph.js';
 
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './controls/section.cp.js';
 import { GalyleoConstraintMarkerActive, GalyleoAlignmentControl, GalyleoResizingSimulator, GalyleoConstraintMarker } from './controls/constraints.cp.js';
@@ -22,6 +21,7 @@ import { GalyleoDynamicProperty } from './controls/body.cp.js';
 import { GalyleoShapeControl } from './controls/shape.cp.js';
 import { GalyleoRichTextControl } from './controls/text.cp.js';
 import { GalyleoFillControl } from './controls/fill.cp.js';
+import { GalyleoColorPicker } from './color-picker.cp.js';
 
 // GalyleoColorInput.openInWorld()
 // GalyleoSideBar.openInWorld()
@@ -179,7 +179,6 @@ export class DashboardControl extends ViewModel {
   /**
    * moves the side bar out of the view
    */
-  // this.slideOut()
   async slideOut () {
     const world = this.world();
     const { view } = this;
@@ -427,12 +426,32 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
   extent: pt(255.4, 917.3),
   submorphs: [{
     name: 'background control',
+    layout: new TilingLayout({
+      axis: 'column',
+      hugContentsVertically: true,
+      orderByIndex: true,
+      padding: rect(0, 10, 0, 0),
+      resizePolicies: [['h floater', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['background fill input', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 10,
+      wrapSubmorphs: false
+    }),
     extent: pt(250, 98),
     master: GalyleoPropertySection,
     submorphs: [
       {
         name: 'background fill input',
-        master: GalyleoColorInput
+        master: GalyleoColorInput,
+        viewModel: {
+          activeColor: Color.gray,
+          gradientEnabled: true,
+          colorPickerComponent: GalyleoColorPicker
+        }
       }]
   }, {
     name: 'shape control',
@@ -480,6 +499,12 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
             }
           }
         ]
+      }, {
+        name: 'font color input',
+        viewModel: {
+          activeColor: Color.gray,
+          colorPickerComponent: GalyleoColorPicker
+        }
       },
       {
         name: 'bottom wrapper',
@@ -568,7 +593,17 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
     master: GalyleoFillControl,
     viewModel: {
       placeholderImage
-    }
+    },
+    submorphs: [
+      {
+        name: 'fill color input',
+        viewModel: {
+          activeColor: Color.gray,
+          gradientEnabled: true,
+          colorPickerComponent: GalyleoColorPicker
+        }
+      }
+    ]
   }, {
     name: 'border control',
     visible: true,
@@ -579,21 +614,30 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
       inactiveSectionComponent: GalyleoPropertySectionInactive,
       propertyLabelComponent: GalyleoAddButtonDefault,
       propertyLabelComponentHover: GalyleoAddButtonHovered,
-      propertyLabelComponentActive: GalyleoAddButtonActive
+      propertyLabelComponentActive: GalyleoAddButtonActive,
+      borderPopupComponent: GalyleoBorderPopup
     },
     submorphs: [
       {
         name: 'elements wrapper',
-        submorphs: [{
-          name: 'border width control',
-          submorphs: [{
-            name: 'border style selector',
-            viewModelClass: GalyleoDropDownListModel,
+        submorphs: [
+          {
+            name: 'border color input',
             viewModel: {
-              listMaster: GalyleoDropDownList
-            }
+              activeColor: Color.gray,
+              colorPickerComponent: GalyleoColorPicker
+            } // fixme: this should be also hanlded by master application....
+          },
+          {
+            name: 'border width control',
+            submorphs: [{
+              name: 'border style selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList // fixme: should also be handled by master application
+              }
+            }]
           }]
-        }]
       }]
   }, {
     name: 'effects control',
