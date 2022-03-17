@@ -488,6 +488,7 @@ const GalyleoColorInput = component(ColorInput, {
 // GalyleoWindow.openInWorld()
 const GalyleoWindow = component({
   name: 'galyleo/window',
+  dropShadow: new ShadowObject({ color: Color.rgba(0, 0, 0, 0.4086), blur: 20 }),
   borderColor: Color.rgb(127, 140, 141),
   borderRadius: 10,
   borderWidth: 2,
@@ -552,6 +553,11 @@ export class GalyleoDropDownListModel extends DropDownListModel {
           this.listMaster = GalyleoDropDownList;
         }
       },
+      expose: {
+        get () {
+          return [...super.prototype.expose, 'toggleError'];
+        }
+      },
       items: {
         derived: true,
         after: ['listMorph'],
@@ -576,9 +582,21 @@ export class GalyleoDropDownListModel extends DropDownListModel {
     };
   }
 
+  toggleError () {
+    this.view.master = GalyleoDropDownError;
+  }
+
   adjustLableFor (item) {
     let label = item.label || [item.string, null];
     this.label = { value: label };
+  }
+
+  async toggleList () {
+    await super.toggleList();
+    this.listMorph.update();
+    if (this.view.master.auto == GalyleoDropDownError) {
+      this.view.master = GalyleoDropDown;
+    }
   }
 }
 
@@ -612,6 +630,13 @@ const GalyleoDropDownAuto = component(DropDownList, {
       extent: pt(20, 20),
       reactsToPointer: false,
       imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/list-icon.svg'
+    }), add({
+      type: Label,
+      name: 'error icon',
+      fontColor: Color.rgb(205, 0, 0),
+      fontSize: 16,
+      visible: false,
+      textAndAttributes: Icon.textAttribute('exclamation-circle')
     })
   ]
 });
@@ -632,7 +657,18 @@ const GalyleoDropDownError = component(GalyleoDropDown, {
   name: 'galyleo/drop down/error',
   extent: pt(168, 34),
   borderColor: Color.rgb(205, 0, 0),
-  borderWidth: 4
+  borderWidth: 4,
+  submorphs: [
+    {
+      name: 'label',
+      fontColor: Color.rgb(205, 0, 0)
+    },
+    {
+      name: 'down caret',
+      visible: false
+    }, {
+      name: 'error icon', visible: true
+    }]
 });
 
 // GalyleoList.openInWorld()
@@ -1013,6 +1049,6 @@ const GalyleoConfirmPrompt = component(GalyleoWindow, {
 export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
-  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive,
+  TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive, GalyleoDropDownAuto,
   GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt
 };
