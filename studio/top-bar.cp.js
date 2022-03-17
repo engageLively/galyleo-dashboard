@@ -6,6 +6,7 @@ import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user/morphic/user-ui.js';
+import { signal } from "lively.bindings/index.js";
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -30,8 +31,24 @@ export default class DashboardUserFlap extends UserFlap {
 }
 
 class GalyleoTopBarModel extends TopBarModel {
-  
+  static get properties () {
+    return {
+      bindings: {
+        get () {
+          return [
+            { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' }
+          ];
+        }
+      }
+    };
+  }
+
+  reportBug () {
+    signal(this, 'initiate bug report');
+  }
 }
+
+
 // GalyleoTopBar.openInWorld()
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',

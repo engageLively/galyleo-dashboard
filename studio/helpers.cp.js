@@ -17,6 +17,24 @@ import { rect } from 'lively.graphics/geometry-2d.js';
  * curl -H "Content-Type: application/json" -d '{"user": "foo@bar.com", "file_path":"/dev/null", "message":"First App Engine Test"}' https://engagelively.wl.r.appspot.com/ticket
  */
 export class BugReporterModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'close' },
+            { model: 'report button', signal: 'fire', handler: 'reportBug' }
+          ];
+        }
+      }
+    };
+  }
+
   /**
    * initialize the user and file_path fields with the values from the
    * environment, if provided (non-null and length > 0)
@@ -27,7 +45,7 @@ export class BugReporterModel extends ViewModel {
     this._initInputField_('user', userName);
     this._initInputField_('file_path', filePath);
   }
-  
+
   /**
    * Initialize an input field with a value, if the value is non-null and
    * its length is > 0.  For nulls or empty values, do nothing.
@@ -36,10 +54,10 @@ export class BugReporterModel extends ViewModel {
    */
   _initInputField_ (inputFieldName, value) {
     if (value && value.length > 0) {
-      this.getSubmorphNamed(inputFieldName).textString = value;
+      this.ui[inputFieldName].textString = value;
     }
   }
-  
+
   /**
    * Report a bug.  Just collect the inputs, put dummies in for file_path
    * and user if nothing is entered, ensure that there is a message, then
@@ -47,28 +65,33 @@ export class BugReporterModel extends ViewModel {
    * posted, close this dialog to prevent accidental spamming.
    */
   reportBug () {
-    const user = this.getSubmorphNamed('user').textString;
-    const file_path = this.getSubmorphNamed('file_path').textString;
-    const message = this.getSubmorphNamed('message').textString;
+    const { userNameInput, fileInput, message: messageInput } = this.ui;
+    const user = userNameInput.textString;
+    const filePath = fileInput.textString;
+    const message = messageInput.textString;
     if (message.length === 0) {
       // no blank messages will be filed
-      this.getSubmorphNamed('message').show();
+      messageInput.show();
     } else {
       const body = {
         user: user.length > 0 ? user : 'No user name entered',
-        file_path: file_path.length > 0 ? user : 'No file path  entered',
+        file_path: filePath.length > 0 ? user : 'No file path  entered',
         message: message
       };
       const r = resource(this.url, { headers: { 'Content-Type': 'application/json' } });
       r.contentType = 'application/json';
       r.useProxy = true;
       r.post(JSON.stringify(body));
-      this.remove();
+      this.close();
     }
   }
 
   get url () {
     return 'https://engagelively.wl.r.appspot.com/ticket';
+  }
+
+  close () {
+    this.view.remove();
   }
 }
 
@@ -141,7 +164,7 @@ const BugReporter = component(GalyleoWindow, {
           name: 'placeholder',
           extent: pt(90, 28.8),
           textAndAttributes: ['User name', null]
-        }] 
+        }]
       }),
       part(GalyleoSearch, {
         name: 'file input',
@@ -150,7 +173,7 @@ const BugReporter = component(GalyleoWindow, {
           name: 'placeholder',
           extent: pt(114, 28.8),
           textAndAttributes: ['Dashboard file', null]
-        }] 
+        }]
       }),
       {
         type: Label,
@@ -158,7 +181,7 @@ const BugReporter = component(GalyleoWindow, {
         fontColor: Color.rgb(89, 89, 89),
         fontWeight: 700,
         fontSize: 15,
-        textString: 'Message' 
+        textString: 'Message'
       },
       {
         type: Text,
@@ -166,9 +189,13 @@ const BugReporter = component(GalyleoWindow, {
         clipMode: 'auto',
         fill: Color.rgb(190, 190, 190),
         borderRadius: 20,
+        fontSize: 18,
+        lineWrapping: true,
+        fontFamily: 'Barlow',
+        padding: rect(10, 10, 0, 0),
         extent: pt(318, 58.4),
         fixedWidth: true,
-        fixedHeight: true 
+        fixedHeight: true
       },
       {
         name: 'footer',
@@ -185,7 +212,7 @@ const BugReporter = component(GalyleoWindow, {
             submorphs: [without('icon'), {
               name: 'label',
               textAndAttributes: ['Report', null]
-            }] 
+            }]
           })
         ]
       }
@@ -217,14 +244,14 @@ export class TableLoaderModel extends ViewModel {
       }
     };
   }
-  
+
   /**
    * Closes the prompt
    */
   close () {
     this.view.remove();
   }
-  
+
   /**
    * Initialize this with the  dashboard to call back.  This is called by
    * DashboardControl.loadTable after this part has been created in that routine.
@@ -233,7 +260,7 @@ export class TableLoaderModel extends ViewModel {
   init (dashboard) {
     this.dashboard = dashboard;
   }
-  
+
   /**
    * Tell the dashboard to load the table from this URL.  The URL should be
    * checked here first, to ensure it's at least a valid URL.  Once done,
@@ -307,7 +334,7 @@ const DataLoader = component(GalyleoWindow, {
       part(PromptButton, {
         name: 'load button',
         extent: pt(106.5, 30.9),
-        submorphs: [without('icon')] 
+        submorphs: [without('icon')]
       })]
   })]
 });

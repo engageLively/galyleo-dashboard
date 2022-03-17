@@ -188,7 +188,8 @@ export default class Galyleo extends ViewModel {
           return [
             { signal: 'extent', handler: 'relayout' },
             { target: 'side bar', signal: 'position', handler: 'resizeDashboard' },
-            { target: 'dashboard', signal: 'onHaloRemoved', handler: 'clearFocus' }
+            { target: 'dashboard', signal: 'onHaloRemoved', handler: 'clearFocus' },
+            { model: 'top bar', signal: 'initiate bug report', handler: 'reportBug' }
           ];
         }
       }
@@ -406,6 +407,7 @@ export default class Galyleo extends ViewModel {
     topBar.width = view.width;
   }
 }
+
 
 
 
