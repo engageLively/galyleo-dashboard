@@ -15,6 +15,23 @@ import { rect } from 'lively.graphics/geometry-2d.js';
  * Create is connected to createChart() and Cancel is connected to remove()
  */
 export class ChartBuilderModel extends ViewModel {
+  static get properties () {
+    return {
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'cancel' },
+            { model: 'create chart button', signal: 'fire', handler: 'createChart' }
+          ];
+        }
+      }
+    };
+  }
+
+  cancel () {
+    this.view.remove();
+  }
+
   /**
    * Initialize with the dashboard, the source of table and view names and
    * information.  Populate the table/view list, and set an initial selection.
@@ -30,7 +47,7 @@ export class ChartBuilderModel extends ViewModel {
     viewSelector.selection = allNames[0];
     this.updateChartTypeList();
   }
-  
+
   /**
    * The Chart Types for each number of columns in a table/view.  this.chartTypes[i]
    * are the charts that take exactly i columns; this.chartTypes[0] are the charts
@@ -56,7 +73,7 @@ export class ChartBuilderModel extends ViewModel {
       ['Interval']
     ];
   }
-  
+
   /**
    * Update the chartTypeList with the charts appropriate for the selected view
    * Merges this.chartTypes[0] with this.chartTypes[n], where n is the
@@ -86,24 +103,24 @@ export class ChartBuilderModel extends ViewModel {
       this.chartTypeList.selection = selectedChart && charts.indexOf(selectedChart) >= 0 ? selectedChart : 'Table';
     } */
   }
-  
+
   /**
    * An internal utility to check that a list has a selection; if it does,
    * return true, if it doesn't, return false and highlight the list to
-   * show a selection needs to be made.  Called from __checkInputs__()
+   * show a selection needs to be made.  Called from _checkInputs()
    * @access private
    * @param { List } list - The list morph to be checked.
    * @returns { Boolean }
    */
-  __checkSelectionOrSignal__ (list) {
-    if (list.selection) {
+  _checkSelectionOrSignal (list) {
+    if (list.selection && list.selection !== '__no_selection__') {
       return true;
     } else {
-      list.show();
+      list.toggleError();
       return false;
     }
   }
-  
+
   /**
    * An internal utility to check that the inputs are OK for Chart Creation.  Makes
    * sure that tableViewList and chartTypeList have selections, that the chart
@@ -112,8 +129,8 @@ export class ChartBuilderModel extends ViewModel {
    * Called from createChart.
    * @access private
    */
-  __checkInputs__ () {
-    return this.__checkSelectionOrSignal__(this.ui.viewSelector) && this.__nameOK__();
+  _checkInputs () {
+    return this._checkSelectionOrSignal(this.ui.viewSelector) && this._nameOK();
   }
 
   /**
@@ -124,21 +141,21 @@ export class ChartBuilderModel extends ViewModel {
    * called from __checkInputs__
    * @access private
    */
-  __nameOK__ () {
+  _nameOK () {
     const { chartNameInput } = this.ui;
     const chosenName = chartNameInput.textString;
     if (!chosenName || chosenName.length === 0) {
-      chartNameInput.show();
+      chartNameInput.indicateError('Enter a chart name!');
       return false;
     }
     const names = this.dashboard.chartNames.concat(this.dashboard.filterNames);
     if (names.indexOf(chosenName) >= 0) {
-      chartNameInput.show();
+      chartNameInput.indicateError('That name is already in use!');
       return false;
     }
     return true;
   }
-  
+
   /**
    * The specification of the chart -- just the selections from the two lists,
    * and a required option field that tells the chart renderer to fill the morph
@@ -157,15 +174,15 @@ export class ChartBuilderModel extends ViewModel {
       options: { width: '100%', height: '100%' }
     };
   }
-  
+
   /**
    * Maximum table size before we pop up a warning.  The size should probably b
    * chart-type specific.  For the moment, we'll use 1K rows as the threshold.
    */
-  get __maxTableSize__ () {
+  get _maxTableSize () {
     return 1000;
   }
-  
+
   /**
    * Check that the chart's inputs are OK, and then check to see if the data is
    * too big to plot.  If it is, warn the user and give him an opportunity to back
@@ -174,9 +191,9 @@ export class ChartBuilderModel extends ViewModel {
    * This code needs to be revisited.
    */
   async checkChartInputsAndCreate () {
-    if (this.__checkInputs__()) {
+    if (this._checkInputs()) {
       const table = this.dashboard.prepareData(this.chartSpecification.viewOrTable);
-      if (table.getNumberOfRows() > this.__maxTableSize__) {
+      if (table.getNumberOfRows() > this._maxTableSize) {
         const message = `Warning!  This chart will have ${table.getNumberOfRows()} entries and drawing may be slow.  Click OK to proceed, cancel to cancel chart creation`;
         // const isConfirmed = window.confirm(message);
         const isConfirmed = await this.dashboard.confirm(message);
@@ -190,7 +207,7 @@ export class ChartBuilderModel extends ViewModel {
       }
     }
   }
-  
+
   /**
    * Create the chart.  If the inputs are OK, then tell the dashboard to add
    * the chart with the entered name and the specification given by the two lists,
@@ -198,7 +215,7 @@ export class ChartBuilderModel extends ViewModel {
    */
   createChart () {
     // delete check when we rebind the Create button.
-    if (this.__checkInputs__()) {
+    if (this._checkInputs()) {
       this.dashboard.addChart(this.ui.chartNameInput.textString, this.chartSpecification);
       this.remove();
     }
@@ -274,7 +291,7 @@ const ChartBuilder = component(GalyleoWindow, {
           name: 'chart name input',
           placeholder: 'Chart name'
         }),
-        part(GalyleoDropDown, { name: 'view selector', viewModel: { placeholder: 'Select view...' } }),
+        part(GalyleoDropDown, { name: 'view selector', viewModel: { placeholder: 'Select view...', openListInWorld: true } }),
         part(PromptButton, {
           name: 'create chart button',
           extent: pt(116.2, 30.5),
@@ -282,7 +299,7 @@ const ChartBuilder = component(GalyleoWindow, {
             name: 'label',
             textAndAttributes: ['Create chart', null]
           },
-          without('icon')] 
+          without('icon')]
         })
       ]
     })
@@ -321,7 +338,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
       }
     };
   }
-  
+
   /**
    * An indicator that this morph is a chart, which the dashboard uses
    * to manipulate and organize the chart morphs in the dashboard.
@@ -329,7 +346,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
   get isChart () {
     return true;
   }
-  
+
   /**
    * Initialize. Just set the morph name to the name of the chart on the
    * dashboard, a technique the dashboard uses to keep track of which charts
@@ -345,7 +362,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     this.requestRedraw();
     this.getSubmorphNamed('resizer').bottomRight = this.innerBounds().bottomRight();
   }
-  
+
   /**
    * Redraw, using the stored wrapper if any.  This is hardwired to this.extent, so
    * when the shape of the morph changes the chart is redrawn.  The default
@@ -361,7 +378,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
       this.drawChart(this.wrapper);
     }
   }
-  
+
   /**
    * Actually draw the chart.  We first make sure that width and height are set
    * to 100% -- we do this in `ChartBuilder.__makeOptions__` as well, so this is
@@ -375,7 +392,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     wrapper.draw(this.chartDiv);
     this.wrapper = wrapper;
   }
-  
+
   /**
    * Resize the chart in response to a drag event
    * @param { Event } evt - The drag event.

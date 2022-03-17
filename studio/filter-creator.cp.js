@@ -61,7 +61,7 @@ const FilterEditor = component(GalyleoWindow, {
           submorphs: [{
             name: 'label',
             textAndAttributes: ['Done', null]
-          }, without('icon')] 
+          }, without('icon')]
         })
       ]
     })
@@ -78,7 +78,7 @@ export class FilterBuilderMorph extends Morph {
       filterCreator: { defaultValue: null }
     };
   }
-  
+
   /**
    * The filterTypes.  The keys here are the items in the filterType
    * dropdown; to add a new filter, add an entry here.  Each filter has
@@ -98,9 +98,9 @@ export class FilterBuilderMorph extends Morph {
   }
 
   onLoad () {
-    this.whenRendered().then(_ => noUpdate(() => this.__initDropDowns__()));
+    this.whenRendered().then(_ => noUpdate(() => this._initDropDowns()));
   }
-  
+
   /**
    * A Filter Builder.  The object that created this must
    * implement the FilterCreator API, namely:
@@ -118,9 +118,11 @@ export class FilterBuilderMorph extends Morph {
   init (filterCreator, filter) {
     this.filterCreator = filterCreator;
     if (filter) this._editedFilter = filter;
-    this.__initDropDowns__();
+    this._initDropDowns();
+    connect(this.getSubmorphNamed('close button'), 'onMouseDown', this, 'cancel');
+    connect(this.getSubmorphNamed('create filter button'), 'onMouseDown', this, 'createFilter');
   }
-  
+
   /**
    * Initialize the dropdown menus.  This is called by onLoad() and init()
    * and it principally initializes the filterType dropdown.  It also ensures
@@ -129,15 +131,15 @@ export class FilterBuilderMorph extends Morph {
    * but this led to bad UX (column choices resetting) so now we just flag
    * an error with inconsistent types.
    */
-  __initDropDowns__ () {
+  _initDropDowns () {
     const items = Object.keys(this.filterTypes);
-    const filterDropDown = this.getSubmorphNamed('filterType');
+    const filterDropDown = this.getSubmorphNamed('filter selector');
     filterDropDown.items = items;
     if (this._editedFilter) {
       filterDropDown.selection = this._editedFilter.filterMorph.widgetType;
     }
     // this.updateColumns();
-    const columnSelector = this.getSubmorphNamed('columnSelector');
+    const columnSelector = this.getSubmorphNamed('column selector');
     const columns = this.filterCreator.getColumnsOfType([]);
     if (columns && columns.length > 0) {
       columnSelector.items = columns;
@@ -146,7 +148,7 @@ export class FilterBuilderMorph extends Morph {
       }
     }
   }
-  
+
   /**
    * Check a filter and column for consistency -- does this filter filter
    * values for this column?
@@ -154,7 +156,7 @@ export class FilterBuilderMorph extends Morph {
    * @param { string } selectedFilter - The filter type chosen corresponding to selectedFilterName.
    * @param { string } selectedFilterName - Name of the selected filter.
    */
-  _checkConsistency_ (selectedColumn, selectedFilter, selectedFilterName) {
+  _checkConsistency (selectedColumn, selectedFilter, selectedFilterName) {
     const columns = this.filterCreator.getColumnsOfType(selectedFilter.columnTypes);
     if (columns && columns.length > 0) {
       if (columns.indexOf(selectedColumn) >= 0) {
@@ -166,7 +168,7 @@ export class FilterBuilderMorph extends Morph {
       return { valid: false, message: `No matching columns found for  ${selectedFilterName}` };
     }
   }
-  
+
   /**
    * Create a filter.  This just calls the FilterCreator to do it; it's provided
    * here so the create button will have a local target.  Get the selected filter
@@ -176,25 +178,25 @@ export class FilterBuilderMorph extends Morph {
    * make the filter.
    */
   async createFilter () {
-    const selectedFilterName = this.getSubmorphNamed('filterType').selection;
+    const selectedFilterName = this.getSubmorphNamed('filter selector').selection;
     const selectedFilter = this.filterTypes[selectedFilterName];
-    const selectedColumn = this.getSubmorphNamed('columnSelector').selection;
+    const selectedColumn = this.getSubmorphNamed('column selector').selection;
     if (!selectedFilter) {
-      this.getSubmorphNamed('filterType').toggleError();
+      this.getSubmorphNamed('filter selector').toggleError();
       return false;
     }
     if (!selectedColumn) {
-      this.getSubmorphNamed('columnSelector').toggleError();
+      this.getSubmorphNamed('column selector').toggleError();
       return false;
     }
-    const validity = this._checkConsistency_(selectedColumn, selectedFilter, selectedFilterName);
+    const validity = this._checkConsistency(selectedColumn, selectedFilter, selectedFilterName);
     if (!validity.valid) {
-      window.alert(validity.message);
+      this.showError(validity.message);
       return false;
     }
     return await this.filterCreator.createFilter(this, selectedFilter.filterType, selectedFilter.part, selectedColumn);
   }
-  
+
   /**
    * update the columns for the right filter type.  This is called from
    * __initDropDown__() and when the filter type is changed in the menu, via
@@ -214,12 +216,16 @@ export class FilterBuilderMorph extends Morph {
       }
     }
   }
-  
+
   /**
    * Handle the cancel event.  Just passes this to the filterCreator:
    */
   cancelFilterCreation () {
     this.filterCreator.cancelFilterCreation(this);
+  }
+
+  cancel () {
+    this.remove();
   }
 }
 
@@ -255,7 +261,7 @@ const FilterBuilder = component(GalyleoWindow, {
         }], ['view name input', {
           height: 'fixed',
           width: 'fill'
-        }], ['widget selector', {
+        }], ['filter selector', {
           height: 'fixed',
           width: 'fill'
         }], ['column selector', {
@@ -295,8 +301,8 @@ const FilterBuilder = component(GalyleoWindow, {
           name: 'filter name input',
           placeholder: 'Filter name'
         }),
-        part(GalyleoDropDown, { name: 'widget selector', viewModel: { placeholder: 'Select widget...' } }),
-        part(GalyleoDropDown, { name: 'column selector', viewModel: { placeholder: 'Select column...' } }),
+        part(GalyleoDropDown, { name: 'filter selector', viewModel: { placeholder: 'Select widget...', openListInWorld: true } }),
+        part(GalyleoDropDown, { name: 'column selector', viewModel: { placeholder: 'Select column...', openListInWorld: true } }),
         part(PromptButton, {
           name: 'create filter button',
           extent: pt(116.2, 30.5),
@@ -304,7 +310,7 @@ const FilterBuilder = component(GalyleoWindow, {
             name: 'label',
             textAndAttributes: ['Create filter', null]
           },
-          without('icon')] 
+          without('icon')]
         })
       ]
     })
@@ -336,7 +342,7 @@ export class InternalFilterBuilderMorph extends Morph {
     this.updateItems();
     this.verify();
   }
-  
+
   /**
    * Update the items in the columnSelector pulldown, to match the type of
    * filter chosen in the filterType pulldown. This is called from init, above,
@@ -349,7 +355,7 @@ export class InternalFilterBuilderMorph extends Morph {
     }
     this.requestToProceed();
   }
-  
+
   /**
    * Check if all selections have been entered that are needed to proceeed with
    * creating a new internal filter. If not satisfied, the add row filter button
@@ -358,7 +364,7 @@ export class InternalFilterBuilderMorph extends Morph {
   requestToProceed () {
     this.getSubmorphNamed('add filter button').deactivated = !this.verify();
   }
-  
+
   /**
    * Check the input of the selections.
    */
@@ -373,7 +379,7 @@ export class InternalFilterBuilderMorph extends Morph {
     // also signal to owner to remove fader
     this.remove();
   }
-  
+
   /**
    * Create a filter.  Just get the filterType and columnName from the
    * two pulldowns, select the filter part implementing the filter type,
@@ -450,7 +456,7 @@ const FilterSettings = component({
         name: 'label',
         textAndAttributes: ['Apply changes', null]
       },
-      without('icon')] 
+      without('icon')]
     })
   ]
 });
@@ -535,7 +541,7 @@ export class FilterEditorPrompt extends Morph {
   }
 }
 
-export class FilterCreatorPrompt extends Morph {
+export class FilterCreatorPromptMorph extends Morph {
   init (dashboard) {
     this.getSubmorphNamed('external filter creator').init(dashboard);
   }
@@ -548,6 +554,11 @@ export class FilterCreatorPrompt extends Morph {
     this.remove();
   }
 }
+
+const FilterCreatorPrompt = component(FilterBuilder, {
+  name: 'fitler creator prompt',
+  type: FilterCreatorPromptMorph
+});
 
 /**
  * An ExternalFilterCreator -- this is the widget that sits on the
@@ -585,7 +596,7 @@ export default class ExternalFilterCreator extends Morph {
     // clear the input string
     this.getSubmorphNamed('filterName').textString = filterName || '';
   }
-  
+
   /**
    * Get the columns for a particular filterType, which is either Range or Select.
    * Range filters are over numeric columns, Select filters are for columns of
@@ -602,7 +613,7 @@ export default class ExternalFilterCreator extends Morph {
   getColumnsOfType (typeArray) {
     return this.dashboard ? this.dashboard.getColumnsOfType(typeArray) : [];
   }
-  
+
   /**
    * Actually create the filter.  This is the most complex method here.
    * Given a filterType and columnName, find the name for this
@@ -645,7 +656,7 @@ export default class ExternalFilterCreator extends Morph {
     await this.dashboard.createExternalFilter(filterName, columnName, filterType, filterPart);
     return true;
   }
-  
+
   /**
    * This is called by the FilterBuilder when the user has requested cancel
    * filter creation.  Just clear the name input.
@@ -655,4 +666,4 @@ export default class ExternalFilterCreator extends Morph {
   }
 }
 
-export { FilterEditor, FilterBuilder, InternalFilterBuilder, FilterSettingsPrompt };
+export { FilterEditor, FilterBuilder, InternalFilterBuilder, FilterSettingsPrompt, FilterCreatorPrompt };

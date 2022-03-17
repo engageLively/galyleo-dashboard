@@ -5,6 +5,7 @@ import { Label } from 'lively.morphic/text/label.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
+import { signal } from 'lively.bindings';
 
 /**
  * A View Editor.  This permits dashboard designers to edit
@@ -65,7 +66,7 @@ export class ViewBuilderModel extends ViewModel {
     // panel from having to call back with this information.
     // this.getSubmorphNamed('viewFilterPanel').init(this.dashboard, this.table, allColumns, aView.filterList);
   }
-  
+
   /**
    * The current view specificaton, which consists of:
    * 1.  The name of the underlying table;
@@ -81,7 +82,7 @@ export class ViewBuilderModel extends ViewModel {
       /* filterList: this.getSubmorphNamed('viewFilterPanel').filterList */
     };
   }
-  
+
   /**
    * Close the view builder.  This is a target for the Close button, which
    * which formerly just went to remove.  The added cleanup is to remove this
@@ -91,7 +92,7 @@ export class ViewBuilderModel extends ViewModel {
     delete this.dashboard.viewBuilders[this.viewName];
     this.remove();
   }
-  
+
   /**
    * Load the current view specification into the dashboard.  This is done
    * when the Update View button is fired.
@@ -231,7 +232,7 @@ const ViewBuilder = component(GalyleoWindow, {
           name: 'scroll bar',
           extent: pt(4.6, 125.7),
           position: pt(353.4, 10.1)
-        }] 
+        }]
       }),
       {
         name: 'widget header',
@@ -269,7 +270,7 @@ const ViewBuilder = component(GalyleoWindow, {
           name: 'scroll bar',
           extent: pt(4.6, 125.7),
           position: pt(353.4, 10.1)
-        }] 
+        }]
       }),
       {
         name: 'footer',
@@ -294,29 +295,58 @@ const ViewBuilder = component(GalyleoWindow, {
 });
 
 export class ViewCreatorPromptModel extends ViewModel {
-  init (dashboard) {
-    this.getSubmorphNamed('view creator').init(dashboard);
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'view creator', signal: 'canceled', handler: 'close' },
+            { model: 'view creator', signal: 'viewCreated', handler: 'close' }
+          ];
+        }
+      }
+    };
   }
 
-  createView () {
-    if (this.getSubmorphNamed('view creator').createView()) { this.close(); }
+  init (dashboard) {
+    this.models.viewCreator.init(dashboard);
   }
 
   close () {
-    this.remove();
+    this.view.remove();
   }
 }
 
 export class ViewCreatorModel extends ViewModel {
-  init (dashboard) {
-    this.dashboard = dashboard;
-    this.getSubmorphNamed('viewName').input = '';
-    this.getSubmorphNamed('tableList').items = [...dashboard.tableNames];
-    this.getSubmorphNamed('tableList').selection = '__no_selection__';
+  static get properties () {
+    return {
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'cancel' },
+            { model: 'create view button', signal: 'fire', handler: 'createView' }
+          ];
+        }
+      }
+    };
   }
 
-  __nameOK__ () {
-    const input = this.getSubmorphNamed('viewName').textString;
+  init (dashboard) {
+    const { viewNameInput, tableSelector } = this.ui;
+    this.dashboard = dashboard;
+    viewNameInput.input = '';
+    tableSelector.items = [...dashboard.tableNames];
+    tableSelector.selection = '__no_selection__';
+  }
+
+  _nameOK () {
+    const { viewNameInput } = this.ui;
+    const input = viewNameInput.textString;
     if (input.length === 0) {
       return false;
     }
@@ -324,21 +354,25 @@ export class ViewCreatorModel extends ViewModel {
     return allNames.indexOf(input) < 0;
   }
 
-  __tableOK__ () {
-    return this.getSubmorphNamed('tableList').selection !== '__no_selection__';
+  _tableOK () {
+    return this.ui.tableSelector.selection !== '__no_selection__';
+  }
+
+  cancel () {
+    signal(this, 'canceled');
   }
 
   createView () {
-    if (this.__nameOK__() && this.__tableOK__()) {
-      const name = this.getSubmorphNamed('viewName').textString;
-      const table = this.getSubmorphNamed('tableList').selection;
+    const { viewNameInput, tableSelector } = this.ui;
+    if (this._nameOK() && this._tableOK()) {
+      const name = viewNameInput.textString;
+      const table = tableSelector.selection;
       this.dashboard.addView(name, { table: table });
       this.dashboard.createViewEditor(name);
       this.init(this.dashboard);
-      return true;
+      signal(this, 'viewCreated');
     } else {
-      if (!this.__nameOK__()) { this.getSubmorphNamed('viewName').indicateError('Please enter a name'); }
-      return false;
+      if (!this._nameOK()) { viewNameInput.indicateError('Please enter a name'); }
     }
   }
 }
@@ -398,9 +432,9 @@ const ViewCreator = component({
         name: 'placeholder',
         extent: pt(91, 28.8),
         textAndAttributes: ['View name', null]
-      }] 
+      }]
     }),
-    part(GalyleoDropDown, { name: 'table selector', viewModel: { placeholder: 'Select table...' } }),
+    part(GalyleoDropDown, { name: 'table selector', viewModel: { placeholder: 'Select table...', openListInWorld: true } }),
     part(PromptButton, {
       name: 'create view button',
       extent: pt(116.2, 30.5),
@@ -408,7 +442,7 @@ const ViewCreator = component({
         name: 'label',
         textAndAttributes: ['Create view', null]
       },
-      without('icon')] 
+      without('icon')]
     })
   ]
 });
