@@ -187,7 +187,8 @@ export default class Galyleo extends ViewModel {
         get () {
           return [
             { signal: 'extent', handler: 'relayout' },
-            { target: 'side bar', signal: 'position', handler: 'resizeDashboard' }
+            { target: 'side bar', signal: 'position', handler: 'resizeDashboard' },
+            { target: 'dashboard', signal: 'onHaloRemoved', handler: 'clearFocus' }
           ];
         }
       }
@@ -203,6 +204,11 @@ export default class Galyleo extends ViewModel {
         }
       }
     ];
+  }
+
+  clearFocus () {
+    // only do that if dashboard is actually focused
+    if (this.world().focusedMorph == this.ui.dashboard) { this.models.sideBar.ui.styleControl.clearFocus(); }
   }
 
   requestSave () {
@@ -223,7 +229,7 @@ export default class Galyleo extends ViewModel {
     this._messages = [];
     this.ui.topBar.stylingPalette = this.ui.sideBar;
     this.ui.topBar.attachToTarget(this.ui.dashboard);
-    this.models.sideBar.ui.styleControl.viewModel.attachToTarget(this.ui.dashboard);
+    this.models.sideBar.init(this.ui.dashboard);
   }
 
   resizeDashboard () {
@@ -400,6 +406,8 @@ export default class Galyleo extends ViewModel {
     topBar.width = view.width;
   }
 }
+
+
 
 // part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({

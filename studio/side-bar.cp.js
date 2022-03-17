@@ -162,8 +162,9 @@ export class DashboardControl extends ViewModel {
     dashboard.init(this);
     this.models.tablesControl.init(dashboard);
     this.models.filtersControl.init(dashboard);
-    this.models.chartsControl.init(dashboard);
-    this.models.viewsControl.init(dashboard);
+    this.models.chartControl.init(dashboard);
+    this.models.viewControl.init(dashboard);
+    this.models.styleControl.attachToTarget(dashboard);
   }
 
   toggleSlide () {
