@@ -10,16 +10,17 @@ import { GalyleoDropDownList, GalyleoNumberInput, GalyleoDropDown } from './shar
 import { rect } from 'lively.graphics/geometry-2d.js';
 
 // fixme: turn this into a transparent filter?
+// VisualFilter.openInWorld()
 const VisualFilter = component({
   name: 'visual filter',
   borderColor: Color.rgb(128, 128, 128),
   borderRadius: 10,
-  borderWidth: 0,
+  borderWidth: 1,
   nativeCursor: 'drag',
   draggable: true,
   dropShadow: false,
   extent: pt(103, 44),
-  fill: Color.transparent,
+  fill: Color.rgba(0, 0, 0, 0.05),
   position: pt(64.9, 294.1),
   reactsToPointer: false,
   layout: new VerticalLayout({
@@ -64,17 +65,17 @@ export class BooleanFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'toggle';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return BooleanFilter[Symbol.for('lively-module-meta')];
-        } 
+          return BooleanFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName and tableName properties is set.
@@ -88,7 +89,7 @@ export class BooleanFilterMorph extends Morph {
     toggle.state = true;
     connect(toggle, 'state', this, 'signalFilterChanged');
   }
-  
+
   /**
    * Fire the filterChanged property.  This is called (hardcoded connection) when
    * the pulldown selection changes.
@@ -96,7 +97,7 @@ export class BooleanFilterMorph extends Morph {
   signalFilterChanged () {
     signal(this, 'filterChanged');
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field.  It also
@@ -107,7 +108,7 @@ export class BooleanFilterMorph extends Morph {
   get filter () {
     return { columnName: this.columnName, value: this.getSubmorphNamed('toggle').state };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -115,7 +116,7 @@ export class BooleanFilterMorph extends Morph {
   get filterString () {
     return `${this.columnName} = ${this.getSubmorphNamed('toggle').state}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -130,7 +131,7 @@ export class BooleanFilterMorph extends Morph {
       state: this.getSubmorphNamed('toggle').state
     };
   }
-  
+
   /**
    * restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
@@ -192,17 +193,17 @@ export class DateFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'DatePicker';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return DateFilter[Symbol.for('lively-module-meta')];
-        } 
+          return DateFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName and tableName are set.
@@ -230,7 +231,7 @@ export class DateFilterMorph extends Morph {
   }
 
   get datePicker () { return this.getSubmorphNamed('date picker').viewModel; }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field
@@ -241,7 +242,7 @@ export class DateFilterMorph extends Morph {
   get filter () {
     return { columnName: this.columnName, value: this.datePicker.selectedDate };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -249,7 +250,7 @@ export class DateFilterMorph extends Morph {
   get filterString () {
     return `${this.columnName} == ${this.datePicker.selectedDate}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -264,7 +265,7 @@ export class DateFilterMorph extends Morph {
       selectedDate: this.datePicker.selectedDate
     };
   }
-  
+
   /**
    * Restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
@@ -327,20 +328,20 @@ export class DoubleSliderFilterMorph extends Morph {
       widgetType: {
         serialize: false,
         get () {
-          return 'doubleSliderWithValues';
-        } 
+          return 'doubleSlider';
+        }
       },
       part: {
         serialize: false,
         get () {
-          return DoubleSliderFilter[Symbol.for('lively-module-meta')];
-        } 
+          return DoubleSliderFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
 
   get doubleSlider () { return this.getSubmorphNamed('double slider'); }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName, minVal, and maxVal properties are set.  The two
@@ -371,7 +372,7 @@ export class DoubleSliderFilterMorph extends Morph {
     this.tableName = tableName;
     this.signalEnabled = true;
   }
-  
+
   /**
    * Called when the range on the slider changes, through a hardcoded
    * connection.  Very simple -- just checks to see if the signal is enabled, and
@@ -391,7 +392,7 @@ export class DoubleSliderFilterMorph extends Morph {
       // signal(this, 'filterChanged');
     }
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a minValue and a
@@ -403,7 +404,7 @@ export class DoubleSliderFilterMorph extends Morph {
     const range = this.doubleSlider.range;
     return { columnName: this.columnName, maxValue: range.max, minValue: range.min };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -412,7 +413,7 @@ export class DoubleSliderFilterMorph extends Morph {
     const range = this.doubleSlider.range;
     return `${range.max} >= ${this.columnName} >= ${range.min}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -433,7 +434,7 @@ export class DoubleSliderFilterMorph extends Morph {
       increment: doubleSlider.increment
     };
   }
-  
+
   /**
    * restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
@@ -493,19 +494,19 @@ export class ListFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'list';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return ListFilter[Symbol.for('lively-module-meta')];
-        } 
+          return ListFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
 
   get valueList () { return this.getSubmorphNamed('value list'); }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName property is set.  There is one input part, a pulldown valueList, and
@@ -527,7 +528,7 @@ export class ListFilterMorph extends Morph {
     this.valueList.selection = choices[0];
     connect(this.valueList, 'selection', this, 'filterChanged');
   }
-  
+
   /**
    * Fire the filterChanged property.  This is called (hardcoded connection) when
    * the pulldown selection changes.
@@ -535,7 +536,7 @@ export class ListFilterMorph extends Morph {
   signalFilterChanged () {
     signal(this, 'filterChanged');
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field, which
@@ -552,7 +553,7 @@ export class ListFilterMorph extends Morph {
   get filterString () {
     return `${this.columnName} = ${this.valueList.selection}`;
   }
- 
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -569,7 +570,7 @@ export class ListFilterMorph extends Morph {
       type: this.filterType
     };
   }
-  
+
   /**
    * Restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
@@ -589,7 +590,7 @@ const ListFilter = component(VisualFilter, {
   name: 'list filter',
   type: ListFilterMorph,
   submorphs: [
-    add(part(GalyleoDropDownList, { name: 'value list' }))
+    add(part(GalyleoDropDownList, { name: 'value list', viewModel: { openListInWorld: true } }))
   ]
 });
 
@@ -618,7 +619,7 @@ export class NamedFilterMorph extends Morph {
       }
     };
   }
-  
+
   /**
    * This is called from ExternalFilterCreator.createFilter after
    * this part is instantiated.  The underlying filterMorph asnd  the filterName are
@@ -639,7 +640,7 @@ export class NamedFilterMorph extends Morph {
     this.filterMorph = filterMorph;
     connect(filterMorph, 'filterChanged', this, 'signalFilterChanged');
   }
-  
+
   /**
    * Implement the filter property, which just pulls the filter property
    * from the embedded filterMorph
@@ -647,7 +648,7 @@ export class NamedFilterMorph extends Morph {
   get filter () {
     return this.filterMorph.filter;
   }
-  
+
   /**
    * Return the columnName, which is just reflected from the contained
    * filter
@@ -655,7 +656,7 @@ export class NamedFilterMorph extends Morph {
   get columnName () {
     return this.filterMorph.columnName;
   }
-  
+
   /**
    * Fire the signal changed method; this is only called in response to the
    * connection set up in init
@@ -663,7 +664,7 @@ export class NamedFilterMorph extends Morph {
   signalFilterChanged () {
     signal(this, 'filterChanged');
   }
-  
+
   /**
    * A read-only property which permits the dashboard code to see that this
    * morph is a filter.  This is used for morph and filter management in
@@ -678,10 +679,12 @@ export class NamedFilterMorph extends Morph {
   }
 }
 
+// NamedFilter.openInWorld()
 const NamedFilter = component(VisualFilter, {
   type: NamedFilterMorph,
-  fill: Color.rgba(0, 0, 0, 0.05),
-  borderWidth: 1,
+  fill: Color.white,
+  borderWidth: 0,
+  reactsToPointer: false,
   submorphs: [
     add({
       type: Label,
@@ -734,17 +737,17 @@ export class RangeFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'minMax';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return RangeFilter[Symbol.for('lively-module-meta')];
-        } 
+          return RangeFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName, minVal, and maxVal properties are set.  The two
@@ -775,12 +778,12 @@ export class RangeFilterMorph extends Morph {
     // setup connections
     connect(minInput, 'numberChanged', this, 'minChanged');
     connect(maxInput, 'numberChanged', this, 'maxChanged');
-    
+
     this.columnName = columnName;
     this.tableName = tableName;
     this.signalEnabled = true;
   }
-  
+
   /**
    * Called when the maximum input entry is changed, through a connection
    * which was set up when the part was designed.  The maximum input is
@@ -806,7 +809,7 @@ export class RangeFilterMorph extends Morph {
       signal(this, 'filterChanged');
     }
   }
-  
+
   /**
    * Called when the minimum input entry is changed, through a connection
    * which was set up when the part was designed.  The minimum input is
@@ -832,7 +835,7 @@ export class RangeFilterMorph extends Morph {
       signal(this, 'filterChanged');
     }
   }
-  
+
   /**
    * A utility to get the input value of one of the input submorphs,
    * either max or min, called from filter, fitlerString, and get persistentForm
@@ -844,7 +847,7 @@ export class RangeFilterMorph extends Morph {
     const inputMorph = this.getSubmorphNamed(submorphName);
     return Number(inputMorph.number);
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a minValue and a
@@ -857,7 +860,7 @@ export class RangeFilterMorph extends Morph {
     const max = this._inputValue('max');
     return { columnName: this.columnName, maxValue: max, minValue: min };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -867,7 +870,7 @@ export class RangeFilterMorph extends Morph {
     const max = this._inputValue('max');
     return `${max} >= ${this.columnName} >= ${min}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -939,7 +942,7 @@ const RangeFilter = component(VisualFilter, {
             name: 'interactive label',
             fontColor: Color.rgba(0, 0, 0, 0.4965358231707328),
             textAndAttributes: Icon.textAttribute('sort-amount-up')
-          }] 
+          }]
         }),
         {
           type: Label,
@@ -956,11 +959,11 @@ const RangeFilter = component(VisualFilter, {
             name: 'interactive label',
             fontColor: Color.rgba(0, 0, 0, 0.4965358231707328),
             textAndAttributes: Icon.textAttribute('sort-amount-down')
-          }] 
-        })  
+          }]
+        })
       ]
     })
-  ]  
+  ]
 });
 
 /**
@@ -996,19 +999,19 @@ export class SelectFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'dropdown';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return SelectFilter[Symbol.for('lively-module-meta')];
-        } 
+          return SelectFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
 
   get valueList () { return this.getSubmorphNamed('value list').viewModel; }
-  
+
   /**
    * init.  Called as soon as the filter is created.  The
    * columnName property is set.  There is one input part, a pulldown valueList, and
@@ -1028,8 +1031,9 @@ export class SelectFilterMorph extends Morph {
     this.valueList.items = arr.compact(choices);
     this.isString = isString;
     this.valueList.selection = choices[0];
+    connect(this.valueList, 'selection', this, 'signalFilterChanged');
   }
-  
+
   /**
    * Fire the filterChanged property.  This is called (hardcoded connection) when
    * the pulldown selection changes.
@@ -1037,7 +1041,7 @@ export class SelectFilterMorph extends Morph {
   signalFilterChanged () {
     signal(this, 'filterChanged');
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field, which
@@ -1050,7 +1054,7 @@ export class SelectFilterMorph extends Morph {
     const valueValue = this.isString ? `"${valueField}"` : valueField;
     return { columnName: this.columnName, value: valueValue };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -1058,7 +1062,7 @@ export class SelectFilterMorph extends Morph {
   get filterString () {
     return `${this.columnName} = ${this.valueList.selection}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store. Just the parameters to init plus the
@@ -1075,7 +1079,7 @@ export class SelectFilterMorph extends Morph {
       isString: this.isString
     };
   }
-  
+
   /**
    * Restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
@@ -1095,7 +1099,7 @@ const SelectFilter = component(VisualFilter, {
   name: 'select filter',
   type: SelectFilterMorph,
   submorphs: [
-    add(part(GalyleoDropDown, { name: 'value list' }))
+    add(part(GalyleoDropDown, { name: 'value list', viewModel: { openListInWorld: true } }))
   ]
 });
 
@@ -1138,19 +1142,19 @@ export class SliderFilterMorph extends Morph {
         serialize: false,
         get () {
           return 'SliderWithValue';
-        } 
+        }
       },
       part: {
         serialize: false,
         get () {
-          return SliderFilter[Symbol.for('lively-module-meta')];
-        } 
+          return SliderFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
+        }
       }
     };
   }
 
   get slider () { return this.getSubmorphNamed('slider').viewModel; }
-  
+
   /**
    * Called as soon as the filter is created.  The
    * columnName, minVal, and maxVal properties are set.   The initial value of the
@@ -1179,7 +1183,7 @@ export class SliderFilterMorph extends Morph {
     this.signalEnabled = true;
     connect(slider, 'valueChanged', this, 'valueChanged');
   }
-  
+
   /**
    * Called when the value on the slider changes, through a hardcoded
    * connection.  Very simple -- just checks to see if the signal is enabled, and
@@ -1190,7 +1194,7 @@ export class SliderFilterMorph extends Morph {
       signal(this, 'filterChanged');
     })();
   }
-  
+
   /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field
@@ -1201,7 +1205,7 @@ export class SliderFilterMorph extends Morph {
   get filter () {
     return { columnName: this.columnName, value: this.slider.value };
   }
-  
+
   /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
@@ -1209,7 +1213,7 @@ export class SliderFilterMorph extends Morph {
   get filterString () {
     return `${this.columnName} == ${this.slider.value}`;
   }
-  
+
   /**
    * Return the storable version of this filter, for later restoration.  This
    * is used in dashboard store.  Just the parameters to init plus the
@@ -1228,7 +1232,7 @@ export class SliderFilterMorph extends Morph {
       increment: slider.increment
     };
   }
-  
+
   /**
    * Restore from a saved form created in persistentForm, immediately above.
    * This is used in dashboard load.  The sole parameter is an object of the
