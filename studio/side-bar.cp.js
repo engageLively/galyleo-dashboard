@@ -7,10 +7,10 @@ import {
 } from 'lively.morphic';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
-import { GalyleoColorInput, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
-import { ViewCreator } from './view-creator.cp.js';
+import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
+import { ViewCreator, ViewCreatorPrompt } from './view-creator.cp.js';
 import { ChartBuilder } from './chart-creator.cp.js';
-import { FilterBuilder, FilterEditor } from './filter-creator.cp.js';
+import { FilterBuilder, FilterSettingsPrompt, FilterCreatorPrompt, FilterEditor } from './filter-creator.cp.js';
 import { DataLoader } from './helpers.cp.js';
 
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './controls/section.cp.js';
@@ -22,6 +22,7 @@ import { GalyleoShapeControl } from './controls/shape.cp.js';
 import { GalyleoRichTextControl } from './controls/text.cp.js';
 import { GalyleoFillControl } from './controls/fill.cp.js';
 import { GalyleoColorPicker } from './color-picker.cp.js';
+import { resource } from 'lively.resources/index.js';
 
 // GalyleoColorInput.openInWorld()
 // GalyleoSideBar.openInWorld()
@@ -87,10 +88,9 @@ export class DashboardControl extends ViewModel {
       },
       expose: {
         get () {
-          return ['isHaloItem', 'init'];
+          return ['isHaloItem', 'init', 'update'];
         }
       },
-      // this.reifyBindings()
       bindings: {
         get () {
           return [
@@ -136,8 +136,8 @@ export class DashboardControl extends ViewModel {
 
   async selectTab (tabName) {
     const tabToControl = {
-      tables: 'tablesControl',
-      filters: 'filtersControl',
+      tables: 'tableControl',
+      filters: 'filterControl',
       charts: 'chartControl',
       views: 'viewControl'
     };
@@ -160,10 +160,10 @@ export class DashboardControl extends ViewModel {
   init (dashboard) {
     this.dashboard = dashboard;
     dashboard.init(this);
-    this.models.tablesControl.init(dashboard);
-    this.models.filtersControl.init(dashboard);
-    this.models.chartControl.init(dashboard);
-    this.models.viewControl.init(dashboard);
+    this.models.tableControl.init(this);
+    this.models.filterControl.init(this);
+    this.models.chartControl.init(this);
+    this.models.viewControl.init(this);
     this.models.styleControl.attachToTarget(dashboard);
   }
 
@@ -244,25 +244,25 @@ export class DashboardControl extends ViewModel {
   update () {
     const { tableControl, chartControl, viewControl, filterControl } = this.models;
     const tables = this.dashboard.tableNames.map(tableName => {
-      return TableEntry.wrapDataEntry(tableName, {
+      return TableEntryMorph.wrapDataEntry(tableName, {
         onDelete: () => tableControl.removeTable(tableName),
         onConfig: () => tableControl.previewTable(tableName)
       });
     });
     const charts = this.dashboard.chartNames.map(chartName => {
-      return TableEntry.wrapVisualEntry(chartName, {
+      return TableEntryMorph.wrapVisualEntry(chartName, {
         onConfig: () => chartControl.editChart(chartName),
         onDelete: () => chartControl.removeChart(chartName)
       });
     });
     const views = this.dashboard.viewNames.map(viewName => {
-      return TableEntry.wrapVisualEntry(viewName, {
+      return TableEntryMorph.wrapVisualEntry(viewName, {
         onConfig: () => viewControl.editView(viewName),
         onDelete: () => viewControl.removeView(viewName)
       });
     });
     const filters = this.dashboard.filterNames.map(filterName => {
-      return TableEntry.wrapVisualDataEntry(filterName, {
+      return TableEntryMorph.wrapVisualDataEntry(filterName, {
         onConfig: () => filterControl.highlightFilter(filterName),
         onData: () => filterControl.editFilter(filterName),
         onDelete: () => filterControl.removeFilter(filterName)
@@ -363,7 +363,7 @@ export class FilterControlModel extends EntityControlModel {
 
   removeFilter (filterName) {
     const filterMorph = this.dashboard.getSubmorphNamed(filterName);
-    filterMorph.remove();
+    if (filterMorph) filterMorph.remove();
     this.controller.update();
     this.dashboard.dirty = true;
   }
@@ -372,6 +372,7 @@ export class FilterControlModel extends EntityControlModel {
     this.dashboard.getSubmorphNamed(filterName).show();
   }
 }
+
 
 export class ChartControlModel extends EntityControlModel {
   /**
@@ -402,7 +403,7 @@ export class ChartControlModel extends EntityControlModel {
 
 export class ViewControlModel extends EntityControlModel {
   async build () {
-    const newViewPrompt = await this.controller.openDialog(ViewCreator);
+    const newViewPrompt = await this.controller.openDialog(ViewCreatorPrompt);
     newViewPrompt.init(this.dashboard);
   }
 
@@ -416,6 +417,7 @@ export class ViewControlModel extends EntityControlModel {
     this.dashboard.dirty = true;
   }
 }
+
 // GalyleoPropertiesPanel.get('clip mode selector').owner.master.auto.derivedMorph.ownerChain()
 // PropertiesPanel.openInWorld()
 // GalyleoPropertiesPanel.openInWorld()
@@ -801,10 +803,10 @@ const GalyleoSideBarControls = component({
       }], ['view control', {
         height: 'fixed',
         width: 'fill'
-      }], ['tables control', {
+      }], ['table control', {
         height: 'fixed',
         width: 'fill'
-      }], ['filters control', {
+      }], ['filter control', {
         height: 'fixed',
         width: 'fill'
       }]],
@@ -848,7 +850,7 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(ControlPanel, {
-        name: 'tables control',
+        name: 'table control',
         viewModel: new TableControlModel(),
         position: pt(12.7, 510.6),
         submorphs: [{
@@ -866,7 +868,7 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(ControlPanel, {
-        name: 'filters control',
+        name: 'filter control',
         viewModel: new FilterControlModel(),
         position: pt(16.8, 258.7),
         submorphs: [{
