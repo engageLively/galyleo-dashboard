@@ -35,9 +35,9 @@ class GalyleoTopBarModel extends TopBarModel {
     return {
       bindings: {
         get () {
-          return [
+          return super.prototype.bindings.concat([
             { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' }
-          ];
+          ]);
         }
       }
     };
@@ -47,6 +47,7 @@ class GalyleoTopBarModel extends TopBarModel {
     signal(this, 'initiate bug report');
   }
 }
+
 
 
 // GalyleoTopBar.openInWorld()
