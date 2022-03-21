@@ -231,6 +231,7 @@ export default class Galyleo extends ViewModel {
     this.ui.topBar.stylingPalette = this.ui.sideBar;
     this.ui.topBar.attachToTarget(this.ui.dashboard);
     this.models.sideBar.init(this.ui.dashboard);
+    this.models.dashboard.init(this.ui.sideBar);
   }
 
   resizeDashboard () {
