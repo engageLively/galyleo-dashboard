@@ -8,6 +8,12 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
   extent: pt(324.8, 668),
   submorphs: [
     {
+      name: 'button wrapper',
+      submorphs: [
+        { name: 'close button', submorphs: [{ name: 'label', textAndAttributes: ['閉じる', null] }] }
+      ]
+    },
+    {
       name: 'controls',
       submorphs: [{
         name: 'tab switcher',
