@@ -52,7 +52,6 @@ const VisualFilter = component({
 export class BooleanFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
@@ -180,7 +179,6 @@ const BooleanFilter = component(VisualFilter, {
 export class DateFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
@@ -313,7 +311,6 @@ const DateFilter = component(VisualFilter, {
 export class DoubleSliderFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       minVal: { defaultValue: null },
@@ -481,7 +478,6 @@ const DoubleSliderFilter = component(VisualFilter, {
 export class ListFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       tableName: { defaultValue: null },
       columnName: { defaultValue: null },
       filterType: {
@@ -611,9 +607,6 @@ export class NamedFilterMorph extends Morph {
    */
   static get properties () {
     return {
-      filterChanged: {
-        derived: true, readOnly: true, isSignal: true
-      },
       filterMorph: {
         defaultValue: null
       }
@@ -721,7 +714,6 @@ const NamedFilter = component(VisualFilter, {
 export class RangeFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       minVal: { defaultValue: null },
@@ -986,7 +978,6 @@ const RangeFilter = component(VisualFilter, {
 export class SelectFilterMorph extends Morph {
   static get properties () {
     return {
-      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       filterType: {
