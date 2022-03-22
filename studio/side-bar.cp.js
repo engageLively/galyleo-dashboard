@@ -8,21 +8,20 @@ import {
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
 import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
-import { ViewCreator, ViewCreatorPrompt } from './view-creator.cp.js';
+import { ViewCreatorPrompt } from './view-creator.cp.js';
 import { ChartBuilder } from './chart-creator.cp.js';
-import { FilterBuilder, FilterSettingsPrompt, FilterCreatorPrompt, FilterEditor } from './filter-creator.cp.js';
+import { FilterBuilder, FilterEditor } from './filter-creator.cp.js';
 import { DataLoader } from './helpers.cp.js';
 
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './controls/section.cp.js';
 import { GalyleoConstraintMarkerActive, GalyleoAlignmentControl, GalyleoResizingSimulator, GalyleoConstraintMarker } from './controls/constraints.cp.js';
 import { GalyleoLayoutFlap, GalyleoLayoutControl, GalyleoMiniLayoutPreviewActive, GalyleoMiniLayoutPreview } from './controls/layout.cp.js';
 import { GalyleoBorderPopup, GalyleoBorderControl } from './controls/border.cp.js';
-import { GalyleoDynamicProperty } from './controls/body.cp.js';
+import { GalyleoDynamicProperty, GalyleoBodyControlModel } from './controls/body.cp.js';
 import { GalyleoShapeControl } from './controls/shape.cp.js';
 import { GalyleoRichTextControl } from './controls/text.cp.js';
 import { GalyleoFillControl } from './controls/fill.cp.js';
 import { GalyleoColorPicker } from './color-picker.cp.js';
-import { resource } from 'lively.resources/index.js';
 
 // GalyleoColorInput.openInWorld()
 // GalyleoSideBar.openInWorld()
@@ -400,7 +399,6 @@ export class ChartControlModel extends EntityControlModel {
   }
 }
 
-
 export class ViewControlModel extends EntityControlModel {
   async build () {
     const newViewPrompt = await this.controller.openDialog(ViewCreatorPrompt);
@@ -646,12 +644,12 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
     name: 'effects control',
     visible: true,
     master: GalyleoPropertySection,
-    viewModel: {
+    viewModel: new GalyleoBodyControlModel({
       activeSectionComponent: GalyleoPropertySection,
       hoverSectionComponent: GalyleoPropertySection,
       inactiveSectionComponent: GalyleoPropertySectionInactive,
       dynamicPropertyComponent: GalyleoDynamicProperty
-    }
+    })
   }]
 });
 

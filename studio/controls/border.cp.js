@@ -1,25 +1,14 @@
 import { component, part, add, without } from 'lively.morphic/components/core.js';
-import { BorderPopup, BorderPopupWindow, BorderControl } from 'lively.ide/studio/controls/border.cp.js';
+import { BorderPopup, BorderControl } from 'lively.ide/studio/controls/border.cp.js';
 import { Color, pt, rect } from 'lively.graphics';
-import { GalyleoAddButtonDefault, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButton, MenuBarButton, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
+import { GalyleoAddButtonDefault, CloseButtonFloat, WindowHeader, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButton, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
 import { TilingLayout } from 'lively.morphic';
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './section.cp.js';
 
-// fix the binding by custom overriding the view model....
-// ... but a real fix would be for the components to properly handle
-// swapped out submorphs.
-class GalyleoPopupModel extends BorderPopupWindow {
-  get bindings () {
-    return [...super.bindings, {
-      target: 'close button new', signal: 'onMouseDown', handler: 'close'
-    }];
-  }
-}
-
+// part(GalyleoBorderPopup).openInWorld()
 const GalyleoBorderPopup = component(BorderPopup, {
   name: 'galyleo/border popup',
   fill: Color.rgb(215, 219, 221),
-  defaultViewModel: GalyleoPopupModel,
   viewModel: {
     propertyLabelComponent: GalyleoAddButtonDefault,
     propertyLabelComponentHover: GalyleoAddButtonHovered,
@@ -27,45 +16,16 @@ const GalyleoBorderPopup = component(BorderPopup, {
   },
   submorphs: [{
     name: 'header menu',
-    layout: new TilingLayout({
-      align: 'center',
-      axisAlign: 'center',
-      orderByIndex: true,
-      padding: rect(5, 0, 0, 0),
-      wrapSubmorphs: false
-    }),
-    fill: Color.rgb(127, 140, 141),
-    extent: pt(241, 26.3),
-    submorphs: [{
-      name: 'title',
-      fontColor: Color.rgb(255, 255, 255)
-    }, without('close button')] // this should also disqualify the master from traversing other newly added morphs with the same name
+    master: WindowHeader,
+    submorphs: [without('close button')]
   },
-  add({
+  add(part(CloseButtonFloat, {
     name: 'h float',
-    layout: new TilingLayout({
-      align: 'right',
-      orderByIndex: true,
-      padding: rect(0, 5, 10, -5)
-    }),
-    fill: Color.rgba(255, 255, 255, 0),
-    submorphs: [
-      part(MenuBarButton, {
-        tooltip: 'Close this dialog without loading',
-        name: 'close button new',
-        extent: pt(72.4, 21.3),
-        submorphs: [{
-          name: 'label',
-          fontSize: 12,
-          textAndAttributes: ['CLOSE', null]
-        }, {
-          name: 'icon',
-          extent: pt(10, 10),
-          imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
-        }]
-      })
-    ]
-  }, 'multi border control'),
+    submorphs: [{
+      tooltip: 'Close this dialog without loading',
+      name: 'close button'
+    }]
+  }), 'multi border control'),
   {
     name: 'multi border control',
     extent: pt(241, 120),
@@ -132,7 +92,7 @@ const GalyleoBorderPopup = component(BorderPopup, {
   }]
 });
 
-// GalyleoBorderControl.openInWorld()
+// part(GalyleoBorderControl).openInWorld()
 const GalyleoBorderControl = component(BorderControl, {
   name: 'galyleo/border control',
   layout: new TilingLayout({

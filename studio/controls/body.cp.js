@@ -1,7 +1,20 @@
 import { component } from 'lively.morphic/components/core.js';
-import { DynamicProperty } from 'lively.ide/studio/controls/body.cp.js';
+import { DynamicProperty, BodyControlModel } from 'lively.ide/studio/controls/body.cp.js';
 import { pt } from 'lively.graphics';
 import { GalyleoAddButton, GalyleoDropDownList, GalyleoDropDown } from '../shared.cp.js';
+import { PROP_CONFIG } from './popups.cp.js';
+
+export class GalyleoBodyControlModel extends BodyControlModel {
+  static get properties () {
+    return {
+      propConfig: {
+        get () {
+          return PROP_CONFIG;
+        }
+      }
+    };
+  }
+}
 
 // GalyleoDynamicProperty.openInWorld()
 const GalyleoDynamicProperty = component(DynamicProperty, {

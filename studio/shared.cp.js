@@ -114,7 +114,6 @@ export class SelectableEntryModel extends ViewModel {
   }
 }
 
-
 export class TableEntryMorph extends Morph {
   static get properties () {
     return {
@@ -1060,9 +1059,57 @@ const GalyleoConfirmPrompt = component(GalyleoWindow, {
   })]
 });
 
+const WindowHeader = component({
+  name: 'window header',
+  layout: new TilingLayout({
+    align: 'center',
+    axisAlign: 'center',
+    orderByIndex: true,
+    padding: rect(5, 0, 0, 0),
+    wrapSubmorphs: false
+  }),
+  fill: Color.rgb(127, 140, 141),
+  extent: pt(241, 26.3),
+  submorphs: [
+    {
+      name: 'title',
+      type: 'label',
+      fontFamily: 'Barlow',
+      fontWeight: 'bold',
+      fontColor: Color.rgb(255, 255, 255)
+    }
+  ]
+});
+
+const CloseButtonFloat = component({
+  name: 'close button float',
+  layout: new TilingLayout({
+    align: 'right',
+    orderByIndex: true,
+    padding: rect(0, 5, 10, -5)
+  }),
+  fill: Color.rgba(255, 255, 255, 0),
+  submorphs: [
+    part(MenuBarButton, {
+      tooltip: 'Close this dialog without loading',
+      name: 'close button',
+      extent: pt(72.4, 21.3),
+      submorphs: [{
+        name: 'label',
+        fontSize: 12,
+        textAndAttributes: ['CLOSE', null]
+      }, {
+        name: 'icon',
+        extent: pt(10, 10),
+        imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+      }]
+    })
+  ]
+});
+
 export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
   TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive, GalyleoDropDownAuto,
-  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt
+  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat
 };
