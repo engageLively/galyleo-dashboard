@@ -8,12 +8,21 @@ import { SystemList } from 'lively.ide/styling/shared.cp.js';
 import { DropDownList } from 'lively.components/list.cp.js';
 import { NumberInput, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
 import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
-import { Scrubber } from 'lively.ide/value-widgets.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
-import { PropertySection } from 'lively.ide/studio/controls/section.cp.js';
 
 export class SelectableEntryModel extends ViewModel {
+  static wrap (entryName, opts) {
+    const entry = part(SelectableEntry, { // eslint-disable-line no-use-before-define
+      viewModel: {
+        entryName,
+        ...opts
+      }
+    });
+
+    return { isListItem: true, morph: entry };
+  }
+
   static get properties () {
     return {
       entryName: {
@@ -29,15 +38,25 @@ export class SelectableEntryModel extends ViewModel {
       isSelected: {
         // wether or not the item is checked
       },
+      expose: {
+        get () {
+          return ['toggleEdit', 'isSelected', 'editMode', 'orderMode', 'entryName'];
+        }
+      },
       bindings: {
         get () {
-          return [];
+          return [
+            { signal: 'onMouseUp', handler: 'toggleSelect' },
+            { signal: 'onDrag', handler: 'onDrag', override: true },
+            { signal: 'onDragStart', handler: 'onDragStart', override: true },
+            { signal: 'onDragEnd', handler: 'onDragEnd', override: true }
+          ];
         }
       }
     };
   }
 
-  onDrag (evt) {
+  onDrag ($onDrag, evt) {
     const { absDragDelta } = evt.state;
     this.shiftOrder(absDragDelta.y, evt);
   }
@@ -54,29 +73,13 @@ export class SelectableEntryModel extends ViewModel {
     // do nothing since we are not editable
   }
 
-  static wrap (entryName, opts) {
-    const entry = part(SelectableEntry, {
-      viewModel: {
-        entryName
-      }
-    });
-
-    entry.master.reconcileSubmorphs().then(async () => {
-      entry.master.applyIfNeeded(true);
-      entry.height = 32; // hard fix
-      Object.assign(entry, opts);
-    });
-
-    return { isListItem: true, morph: entry };
-  }
-
   startShifting () {
-    this.entryList.startShiftingEntry(this);
-    this.master = SelectableEntryDragged;
+    this.entryList.startShiftingEntry(this.view);
+    this.master = SelectableEntryDragged; // eslint-disable-line no-use-before-define
   }
 
   stopShifting () {
-    this.master = SelectableEntry;
+    this.master = SelectableEntry; // eslint-disable-line no-use-before-define
     this.entryList.stopShifting();
   }
 
@@ -87,32 +90,30 @@ export class SelectableEntryModel extends ViewModel {
   onRefresh () {
     const { view, ui: { checkbox, entryName, dragControl } } = this;
     view.draggable = this.orderMode;
-    view.nativeCursor = this.orderMode ? 'grab' : 'auto';
+    view.master = this.orderMode
+      ? {
+          auto: SelectableEntry, click: SelectableEntryDragged // eslint-disable-line no-use-before-define
+        }
+      : SelectableEntry; // eslint-disable-line no-use-before-define
     entryName.value = this.entryName;
-    dragControl.draggable = this.orderMode;
-    checkbox.master = this.isSelected ? CheckboxChecked : CheckboxUnchecked;
+    // dragControl.draggable = this.orderMode;
+    checkbox.master = this.isSelected ? CheckboxChecked : CheckboxUnchecked; // eslint-disable-line no-use-before-define
     const updateElements = () => {
-      if (checkbox.isLayoutable !== !this.orderMode) {
-        checkbox.isLayoutable = checkbox.visible = !this.orderMode;
+      if (checkbox.visible !== !this.orderMode) {
+        checkbox.visible = !this.orderMode;
       }
-      if (dragControl.isLayoutable !== !!this.orderMode) {
-        dragControl.isLayoutable = dragControl.visible = !!this.orderMode;
+      if (dragControl.visible !== !!this.orderMode) {
+        dragControl.visible = !!this.orderMode;
       }
     };
-    this.world()
-      ? view.withAnimationDo(updateElements, {
-        duration: 300
-      })
-      : updateElements();
+    updateElements();
   }
 
-  onMouseUp (evt) {
-    super.onMouseUp(evt);
-    // toggle checkbox
-    if (this.isComponent) return;
+  toggleSelect () {
     this.isSelected = !this.isSelected;
   }
 }
+
 
 export class TableEntryMorph extends Morph {
   static get properties () {
@@ -145,20 +146,23 @@ export class TableEntryMorph extends Morph {
   }
 
   static wrapVisualDataEntry (visualDataEntryName, opts = {}) {
-    const entry = part(TableEntryVisual, opts);
+    const entry = part(TableEntryVisual, opts); // eslint-disable-line no-use-before-define
     entry.value = visualDataEntryName;
+    entry.relayout();
     return { isListItem: true, morph: entry, value: visualDataEntryName };
   }
 
   static wrapDataEntry (dataEntryName, opts = {}) {
-    const entry = part(TableEntry, opts);
+    const entry = part(TableEntry, opts); // eslint-disable-line no-use-before-define
     entry.value = dataEntryName;
+    entry.relayout();
     return { isListItem: true, morph: entry, value: dataEntryName };
   }
 
   static wrapVisualEntry (filterOrChartName, opts = {}) {
-    const entry = part(TableEntryEdit, opts);
+    const entry = part(TableEntryEdit, opts); // eslint-disable-line no-use-before-define
     entry.value = filterOrChartName;
+    entry.relayout();
     return { isListItem: true, morph: entry, value: filterOrChartName };
   }
 
@@ -190,6 +194,11 @@ export class TableEntryMorph extends Morph {
     if (this.onData) this.onData();
   }
 
+  relayout () {
+    const entryName = this.getSubmorphNamed('entry name');
+    entryName.value = this.value;
+  }
+
   async toggleEdit (active, animated = true) {
     this.setProperty('editMode', active);
     const toggle = () => {
@@ -197,16 +206,15 @@ export class TableEntryMorph extends Morph {
       const configButton = this.getSubmorphNamed('edit config button');
       const dataButton = this.getSubmorphNamed('edit data button');
       removeButton.visible = removeButton.isLayoutable = active;
-      configButton.visible = configButton.isLayoutable = !active;
+      if (configButton) configButton.visible = configButton.isLayoutable = !active;
       if (dataButton) dataButton.visible = dataButton.isLayoutable = !active;
     };
-    if (!this.master) return;
-    await this.master.whenApplied();
-    this.master.applyIfNeeded(true);
     if (animated) {
+      this.layout.renderViaCSS = false; // this should be done automatically
       await this.withAnimationDo(toggle, {
         duration: 300
       });
+      this.layout.renderViaCSS = true;
     } else {
       toggle();
     }
@@ -244,6 +252,13 @@ export class GalyleoListMorph extends Morph {
         }
       }
     };
+  }
+
+  onLoad () {
+    connect(this, 'extent', this, 'relayout');
+    connect(this.get('item list'), 'onScroll', this, 'relayout');
+    connect(this.get('scroll bar'), 'onDrag', this, 'onScrollBarDrag');
+    this.get('item list').scroll = pt(0, 0);
   }
 
   // Notify the list that we are about to shift a certain item.
@@ -390,8 +405,6 @@ const GalyleoTextInput = component(TextInput, {
   fill: Color.rgba(0, 0, 0, 0.15),
   fontColor: Color.black
 });
-
-const GalyleoValueInput = component(Scrubber, { name: 'galyleo/value input', cursorColor: Color.black, fontColor: Color.black });
 
 // m = part(NumberInput).openInWorld()
 // m.master = GalyleoNumberInput
@@ -583,7 +596,7 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   }
 
   toggleError () {
-    this.view.master = GalyleoDropDownError;
+    this.view.master = GalyleoDropDownError; // eslint-disable-line no-use-before-define
   }
 
   adjustLableFor (item) {
@@ -594,8 +607,8 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   async toggleList () {
     await super.toggleList();
     this.listMorph.update();
-    if (this.view.master.auto == GalyleoDropDownError) {
-      this.view.master = GalyleoDropDown;
+    if (this.view.master.auto === GalyleoDropDownError) { // eslint-disable-line no-use-before-define
+      this.view.master = GalyleoDropDown; // eslint-disable-line no-use-before-define
     }
   }
 }
@@ -712,8 +725,6 @@ const GalyleoList = component({
     position: pt(178.8, 8)
   }]
 });
-
-connect(GalyleoList, 'extent', GalyleoList, 'relayout');
 
 const MenuBarButtonDefault = component({
   name: 'menu bar button default',
@@ -887,17 +898,18 @@ const SelectableEntry = component({
   }),
   position: pt(344.3, 280.5),
   submorphs: [{
-    // type: DragControl,
     type: Label,
     name: 'drag control',
     fontColor: Color.rgb(81, 90, 90),
     nativeCursor: 'grab',
     fill: Color.transparent,
+    reactsToPointer: false,
     padding: rect(3, 5, 0, 0),
     textAndAttributes: Icon.textAttribute('bars')
   }, part(CheckboxChecked, { name: 'checkbox' }), {
     type: Label,
     name: 'entry name',
+    reactsToPointer: false,
     fontFamily: 'Barlow',
     textAndAttributes: ['entry', null]
   }]
@@ -920,6 +932,7 @@ const TableEntry = component({
     axisAlign: 'center',
     justifySubmorphs: 'spaced',
     orderByIndex: true,
+    reactToSubmorphAnimations: true,
     padding: rect(5, 0, 0, 0),
     resizePolicies: [['buffer', {
       height: 'fixed',
@@ -958,12 +971,13 @@ const TableEntryEdit = component(TableEntry, {
   submorphs: [
     add({
       type: Image,
-      name: 'edit config button',
+      name: 'edit data button',
       extent: pt(15.2, 15.2),
-      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/preview-icon.svg',
+      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/chart-gear.svg',
       nativeCursor: 'pointer',
       naturalExtent: pt(133, 150)
-    })]
+    })
+  ]
 });
 
 // TableEntryVisual.openInWorld()
@@ -972,12 +986,12 @@ const TableEntryVisual = component(TableEntryEdit, {
   submorphs: [
     add({
       type: Image,
-      name: '',
+      name: 'edit config button',
       extent: pt(15.2, 15.2),
-      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/chart-gear.svg',
+      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/preview-icon.svg',
       nativeCursor: 'pointer',
       naturalExtent: pt(133, 150)
-    }, 'edit config button')
+    }, 'edit data button')
   ]
 });
 
