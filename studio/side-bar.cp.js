@@ -256,13 +256,13 @@ export class DashboardControl extends ViewModel {
     });
     const charts = this.dashboard.chartNames.map(chartName => {
       return TableEntryMorph.wrapVisualEntry(chartName, {
-        onConfig: () => chartControl.editChart(chartName),
+        onData: () => chartControl.editChart(chartName),
         onDelete: () => chartControl.removeChart(chartName)
       });
     });
     const views = this.dashboard.viewNames.map(viewName => {
       return TableEntryMorph.wrapVisualEntry(viewName, {
-        onConfig: () => viewControl.editView(viewName),
+        onData: () => viewControl.editView(viewName),
         onDelete: () => viewControl.removeView(viewName)
       });
     });
@@ -291,7 +291,6 @@ export class DashboardControl extends ViewModel {
     return await this.dashboard.openDialog(dialogPart);
   }
 }
-
 
 export class EntityControlModel extends ViewModel {
   static get properties () {
@@ -368,17 +367,13 @@ export class FilterControlModel extends EntityControlModel {
   }
 
   removeFilter (filterName) {
-    const filterMorph = this.dashboard.getSubmorphNamed(filterName);
-    if (filterMorph) filterMorph.remove();
-    this.controller.update();
-    this.dashboard.dirty = true;
+    this.dashboard.removeFilter(filterName);
   }
 
   highlightFilter (filterName) {
     this.dashboard.getSubmorphNamed(filterName).show();
   }
 }
-
 
 export class ChartControlModel extends EntityControlModel {
   /**
@@ -397,15 +392,14 @@ export class ChartControlModel extends EntityControlModel {
   }
 
   removeChart (chartName) {
-    const chartMorph = this.dashboard.getSubmorphNamed(chartName);
-    this.dashboard.dirty = true;
-    chartMorph.remove();
+    this.dashboard.removeChart(chartName);
   }
 
   highlightChart (chartName) {
     this.dashboard.get(chartName).show();
   }
 }
+
 
 export class ViewControlModel extends EntityControlModel {
   async build () {
@@ -781,17 +775,17 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(SideBarTab, {
-        name: 'charts tab',
-        submorphs: [{
-          name: 'tab label',
-          textAndAttributes: ['Charts', null]
-        }]
-      }),
-      part(SideBarTab, {
         name: 'views tab',
         submorphs: [{
           name: 'tab label',
           textAndAttributes: ['Views', null]
+        }]
+      }),
+      part(SideBarTab, {
+        name: 'charts tab',
+        submorphs: [{
+          name: 'tab label',
+          textAndAttributes: ['Charts', null]
         }]
       })
     ]
