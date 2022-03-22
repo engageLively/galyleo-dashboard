@@ -165,6 +165,9 @@ export class DashboardControl extends ViewModel {
     this.models.chartControl.init(this);
     this.models.viewControl.init(this);
     this.models.styleControl.attachToTarget(dashboard);
+    this.models.styleControl.clearFocus();
+    this.ui.controls.visible = false;
+    this.adjustIndicator();
   }
 
   toggleSlide () {
@@ -177,6 +180,12 @@ export class DashboardControl extends ViewModel {
     }
   }
 
+  adjustIndicator () {
+    const { collapseIndicator } = this.ui;
+    collapseIndicator.rotation = this.isToggled ? Math.PI : 2 * Math.PI;
+    this.relayout();
+  }
+
   /**
    * moves the side bar out of the view
    */
@@ -185,9 +194,7 @@ export class DashboardControl extends ViewModel {
     const { view } = this;
     this.isToggled = false;
     await view.owner.withAnimationDo(() => {
-      const { collapseIndicator } = this.ui;
-      collapseIndicator.rotation = 2 * Math.PI;
-      this.relayout();
+      this.adjustIndicator();
     }, {
       easing: easings.inOutExpo,
       duration: 300
@@ -206,9 +213,7 @@ export class DashboardControl extends ViewModel {
     if (view.right === view.owner.width) return;
     this.ui.controls.visible = true;
     await view.owner.withAnimationDo(() => {
-      const { collapseIndicator } = this.ui;
-      collapseIndicator.rotation = Math.PI;
-      this.relayout();
+      this.adjustIndicator();
     }, {
       easing: easings.inOutExpo,
       duration: 300
@@ -286,6 +291,7 @@ export class DashboardControl extends ViewModel {
     return await this.dashboard.openDialog(dialogPart);
   }
 }
+
 
 export class EntityControlModel extends ViewModel {
   static get properties () {
