@@ -183,6 +183,11 @@ export default class Galyleo extends ViewModel {
         },
         readOnly: true
       },
+      expose: {
+        get () {
+          return ['halos', 'withTopBarDo'];
+        }
+      },
       bindings: {
         get () {
           return [
@@ -209,7 +214,7 @@ export default class Galyleo extends ViewModel {
 
   clearFocus () {
     // only do that if dashboard is actually focused
-    if (this.world().focusedMorph == this.ui.dashboard) { this.models.sideBar.ui.styleControl.clearFocus(); }
+    if (this.world().focusedMorph === this.ui.dashboard) { this.models.sideBar.ui.styleControl.clearFocus(); }
   }
 
   requestSave () {
@@ -239,9 +244,10 @@ export default class Galyleo extends ViewModel {
     this.ui.dashboard.top = this.ui.topBar.bottom;
   }
 
-  // Open up a bug-reporting window, and initialize it with the current
-  // user name and path to dashboard file
-
+  /**
+   * Open up a bug-reporting window, and initialize it with the current
+   * user name and path to dashboard file
+   */
   async reportBug () {
     const reportMorph = part(BugReporter);
     const li = LoadingIndicator.open('loading reporting form...');
@@ -281,10 +287,10 @@ export default class Galyleo extends ViewModel {
     ];
   }
 
-  /*
-    When embedded inside a jupyter notebook, we communicate via the postMessage
-    interface, since we are confined to an iframe.
-  */
+  /**
+   * When embedded inside a jupyter notebook, we communicate via the postMessage
+   * interface, since we are confined to an iframe.
+   */
   _initMessageListeners () {
     const handlers = {
       'galyleo:fixLabels': async () => {
@@ -407,10 +413,19 @@ export default class Galyleo extends ViewModel {
     sideBar.height = view.height;
     topBar.width = view.width;
   }
+
+  /**
+   * Analogous to World.halos() but instead returns only the halos
+   * which are focused on elements on the dashboard.
+   */
+  halos () {
+    return this.world().halos().filter(h => h.target.ownerChain().includes(this.view));
+  }
+
+  async withTopBarDo (cb) {
+    await cb(this.ui.topBar);
+  }
 }
-
-
-
 
 // part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({
