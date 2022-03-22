@@ -4,6 +4,7 @@ import { pt, Color } from 'lively.graphics';
 import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { rect } from 'lively.graphics/geometry-2d.js';
+import { connect } from 'lively.bindings/index.js';
 
 /**
  * The second generation of chart builder.  Very simple.  Consists of two
@@ -17,6 +18,11 @@ import { rect } from 'lively.graphics/geometry-2d.js';
 export class ChartBuilderModel extends ViewModel {
   static get properties () {
     return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
       bindings: {
         get () {
           return [
@@ -217,7 +223,7 @@ export class ChartBuilderModel extends ViewModel {
     // delete check when we rebind the Create button.
     if (this._checkInputs()) {
       this.dashboard.addChart(this.ui.chartNameInput.textString, this.chartSpecification);
-      this.remove();
+      this.view.remove();
     }
   }
 }
@@ -361,6 +367,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     delete this.wrapper; // make sure this is clean;
     this.requestRedraw();
     this.getSubmorphNamed('resizer').bottomRight = this.innerBounds().bottomRight();
+    connect(this, 'extent', this, 'requestRedraw');
   }
 
   /**
@@ -405,7 +412,10 @@ export class GoogleChartHolderMorph extends HTMLMorph {
 
 const GoogleChartHolder = component({
   name: 'google chart holder',
-  type: GoogleChartHolderMorph
+  type: GoogleChartHolderMorph,
+  submorphs: [
+    { name: 'resizer' }
+  ]
 });
 
 export { ChartBuilder, GoogleChartHolder };
