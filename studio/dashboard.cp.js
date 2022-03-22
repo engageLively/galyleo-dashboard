@@ -14,7 +14,7 @@ import { getClassName } from 'lively.serializer2/class-helper.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
 import { GalyleoWindow, GalyleoConfirmPrompt, PromptButton } from './shared.cp.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
-import { NamedFilter } from './filters.cp.js';
+import { NamedFilter, SelectFilter } from './filters.cp.js';
 import { ViewBuilder } from './view-creator.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
 
@@ -231,10 +231,10 @@ export class Dashboard extends ViewModel {
 
   static get properties () {
     return {
-      tables: { defaultValue: null, serialize: false },
-      filters: { defaultValue: null },
-      views: { defaultValue: null },
-      charts: { defaultValue: null },
+      tables: { defaultValue: {}, serialize: false },
+      filters: { defaultValue: {} },
+      views: { defaultValue: {} },
+      charts: { defaultValue: {} },
       canvas: { // improve the naming to prevent confusion with views
         get () {
           return this.view;
@@ -252,25 +252,41 @@ export class Dashboard extends ViewModel {
           return window.google.charts;
         }
       },
+      // this.reifyExposedProps()
       expose: {
         get () {
           return [
-            'clear', 'checkAndLoad', 'checkPossibleRenameFromBrowser', 'checkPossibleRename', 'dependencyGraph', 'testDashboards',
-            'loadTestDashboard', 'loadDashboardFromFile', 'checkAndSave', 'saveDashboardToFile', 'prepareJSONForm',
+            'clear', 'checkAndLoad', 'checkPossibleRenameFromBrowser',
+            'checkPossibleRename', 'dependencyGraph', 'testDashboards',
+            'loadTestDashboard', 'loadDashboardFromFile', 'checkAndSave',
+            'saveDashboardToFile', 'prepareJSONForm', 'getColumnsOfType',
             'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
-            'tables', 'views', 'filters', 'charts'
+            'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
+            'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
+            'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter'
           ];
         }
       },
+      // this.reifyBindings()
       bindings: {
         get () {
           return [
             { signal: 'onSubmorphChange', handler: 'onSubmorphChange' },
-            { signal: 'onDrag', handler: 'onDrag', override: true }
+            { signal: 'onDrag', handler: 'onDrag', override: true },
+            { signal: 'addMorph', handler: 'setContext' },
+            { signal: 'removeMorph', handler: 'clearSideBarFocus' }
           ];
         }
       }
     };
+  }
+
+  clearSideBarFocus () {
+    this.dashboardController.viewModel.models.styleControl.clearFocus();
+  }
+
+  viewDidLoad () {
+    this.setContext(this.view);
   }
 
   onSubmorphChange (change, submorph) {
@@ -315,10 +331,6 @@ export class Dashboard extends ViewModel {
       };
     });
     return result;
-  }
-
-  init (controller) {
-    this.dashboardController = controller;
   }
 
   /**
@@ -469,6 +481,7 @@ export class Dashboard extends ViewModel {
    * Convenience method to load a test dashboard easily by name
    * @param { string } dashboardName - The name of the test dashboard.
    */
+  // this.loadTestDashboard('mtbf_mttr_dashboard')
   loadTestDashboard (dashboardName) {
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
@@ -580,7 +593,7 @@ export class Dashboard extends ViewModel {
   openDialog (componentObject) {
     const dialog = part(componentObject);
     dialog.openInWorld();
-    dialog.center = $world.innerBounds().center();
+    dialog.center = this.view.globalBounds().center();
     return dialog;
   }
 
@@ -618,7 +631,7 @@ export class Dashboard extends ViewModel {
       position: aMorph.position,
       extent: aMorph.extent,
       name: aMorph.name,
-      morphIndex: this.submorphs.indexOf(aMorph),
+      morphIndex: this.canvas.submorphs.indexOf(aMorph),
       morphicProperties: this._getFields(aMorph, this._morphicFields),
       complexMorphicProperties: this._complexMorphicFields(aMorph)
     };
@@ -645,7 +658,7 @@ export class Dashboard extends ViewModel {
 
     // discard rest of snapshots if change pointer set back previously
     this._snapshots = this._snapshots.slice(0, this._changePointer + 1);
-    const allMorphs = this.submorphs.filter(morph => !(morph.isFilter || morph.isChart));
+    const allMorphs = canvas.submorphs.filter(morph => !(morph.isFilter || morph.isChart));
 
     // inititalize the snapshot, or retrieve the last one we stored
     const snap = arr.last(this._snapshots) || Immutable.fromJS(this._prepareSerialization());
@@ -686,7 +699,7 @@ export class Dashboard extends ViewModel {
           extent: externalMorph.extent,
           name: filterName,
           savedForm: externalMorph.filterMorph.persistentForm,
-          morphIndex: this.submorphs.indexOf(externalMorph),
+          morphIndex: canvas.submorphs.indexOf(externalMorph),
           morphicProperties: this._getFields(externalMorph, this._morphicFields),
           complexMorphicProperties: this._complexMorphicFields(morph)
         }));
@@ -700,7 +713,7 @@ export class Dashboard extends ViewModel {
     this._snapshots.push(newSnap); // this returned snap reuses a bulk of the existing stored date, so it only contributes what has actually changed to the total memory expended in the system.
     this._changePointer = this._snapshots.length - 1;
 
-    const { dashboardFilePath } = this.ui.galyleo;
+    const { dashboardFilePath } = canvas.owner.viewModel; // fixme
     window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
   }
 
@@ -934,7 +947,7 @@ export class Dashboard extends ViewModel {
     }
     const nonNulls = orderedMorphs.filter(morph => morph);
     // make sure there are no submorphs we missed, and remove all the submorphs we have
-    this.submorphs.forEach(m => {
+    this.canvas.submorphs.forEach(m => {
       if (nonNulls.indexOf(m) < 0) {
         nonNulls.push(m);
       }
@@ -942,7 +955,7 @@ export class Dashboard extends ViewModel {
     });
     // add all the submorphs back, in the right order
     nonNulls.forEach(m => {
-      this.addMorph(m);
+      this.view.addMorph(m);
     });
   }
 
@@ -1013,9 +1026,9 @@ export class Dashboard extends ViewModel {
         const restored = morph({ type: descriptor.type });
         restored.name = descriptor.name;
         addMorphToOrderList(restored, descriptor);
-        this.addMorph(restored);
+        this.view.addMorph(restored);
         this._setComplexFields(restored, descriptor.complexMorphicProperties);
-        this._setFields(restored, descriptor.morphicProperties, this._morphicFields_);
+        this._setFields(restored, descriptor.morphicProperties, this._morphicFields);
         restored.position = Point.fromLiteral(descriptor.position);
         restored.extent = Point.fromLiteral(descriptor.extent);
         if (descriptor.type === 'Image') {
@@ -1067,7 +1080,7 @@ export class Dashboard extends ViewModel {
         return new ExpressionSerializer().deserializeExprObj({
           __expr__: rgba,
           bindings: {
-            'lively.graphics': ['Color']
+            'lively.graphics': ['Color', 'RadialGradient', 'LinearGradient', 'pt', 'rect']
           }
         });
       }
@@ -1304,7 +1317,7 @@ export class Dashboard extends ViewModel {
   _restoreMorphicProperties (savedForm, morph) {
     const complexPropertySource = savedForm.hasOwnProperty('complexMorphicProperties') ? savedForm.complexMorphicProperties : savedForm.morphicProperties;
     this._setComplexFields(morph, complexPropertySource);
-    this._setFields(morph, savedForm.morphicProperties, this._morphicFields_);
+    this._setFields(morph, savedForm.morphicProperties, this._morphicFields);
   }
 
   /**
@@ -1315,11 +1328,24 @@ export class Dashboard extends ViewModel {
   async _restoreFilterFromSaved (filterName, savedFilter) {
     let storedFilter = savedFilter.savedForm;
     if (storedFilter.toJS) storedFilter = storedFilter.toJS();
-    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, storedFilter.part, storedFilter.tableName);
+    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
     externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     this._restoreMorphicProperties(savedFilter, externalFilterMorph);
     await externalFilterMorph.whenRendered();//
     return externalFilterMorph;
+  }
+
+  /**
+   * We ensure compatibility with older dashboard by translating
+   * component URLs to actual component objects.
+   * @param { string|Morph } componentOrString - The component or (now invalid) component URL
+   * @return { Morph } The original or resolved component.
+   */
+  _ensurePart (componentOrString) {
+    if (componentOrString.isComponent) return componentOrString;
+    return ({
+      'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
+    })[componentOrString];
   }
 
   /**
@@ -1353,7 +1379,7 @@ export class Dashboard extends ViewModel {
     if (morphDescriptor.imageUrl) {
       restoredMorph.imageUrl = morphDescriptor.imageUrl;
     }
-    this.addMorph(restoredMorph);
+    this.view.addMorph(restoredMorph);
     if (morphDescriptor.textProperties) {
       const complexTextFieldsSource = morphDescriptor.hasOwnProperty('complexTextProperties') ? morphDescriptor.complexTextProperties : morphDescriptor.textProperties;
       this._setFields(restoredMorph, morphDescriptor.textProperties, this._textFields);
@@ -1419,7 +1445,7 @@ export class Dashboard extends ViewModel {
    * @param { strsing } aName - The name to check.
    */
   nameOK (aName) {
-    return this.__allNames__.indexOf(aName) < 0;
+    return this._allNames.indexOf(aName) < 0;
   }
 
   /**
@@ -1507,7 +1533,7 @@ export class Dashboard extends ViewModel {
    * @param { string } columnName - Name of the column to get types for.
    * @param { string } tableName - If non-null, look only in table named tableName.
    */
-  __getTypes (columnName, tableName = null) {
+  _getTypes (columnName, tableName = null) {
     let columns = this._allColumns();
     columns = columns.filter(column => column.name === columnName);
     if (tableName) {
@@ -1564,16 +1590,11 @@ export class Dashboard extends ViewModel {
     // create a new one.
     let editor;
     if (this.viewBuilders[viewName]) {
-      editor = this.viewBuilders[viewName];
-      editor.openInWorld();
-      // but the editor must be initialized with the currently available
-      // charts, filters, etc, as well as any updates to the columns of the underlying table
-      editor.init(viewName, this);
+      this._initViewEditor(this.viewBuilders[viewName], viewName);
     } else {
       editor = part(ViewBuilder);
       this._initViewEditor(editor, viewName);
     }
-    editor.center = $world.innerBounds().center();
   }
 
   /**
@@ -1601,7 +1622,7 @@ export class Dashboard extends ViewModel {
     if (this.tableNames.indexOf(viewOrTable) >= 0) {
       return new this.gViz.DataTable(this.tables[viewOrTable]);
     } else if (this.viewNames.indexOf(viewOrTable) >= 0) {
-      return this.__prepareViewData(viewOrTable);
+      return this._prepareViewData(viewOrTable);
     } else {
       return null;
     }
@@ -1692,7 +1713,7 @@ export class Dashboard extends ViewModel {
    * @param { string } viewName - The name of the view to turn into a DataView object
    * @returns { object } The data view object ready to be displayed.
    */
-  __prepareViewData (viewName) {
+  _prepareViewData (viewName) {
     const aView = this.views[viewName];
     if (!aView) {
       return;
@@ -1730,7 +1751,7 @@ export class Dashboard extends ViewModel {
    * @param { string[] } seriesColumns - The names of the data series columns.
    * @param { string } viewOrTableName - The name of the view or table.
    */
-  __makeHeaderString (categoryColumn, seriesColumns, viewOrTableName) {
+  _makeHeaderString (categoryColumn, seriesColumns, viewOrTableName) {
     if (seriesColumns.length <= 2 && seriesColumns.length > 0) {
       return `${seriesColumns.join(', ')} v ${categoryColumn}`;
     } else {
@@ -1746,9 +1767,9 @@ export class Dashboard extends ViewModel {
    * @param { object } aTable - A table which is a value in this.tables
    * @param { string } tableName - The string which is the title.
    */
-  __makeTitleForTable (aTable, tableName) {
+  _makeTitleForTable (aTable, tableName) {
     const seriesColumns = aTable.cols.slice(1).map(col => col.id);
-    return this.__makeHeaderString(aTable.cols[0].id, seriesColumns, tableName);
+    return this._makeHeaderString(aTable.cols[0].id, seriesColumns, tableName);
   }
 
   /**
@@ -1762,7 +1783,7 @@ export class Dashboard extends ViewModel {
    * @param {type} viewName - The name of the table/view
    * @returns { string } The string which is the title.
    */
-  __makeTitleForView (aView, viewName) {
+  _makeTitleForView (aView, viewName) {
     const seriesColumns = aView.columns.slice(1);
     const headerString = this._makeHeaderString(aView.columns[0], seriesColumns, viewName);
     const filters = this._getFiltersForView(aView);
@@ -1796,7 +1817,7 @@ export class Dashboard extends ViewModel {
     * ChartWrapper when the chart is drawn.
     * @param { object } chart - The chart to make the title for.
     */
-  __makeTitle (chart) {
+  _makeTitle (chart) {
     if (chart.chartType === 'Table') {
       return;
     }
@@ -1818,7 +1839,7 @@ export class Dashboard extends ViewModel {
    * @param { string } filterName - Name of the filter (to chart) to be checked.
    * @returns { string[] } A list of the names of the views that use this filter
    */
-  __checkFilterUsed (filterName) {
+  _checkFilterUsed (filterName) {
     let filterUsedInView = viewName => {
       return this.views[viewName].filterNames.indexOf(filterName) >= 0;
     };
@@ -1836,17 +1857,17 @@ export class Dashboard extends ViewModel {
    * @param { string } filterOrChartName - The name of the filter (or chart) to be checked.
    * @param { object } objectDict - Either this.filters (for a filter) or this.charts (for a chart)
    */
-  async __removeFilterOrChart (filterOrChartName, objectDict) {
-    let morph = this.getSubmorphNamed(filterOrChartName);
-    let usage = this.__checkFilterUsed(filterOrChartName);
+  async _removeFilterOrChart (filterOrChartName, objectDict, prompt = true) {
+    let morph = this.canvas.getSubmorphNamed(filterOrChartName);
+    let usage = this._checkFilterUsed(filterOrChartName);
     let msg = `${filterOrChartName} is used in views ${usage.join(', ')}.  Proceed?`;
-    let goAhead = usage.length > 0 ? await this.confirm(msg) : true;
+    let goAhead = prompt && usage.length > 0 ? await this.confirm(msg) : true;
     if (goAhead) {
       delete objectDict[filterOrChartName];
       if (morph) {
-        super.removeMorph(morph);
+        morph.remove();
       }
-      if (this.dashboarcController) {
+      if (this.dashboardController) {
         this.dashboardController.update();
       }
     }
@@ -1856,8 +1877,8 @@ export class Dashboard extends ViewModel {
    * Delete a filter, first checking to see if it's used in any View.
    * @param { string } filterName - The name of the filter to be removed.
    */
-  removeFilter (filterName) {
-    this._removeFilterOrChart(filterName, this.filters);
+  async removeFilter (filterName, prompt = true) {
+    await this._removeFilterOrChart(filterName, this.filters, prompt);
   }
 
   /**
@@ -1865,7 +1886,7 @@ export class Dashboard extends ViewModel {
    * @param { string } chartName - The name of the chart to be removed
    */
   removeChart (chartName) {
-    this.__removeFilterOrChart(chartName, this.charts);
+    this._removeFilterOrChart(chartName, this.charts);
   }
 
   /**
@@ -1964,7 +1985,8 @@ export class Dashboard extends ViewModel {
     window.parent.postMessage({ method: 'galyleo:ready', dashboardFilePath: filePath }, '*');
   }
 
-  async init () {
+  async init (controller) {
+    this.dashboardController = controller;
     await this._loadGoogleChartPackages();
     ['charts', 'filters', 'tables', 'views'].forEach(prop => {
       if (!this[prop]) {
@@ -2041,10 +2063,13 @@ export class Dashboard extends ViewModel {
    * is a list of values
    * @param { string } url - a URL.
    */
-  loadDataFromUrl (url) {
-    const r = resource(url);
-    r.readJson().then(tableSpec => this.addTable(tableSpec),
-      err => this.__logEntry({ activity: `loading url ${url}`, error: err }));
+  async loadDataFromUrl (url) {
+    try {
+      const tableSpec = await resource(url).readJson();
+      this.addTable(tableSpec);
+    } catch (err) {
+      console.log({ activity: `loading url ${url}`, error: err });
+    }
   }
 
   /**
@@ -2180,7 +2205,7 @@ export class Dashboard extends ViewModel {
    * @param { object } chart - The chart to make the wrapper for.
    * @param { string } chartName - The name of the chart.
    */
-  __makeWrapper (chart, chartName) {
+  _makeWrapper (chart, chartName) {
     const dataTable = this.prepareData(chart.viewOrTable);
     if (!dataTable) return null;
     const filter = this._prepareChartFilter(chart.viewOrTable);
@@ -2234,7 +2259,7 @@ export class Dashboard extends ViewModel {
   drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
-    this.__makeTitle(chart);
+    this._makeTitle(chart);
     const wrapper = this._makeWrapper(chart, chartName);
     if (wrapper) {
       this.lastWrapper = wrapper;
@@ -2313,7 +2338,7 @@ export class Dashboard extends ViewModel {
    * @param { string } viewOrTableName - The name of the underlying view or table.
    * @returns { object } The filter object for the chart, to be added to the specification.
    */
-  __prepareChartFilter (viewOrTableName) {
+  _prepareChartFilter (viewOrTableName) {
     let filter, table;
     if (this.views[viewOrTableName]) {
       const view = this.views[viewOrTableName];
@@ -2341,7 +2366,7 @@ export class Dashboard extends ViewModel {
    * @param { string } chartName - The name to find/create the chart morph for
    * @returns { Morph } The new morph.
    */
-  async __getChartMorph (chartName) {
+  async _getChartMorph (chartName) {
     const currentMorphsForChart = this.canvas.submorphs.filter(morph => morph.isChart && morph.name === chartName);
     if (currentMorphsForChart && currentMorphsForChart.length > 0) {
       return currentMorphsForChart[0];
@@ -2361,7 +2386,7 @@ export class Dashboard extends ViewModel {
    * this is used by most of the methods that have to deal with types and
    * columns.
    */
-  __allColumns () {
+  _allColumns () {
     const result = [];
     this.tableNames.forEach(tableName => {
       const table = this.tables[tableName];
@@ -2392,7 +2417,7 @@ export class Dashboard extends ViewModel {
     if (!this.tables) {
       return [];
     }
-    let columns = this.__allColumns();
+    let columns = this._allColumns();
     if (tableName) {
       columns = columns.filter(column => column.tableName === tableName);
     }
@@ -2495,11 +2520,11 @@ export class Dashboard extends ViewModel {
    * @param {type} [tableName=null] - If non-null, restrict search to the column in that table.
    * @returns { object[] } A list of unique values (no duplicates) in ascending order
    */
-  __getAllValues (columnName, tableName = null) {
-    const columns = this.__getMatchingColumns(columnName, tableName);
-    let result = this.__getAllValuesForColumn(columns[0]);
+  _getAllValues (columnName, tableName = null) {
+    const columns = this._getMatchingColumns(columnName, tableName);
+    let result = this._getAllValuesForColumn(columns[0]);
     columns.slice(1).forEach(column => {
-      let newVals = this.__getAllValuesForColumn(column);
+      let newVals = this._getAllValuesForColumn(column);
       newVals = newVals.filter(val => result.indexOf(val) < 0);
       result = result.concat(newVals);
     });
@@ -2528,6 +2553,10 @@ export class Dashboard extends ViewModel {
       link.visible = active;
       link.isLayoutable = active;
     }, { duration: 300 });
+  }
+
+  setContext (target) {
+    target._context = this.view.owner; // ensure the context of each added morph is galyleo
   }
 
   async publish () {
