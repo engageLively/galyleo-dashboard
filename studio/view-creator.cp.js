@@ -1,11 +1,12 @@
 import { TilingLayout } from 'lively.morphic';
 import { ViewModel, without, add, component, part } from 'lively.morphic/components/core.js';
-import { GalyleoWindow, GalyleoDropDown, GalyleoList, PromptButton, MenuBarButton } from './shared.cp.js';
+import { GalyleoWindow, SelectableEntryModel, GalyleoDropDown, GalyleoList, PromptButton, MenuBarButton } from './shared.cp.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { signal } from 'lively.bindings';
+import { arr } from 'lively.lang/index.js';
 
 /**
  * A View Editor.  This permits dashboard designers to edit
@@ -22,6 +23,27 @@ import { signal } from 'lively.bindings';
  * and statically filter the rows.
  */
 export class ViewBuilderModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'closeViewBuilder' },
+            { model: 'update button', signal: 'fire', handler: 'updateView' },
+            { model: 'select all columns button', signal: 'fire', handler: 'selectAllColumns' },
+            { model: 'select all widgets button', signal: 'fire', handler: 'selectAllWidgets' },
+            { model: 'edit columns button', signal: 'fire', handler: 'orderColumns' }
+          ];
+        }
+      }
+    };
+  }
+
   /**
    * Get the view from the dashboard, pull out the underlying table,
    * and then initialize the three component editors.  Table, viewName, and
@@ -36,13 +58,12 @@ export class ViewBuilderModel extends ViewModel {
     this.dashboard = dashboard;
     this.viewName = viewName;
     // udpate the lable with the view's name
-    this.getSubmorphNamed('viewName').textString = viewName;
+    this.ui.windowTitle.textString = viewName;
     // initialize the column chooser with all columns from the table.
     // the second parameter to columnChooser.init is the currently selected
     // columns, if any; this is in aView.columns
     const allColumns = this.dashboard.getColumnsOfType([], this.table);
-
-    this.getSubmorphNamed('viewColumnChooser').init(allColumns, aView.columns);
+    this.initColumnChooser(allColumns, aView.columns);
     // initialize the widget chooser with all widgets from the dashboard whose
     // column is one of the columns in the table (a widget over a column not
     // in the table will have no effect on filtering the rows).
@@ -60,11 +81,66 @@ export class ViewBuilderModel extends ViewModel {
       return allColumns.indexOf(chartColumn) >= 0;
     });
     filterNames = filterNames.concat(chartNames);
-    this.getSubmorphNamed('viewFilterChooser').init(filterNames, aView.filterNames);
+    this.initViewFilterChooser(filterNames, aView.filterNames);
     // Finally, initialize the internal filter panel with the currently selected
     // filter list.  Supply the dashboard, table, and columns to prevent the
     // panel from having to call back with this information.
     // this.getSubmorphNamed('viewFilterPanel').init(this.dashboard, this.table, allColumns, aView.filterList);
+  }
+
+  /**
+   * Initialize the column selection list.
+   * @param { string[] } allColumns - All available columns.
+   * @param { string[] } selectedColumns - The list of selected columns.
+   */
+  initColumnChooser (allColumns, selectedColumns = []) {
+    // this.init([1,2,3,4,5,6,7,8,9,10], [2,3])
+    const wrappedColumns = arr.sortBy(allColumns, c => {
+      const i = selectedColumns.indexOf(c);
+      if (i === -1) return Infinity;
+      else return i;
+    }).map(c => {
+      return SelectableEntryModel.wrap(c, {
+        entryList: this.ui.columnList,
+        isSelected: selectedColumns.includes(c)
+      });
+    });
+    this.ui.columnList.items = wrappedColumns;
+  }
+
+  /**
+   * This is this editor's contribution to the viewSpec.  It is just
+   * the selected columns of the list
+   */
+  get selectedColumns () {
+    // alter that
+    return this.ui.columnList.items
+      .filter(entry => entry.morph.isSelected)
+      .map(entry => entry.morph.entryName);
+  }
+
+  /**
+   * Initializes the filter choosing list.
+   * @param { string[] } allFilterNames - The list of all the filter names.
+   * @param { string[] } selectedFilterNames - The selected list filters.
+   */
+  initViewFilterChooser (allFilterNames, selectedFilterNames = []) {
+    this.ui.widgetList.items = allFilterNames.map(filterName => {
+      return SelectableEntryModel.wrap(filterName, {
+        isSelected: selectedFilterNames.includes(filterName),
+        entryList: this.ui.widgetList
+      });
+    });
+  }
+
+  /**
+   * Get the filters that are currently selected.  This is this editor's
+   * contribution to the ViewSpec.
+   */
+  get selectedFilters () {
+    return this.ui.widgetList.items
+      .filter(item => item.morph.isSelected)
+      .map(item => item.morph.entryName);
   }
 
   /**
@@ -77,9 +153,8 @@ export class ViewBuilderModel extends ViewModel {
   get viewSpec () {
     return {
       table: this.table,
-      columns: this.getSubmorphNamed('viewColumnChooser').columns,
-      filterNames: this.getSubmorphNamed('viewFilterChooser').selectedFilters
-      /* filterList: this.getSubmorphNamed('viewFilterPanel').filterList */
+      columns: this.selectedColumns,
+      filterNames: this.selectedFilters
     };
   }
 
@@ -90,7 +165,7 @@ export class ViewBuilderModel extends ViewModel {
    */
   closeViewBuilder () {
     delete this.dashboard.viewBuilders[this.viewName];
-    this.remove();
+    this.view.remove();
   }
 
   /**
@@ -100,9 +175,18 @@ export class ViewBuilderModel extends ViewModel {
   updateView () {
     this.dashboard.views[this.viewName] = this.viewSpec;
     this.dashboard.dirty = true;
-    this.remove();
+    this.view.remove();
+  }
+
+  selectAllColumns () {
+    this.ui.columnList.selectAll();
+  }
+
+  orderColumns () {
+    this.ui.columnList.toggleOrderMode();
   }
 }
+
 
 // ViewBuilder.openInWorld();
 const ViewBuilder = component(GalyleoWindow, {
@@ -282,7 +366,7 @@ const ViewBuilder = component(GalyleoWindow, {
           wrapSubmorphs: false
         }),
         submorphs: [part(PromptButton, {
-          name: 'report button',
+          name: 'update button',
           extent: pt(139.2, 33.2),
           submorphs: [{
             type: Label,
