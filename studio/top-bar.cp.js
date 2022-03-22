@@ -33,6 +33,16 @@ export default class DashboardUserFlap extends UserFlap {
 class GalyleoTopBarModel extends TopBarModel {
   static get properties () {
     return {
+      activeHaloItems: {
+        get () {
+          return ['drag', 'rotate', 'menu', 'close'];
+        }
+      },
+      haloFilterFn: {
+        get () {
+          return m => m.owner === this.primaryTarget || m === this.primaryTarget;
+        }
+      },
       bindings: {
         get () {
           return super.prototype.bindings.concat([
@@ -47,6 +57,7 @@ class GalyleoTopBarModel extends TopBarModel {
     signal(this, 'initiate bug report');
   }
 }
+
 
 
 
