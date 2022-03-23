@@ -1,5 +1,5 @@
 import 'esm://cache/jsuites@3.8.3';
-import jexcel from 'esm://cache/jexcel@4.6.1';
+import jexcel from 'esm://cache/jspreadsheet-ce@4.10.1';
 import { addOrChangeLinkedCSS, HTMLMorph } from 'lively.morphic';
 import { arr } from 'lively.lang';
 import { connect } from 'lively.bindings';
