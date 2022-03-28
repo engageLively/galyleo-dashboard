@@ -502,7 +502,7 @@ export class ExplicitGalyleoTable extends GalyleoTable {
  * @property {GalyleoRemoteTableSpec} connector -- if present, used to make a remote table
  */
 
-export function constructGalyleoTableSpec(galyleoTableSpec) {
+export function constructGalyleoTable(galyleoTableSpec) {
     const name = galyleoTableSpec.name;
     const columns = galyleoTableSpec.columns;
     if (galyleoTableSpec.rows != null) {
