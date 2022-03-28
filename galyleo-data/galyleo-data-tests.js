@@ -1,6 +1,5 @@
 /*
 BSD 3-Clause License
-
   Copyright (c) 2019-2022, engageLively
   All rights reserved.
 
@@ -31,20 +30,18 @@ BSD 3-Clause License
 */
 /* global declare, it, describe, beforeEach, afterEach */
 import { expect } from 'mocha-es6';
-import {Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable} from './galyleo-data.js';
+import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable } from './galyleo-data.js';
 import { resource } from 'lively.resources';
 
 describe('Explicit Table', () => {
-  it('should create table and populate an explicit table',  () => {
-    const schema = [{"name": "name", "type": "string"}, {"name": "age", "type": "number"}]
-    const rows = [['a', 1], ['b', 2]]
-    const table = constructGalyleoTable({"name": "test1", "columns": schema, "rows": rows})
-    expect(table).to.be.an(ExplicitGalyleoTable)
-    expect(table.columns).to.eql(schema)
-    expect(table.rows).to.eql(rows)
-    expect(table.name).to.eql("test1")
-    expect(table.getRows()).to.eql(rows)
-
+  it('should create table and populate an explicit table', () => {
+    const schema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
+    const rows = [['a', 1], ['b', 2]];
+    const table = constructGalyleoTable({ name: 'test1', columns: schema, rows: rows });
+    expect(table.tableType).to.eql('ExplicitGalyleoTable');
+    expect(table.columns).to.eql(schema);
+    expect(table.rows).to.eql(rows);
+    expect(table.name).to.eql('test1');
+    expect(table.getRows()).to.eql(rows);
   });
-
 });
