@@ -273,17 +273,17 @@ class InRangeFilter extends PrimitiveFilter {
  * @returns {Filter} filter over the table as given by the specification
  */
 export function constructFilter (table, filterSpec) {
-  if (filterSpec.operator == 'IN_RANGE') {
+  if (filterSpec.operator === 'IN_RANGE') {
     return new InRangeFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.max_val, filterSpec.min_val);
   }
-  if (filterSpec.operator == 'IN_LIST') {
+  if (filterSpec.operator === 'IN_LIST') {
     return new InListFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.values);
   }
-  if (filterSpec.operator == 'NOT') {
+  if (filterSpec.operator === 'NOT') {
     return new NotFilter(table, constructFilter(table, filterSpec.argument));
   }
   const args = filterSpec.arguments.map(subFilterSpec => constructFilter(table, subFilterSpec));
-  if (filterSpec.operator == 'AND') {
+  if (filterSpec.operator === 'AND') {
     return new AndFilter(table, args);
   }
   return new OrFilter(table, args);
@@ -345,7 +345,7 @@ export class GalyleoTable {
     const index = this.getColumnIndex(columnName);
     const rows = this.getRows();
     const result = [...new Set(rows.map(row => row[index]))];
-    if (this.columns.type == 'number') {
+    if (this.columns.type === 'number') {
       result.sort((a, b) => a - b);
     } else {
       result.sort();
@@ -393,7 +393,6 @@ export class ExplicitGalyleoTable extends GalyleoTable {
   constructor (columns, tableName, rows) {
     this.rows = rows;
     super(columns, tableName, _ => this.rows);
-    this.tableType = 'ExplicitGalyleoTable';
   }
 }
 
@@ -410,7 +409,6 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string?} dashboardName - if non-null, the dashboard name to pass to the remote server
      */
   constructor (columns, url, tableName, dashboardName = null) {
-    this.tableType = 'RemoteGalyleoTable';
     this.url = url;
     super(columns, tableName, this._getRowsFromURL_);
     this.parameters = { table_name: tableName };
