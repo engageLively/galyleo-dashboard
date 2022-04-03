@@ -39,7 +39,7 @@ describe('Explicit Table', () => {
     const schema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
     const rows = [['a', 2], ['b', 1]];
     const table = constructGalyleoTable({ name: 'test1', columns: schema, rows: rows });
-    expect(table).to.be.instanceof(ExplicitGalyleoTable);
+    expect(table.tableType).to.eql('ExplicitGalyleoTable');
     expect(table.columns).to.eql(schema);
     expect(table.rows).to.eql(rows);
     expect(table.name).to.eql('test1');
@@ -54,12 +54,12 @@ describe('Explicit Table', () => {
 });
 describe('Remote Table', () => {
   it('should create table and populate a remote table', async () => {
-    const url = 'https://engagelively.wl.r.appspot.com/';
+    const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
     const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
-    const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, url: url });
+    const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
     expect(remoteTable.tableType).to.eql('RemoteGalyleoTable');
     expect(remoteTable.columns).to.eql(remoteSchema);
-    expect(remoteTable.url).to.eql(url);
+    expect(remoteTable.url).to.eql(connector.url);
     expect(remoteTable.parameters).to.eql({ table_name: 'electoral_college' });
     expect(remoteTable.getUrlParameterString).to.eql('table_name=electoral_college');
     const years = [...Array((2020 - 1828) / 4 + 1).keys()].map(n => n * 4 + 1828);

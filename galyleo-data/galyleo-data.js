@@ -1,4 +1,5 @@
 import { resource } from 'lively.resources';
+import { signal } from 'lively.bindings';
 /*
 BSD 3-Clause License
 
@@ -40,7 +41,7 @@ BSD 3-Clause License
 /** @typedef [[@type {number | string}]]} GalyleoDataTable */
 
 /**
- * A Filter.  This is constructed with a Filter Specifcation and
+ * A Filter.  This is constructed with a Filter Specifcation and a table
  */
 
 export class Filter {
@@ -273,17 +274,17 @@ class InRangeFilter extends PrimitiveFilter {
  * @returns {Filter} filter over the table as given by the specification
  */
 export function constructFilter (table, filterSpec) {
-  if (filterSpec.operator === 'IN_RANGE') {
+  if (filterSpec.operator == 'IN_RANGE') {
     return new InRangeFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.max_val, filterSpec.min_val);
   }
-  if (filterSpec.operator === 'IN_LIST') {
+  if (filterSpec.operator == 'IN_LIST') {
     return new InListFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.values);
   }
-  if (filterSpec.operator === 'NOT') {
+  if (filterSpec.operator == 'NOT') {
     return new NotFilter(table, constructFilter(table, filterSpec.argument));
   }
   const args = filterSpec.arguments.map(subFilterSpec => constructFilter(table, subFilterSpec));
-  if (filterSpec.operator === 'AND') {
+  if (filterSpec.operator == 'AND') {
     return new AndFilter(table, args);
   }
   return new OrFilter(table, args);
@@ -291,7 +292,11 @@ export function constructFilter (table, filterSpec) {
 
 /** @typedef {() => GalyleoDataTable} TableFunction */
 
-/** Class for a Galyleo Table.  The functions  in this abstract class are the  only ones that should be used for any instantiated member. */
+/**
+ * Class for a Galyleo Table.  The functions  in this abstract class are the  only ones that should be
+ * used for any instantiated member.
+ * @property {signal} dataUpdated: used to signal a table client that the data in the table has changed
+ */
 
 export class GalyleoTable {
   /**
@@ -305,6 +310,12 @@ export class GalyleoTable {
     this.columns = columns;
     this.name = tableName;
     this.getRows = getRows;
+  }
+
+  static get properties () {
+    return {
+      dataUpdated: { derived: true, readOnly: true, isSignal: true }
+    };
   }
 
   /**
@@ -345,7 +356,7 @@ export class GalyleoTable {
     const index = this.getColumnIndex(columnName);
     const rows = this.getRows();
     const result = [...new Set(rows.map(row => row[index]))];
-    if (this.columns.type === 'number') {
+    if (this.columns.type == 'number') {
       result.sort((a, b) => a - b);
     } else {
       result.sort();
@@ -387,15 +398,23 @@ export class GalyleoTable {
 
 export class ExplicitGalyleoTable extends GalyleoTable {
   /**
-     * Construct an ExplicitGalyleoTable
-     * @param {GalyleoColumn[]} columns - The columns of the Table.
-     * @param {GalyleoDataTable} rows - the rows of the table
-     */
+   * Construct an ExplicitGalyleoTable
+   * @param {GalyleoColumn[]} columns - The columns of the Table.
+   * @param {GalyleoDataTable} rows - the rows of the table
+   */
   constructor (columns, tableName, rows) {
     this.rows = rows;
     super(columns, tableName, _ => this.rows);
+    this.tableType = 'ExplicitGalyleoTable';
   }
 }
+
+/**
+ * typedef (Object) GalyleoRemoteTableSpec
+ * @property {string} url - the base url for all methods
+ * @property {string?} dashboardName - if present, the name of the dashboard to use in remote requests
+ * @property {number?} interval -- if present, poll this dashboard every interval seconds
+ */
 
 /**
  * A Remote Table -- one which accesses the rows from an URL
@@ -405,20 +424,26 @@ export class RemoteGalyleoTable extends GalyleoTable {
   /**
      * Construct an RemoteGalyleoTable
      * @param {GalyleoColumn[]} columns - The columns of the Table.
-     * @param {string} url - the URL to use to fetch the data
      * @param {string} tableName - the table name to pass to the remote server
-     * @param {string?} dashboardName - if non-null, the dashboard name to pass to the remote server
+     * @param {GalyleoRemoteTableSpec} connector - A structure containing the url, and possibly a dashboard name and interval
      */
-  constructor (columns, url, tableName, dashboardName = null) {
-    this.url = url;
+  constructor (columns, tableName, connector) {
+    this.tableType = 'RemoteGalyleoTable';
+    this.url = connector.url;
     super(columns, tableName, this._getRowsFromURL_);
     this.parameters = { table_name: tableName };
     this.getUrlParameterString = `table_name=${tableName}`;
-    if (dashboardName != null) {
-      this.parameters.dashboard_name = dashboardName;
-      this.getUrlString = `${this.getUrlParameterString}&dashboard_name=${dashboardName}`;
+    if (connector.dashboardName != null) {
+      this.dashboardName = connector.dashboardName;
+      this.parameters.dashboard_name = connector.dashboardName;
+      this.getUrlString = `${this.getUrlParameterString}&dashboard_name=${connector.dashboardName}`;
     }
-    this.getUrlString;
+    // If the connector indicates that polling should take place, simply raise the dataUpdated signal every
+    // connector.interval seconds; the client(s), (typically only the dashboard controller) will decide what to do.
+    // If there aren't any charts or widgets using this table data, the answer will typically be nothing.
+    if (!isNaN(connector.interval) && connector.interval >= 1) {
+      setInterval(_ => signal(this, 'dataUpdated'), 1000 * connector.interval);
+    }
   }
 
   /**
@@ -485,17 +510,11 @@ export class RemoteGalyleoTable extends GalyleoTable {
 }
 
 /**
- * typedef (Object) GalyleoRemoteTableSpec
- * @property {string} url - the base url for all methods
- * @property {string?} dashboardName - if present, the name of the dashboard to use in remote requests
- */
-
-/**
  * @typedef (Object) GalyleoTableSpec
  * @property {string} name - the table name, required
  * @property {GalyleoColumn []} columns - the columns of the table
  * @property {GalyleoDataTable?} rows -- if present, this is an explicit table with the rows resident
- * @property {GalyleoRemoteTableSpec} url -- if present, used to make a remote table
+ * @property {GalyleoRemoteTableSpec} connector -- if present, used to make a remote table
  */
 
 export function constructGalyleoTable (galyleoTableSpec) {
@@ -504,12 +523,8 @@ export function constructGalyleoTable (galyleoTableSpec) {
   if (galyleoTableSpec.rows != null) {
     return new ExplicitGalyleoTable(columns, name, galyleoTableSpec.rows);
   }
-  if (galyleoTableSpec.url != null) {
-    if (galyleoTableSpec.hasOwnProperty('dashboard_name')) {
-      return new RemoteGalyleoTable(columns, galyleoTableSpec.url, name, galyleoTableSpec.dashboard_name);
-    } else {
-      return new RemoteGalyleoTable(columns, galyleoTableSpec.url, name);
-    }
+  if (galyleoTableSpec.connector != null) {
+    return new RemoteGalyleoTable(columns, name, galyleoTableSpec.connector);
   }
   // should never get here
   return null;
