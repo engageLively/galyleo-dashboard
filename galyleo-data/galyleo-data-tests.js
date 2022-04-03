@@ -34,12 +34,34 @@ import { expect } from 'mocha-es6';
 import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable } from './galyleo-data.js';
 import { resource } from 'lively.resources';
 import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
+import { connect } from 'lively.bindings';
 
 const explicitSchema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
 const explicitRows = [['a', 2], ['b', 1]];
 const explicitTableConstructor = { name: 'test1', columns: explicitSchema, rows: explicitRows };
 
 const isEqualSets = (set1, set2) => (set1.size === set2.size) && (set1.size === new Set([...set1, ...set2]).size);
+
+/*
+ * Implement the UpdateListenerObject for Polling...
+ */
+class PollCatcher {
+  constructor () {
+    this.reset();
+  }
+
+  reset () {
+    this.updates = [];
+    this.table = null;
+    this.startTime = new Date();
+  }
+
+  tableUpdated (table) {
+    this.table = table;
+    const latestTime = new Date() - this.startTime;
+    this.updates.push(latestTime / 1000);
+  }
+}
 
 describe('Explicit Table', () => {
   const table = constructGalyleoTable(explicitTableConstructor);
@@ -59,8 +81,10 @@ describe('Explicit Table', () => {
     expect(await table.getNumericSpec('age')).to.eql({ max_val: 2, min_val: 1, increment: 1 });
   });
 });
+
 const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
 const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
+const runRemoteTests = false; // set to true if we want to really run the remote tests
 
 describe('Remote Table', () => {
   const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
@@ -71,16 +95,40 @@ describe('Remote Table', () => {
     expect(remoteTable.parameters).to.eql({ table_name: 'electoral_college' });
     expect(remoteTable.getUrlParameterString).to.eql('table_name=electoral_college');
   });
-  it('should execute the remote table API', async () => {
-    const years = [...Array((2020 - 1828) / 4 + 1).keys()].map(n => n * 4 + 1828);
-    expect(await remoteTable.getAllValues('Year')).to.eql(years);
-    const spec = { max_val: 2020, min_val: 1828, increment: 4 };
-    expect(await remoteTable.getNumericSpec('Year')).to.eql(spec);
+
+  if (runRemoteTests) {
+    it('should get all the years', () => {
+    // generate the years 1828-2020, inclusive, increments of 4
+      const years = [...Array((2020 - 1828) / 4 + 1).keys()].map(n => n * 4 + 1828);
+      remoteTable.getAllValues('Year').then(yearsFromTable => expect(yearsFromTable).to.eql(years));
+    });
+    it('should get the numeric spec from years', async () => {
+      const spec = { max_val: 2020, min_val: 1828, increment: 4 };
+      remoteTable.getNumericSpec('Year').then(specFromTable => expect(specFromTable).to.eql(spec));
+    });
+  }
+  const pollCatcher = new PollCatcher();
+
+  it('should poll every second', () => {
+    const pollingConnector = { url: 'https://engagelively.wl.r.appspot.com/', dashboardName: 'foo', interval: 1 };
+    const remoteTable2 = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: pollingConnector });
+    remoteTable2.registerUpdateListener(pollCatcher);
+    assert(remoteTable2.updateListeners.has(pollCatcher));
+    expect(remoteTable2.updateListeners.size).to.eql(1);
+    expect(remoteTable2.interval).to.eql(1);
+    expect(remoteTable2.dashboardName).to.eql('foo');
+    expect(pollCatcher.updates.length).to.eql(0);
+    const pollDone = () => {
+      assert(pollCatcher.updates.length <= 6 && pollCatcher.updates.length >= 4);
+      const diffs = pollCatcher.slice(1).map((value, index) => value - pollCatcher.updates[index]);
+      diffs.forEach(value => assert(value >= 0.95 && value <= 1.05));
+    };
+    setTimeout(_ => pollDone(), 5000);
   });
 });
 
 describe('Filter Creation and Test', () => {
-  const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
+  /* const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector }); */
   const table = constructGalyleoTable(explicitTableConstructor);
   it('Should create filters and find values based on them', () => {
     const inListExplicit = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });

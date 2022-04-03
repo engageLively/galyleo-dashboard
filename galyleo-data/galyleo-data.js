@@ -393,12 +393,22 @@ export function constructFilter (table, filterSpec) {
   return new OrFilter(table, args);
 }
 
-/** @typedef {() => GalyleoDataTable} TableFunction */
+/**
+ * A function which returns the rows of a data table.
+ * @typedef {() => GalyleoDataTable} TableFunction 
+ *
+ * A function which listens for updates to a GalyleoTable
+ * @typedef {(GalyleoTable) => void} GalyleoUpdateListener
+ *
+ * An objectwhich listens for updates to a GalyleoTable.  This is any object which contains an UpdateListener
+ * function
+ * @typedef {Object} GalyleoUpdateListenerObject
+ * @property {GalyleoUpdateListener} tableUpdated 
+ */
 
 /**
  * Class for a Galyleo Table.  The functions  in this abstract class are the  only ones that should be
  * used for any instantiated member.
- * @property {signal} dataUpdated: used to signal a table client that the data in the table has changed
  */
 
 export class GalyleoTable {
@@ -413,12 +423,37 @@ export class GalyleoTable {
     this.columns = columns;
     this.name = tableName;
     this.getRows = getRows;
+    this.updateListeners = new Set();
   }
 
-  static get properties () {
-    return {
-      dataUpdated: { derived: true, readOnly: true, isSignal: true }
-    };
+  /**
+   * Register an update listener.  This should be a function which is called with a single updateListener
+   * argument; the listener  will get called when the table is updated
+   * @parameter {GalyleoUpdateListenerObject} listener
+   */
+  registerUpdateListener (listener) {
+    this.updateListeners.add(listener);
+  }
+
+  /**
+   * Deregister an update listener.  This should be a function which is called with a single updateListener
+   * argument; the listener will be deleted from the update listeners
+   * @parameter {UpdateListener} listener
+   */
+  deregisterUpdateListener (listener) {
+    this.updateListeners.delete(listener);
+  }
+
+  /**
+   * This method should be called when the table is updated; either when new data is loaded or when a poll is 
+   * signalled.  Call all the listeners waiting for an update
+   */
+  dataUpdated () {
+    this.updateListeners.forEach(listenerObject => {
+      if (listenerObject && listenerObject.tableUpdated) {
+        listenerObject.tableUpdated(this);
+      }
+    });
   }
 
   /**
@@ -545,7 +580,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
     // connector.interval seconds; the client(s), (typically only the dashboard controller) will decide what to do.
     // If there aren't any charts or widgets using this table data, the answer will typically be nothing.
     if (!isNaN(connector.interval) && connector.interval >= 1) {
-      setInterval(_ => signal(this, 'dataUpdated'), 1000 * connector.interval);
+      this.interval = connector.interval;
+      setInterval(_ => this.dataUpdated(), 1000 * connector.interval);
     }
   }
 
