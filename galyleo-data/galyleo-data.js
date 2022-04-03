@@ -46,9 +46,9 @@ BSD 3-Clause License
 
 export class Filter {
   /**
-     * Create a Filter
-     * @param table, a GalyleoTable
-     */
+    * Create a Filter
+    * @param table, a GalyleoTable
+    */
   constructor (table) {
     this.table = table;
   }
@@ -74,7 +74,40 @@ export class Filter {
     const indexes = this._getRows_(rows); // should we catch the error here, or pass it?
     return indexes.map(index => rows[index]);
   }
+
+  /**
+   * Test for equality with another Filter.  The subclasses will extend this.  In general, the
+   * right implementing strategy for a subclass is to call super(otherFilter), and if that returns
+   * true perform other checks, otherwise false
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    return this.table == otherFilter.table;
+  }
 }
+
+/**
+ * Filter set equality.  This is broken out as a separate function for debugging and visibility
+ * @param {[Filter]} filterList1: first list of filters to test for equality
+ * @param {[Filter]} filterList2: second list of filters to test for equality
+ */
+const filterSetEquality = (filterList1, filterList2) => {
+  if (!(filterList1 && filterList2)) {
+    return false;
+  }
+  if (filterList1.size != filterList2.size) {
+    return false;
+  }
+  const matches = filterList1.map(_ => [false, false]);
+  filterList1.forEach((filt, index) => {
+    filterList2.forEach((filt2, index2) => {
+      if (filt.equals(filt2)) {
+        matches[index][0] = matches[index2][1] = true; // Note the pair
+      }
+    });
+  });
+  return matches.reduce((acc, pair) => acc && pair[0] && pair[1], true);
+};
 
 /**
  * A Filter which implements a Boolean function (and, or, or not).  Takes a list of filters as an additional argument
@@ -89,6 +122,23 @@ class BooleanFilter extends Filter {
   constructor (table, args) {
     super(table);
     this.args = args;
+  }
+
+  /**
+   * Equality check for all boolean filters -- the super check must march, they must have the same number of
+   * arguments, and each argument must be equal to one filter in the other List
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+
+  equals (otherFilter) {
+    const findMatch = (filter, filterList) => filterList.reduce((matched, other) => matched || other.equals(filter), false);
+    if (super.equals(otherFilter) && this.args.length == otherFilter.args.length) {
+      const matched = this.args.map(filter => findMatch(filter, otherFilter.args)).reduce((result, bool) => result && bool, true);
+      const otherMatched = otherFilter.args.map(filter => findMatch(filter, this.args)).reduce((result, bool) => result && bool, true);
+      return matched && otherMatched;
+    } else {
+      return false;
+    }
   }
 }
 /**
@@ -110,6 +160,14 @@ class AndFilter extends BooleanFilter {
     });
     return result;
   }
+
+  /**
+   * Equals for an AND operator: otherFilter must be an instance of AND and the super equality check must hold
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    return (otherFilter instanceof AndFilter && super.equals(otherFilter));
+  }
 }
 /**
  * A Filter which implements OR
@@ -130,6 +188,14 @@ class OrFilter extends BooleanFilter {
     });
     return [...result];
   }
+
+  /**
+   * Equals for an OR operator: otherFilter must be an instance of OR and the super equality check must hold
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    return (otherFilter instanceof OrFilter && super.equals(otherFilter));
+  }
 }
 /**
  * A Filter which implements Not
@@ -147,6 +213,14 @@ class NotFilter extends BooleanFilter {
     let inverse = this.arguments[0]._getRows_(rows);
     return [...Array(rows.length).keys()].filter(index => inverse.indexOf(index) < 0);
   }
+
+  /**
+   * Equals for a Not operator: otherFilter must be an instance of NOT and the super equality check must hold
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    return (otherFilter instanceof NotFilter && super.equals(otherFilter));
+  }
 }
 /**
  * A primitive filter -- a filter which operates on a single column.  This too is abstract, and contains two
@@ -162,6 +236,15 @@ class PrimitiveFilter extends Filter {
   constructor (table, column) {
     super(table);
     this.column = column;
+  }
+
+  /**
+   * Equals for a primitive operator: super must hold and the columns must match
+   * Note that this is always called from this function on a subclass, so the typechecking has already been done
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    return super.equals(otherFilter) && otherFilter.column == this.column;
   }
 
   /**
@@ -201,6 +284,16 @@ class InListFilter extends PrimitiveFilter {
   }
 
   /**
+   * Equals for an in_list filter: the other filter must be an instance of in_list filter, the super must be true,
+   * and the value sets must be identical
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+  equals (otherFilter) {
+    const isEqualSets = (set1, set2) => (set1.size === set2.size) && (set1.size === new Set([...set1, ...set2]).size);
+    return otherFilter instanceof InListFilter && super.equals(otherFilter) && isEqualSets(this.valueSet, otherFilter.valueSet);
+  }
+
+  /**
      * _filterValue_ return true only if value is in the provided list
      * @param value{string|number} The value to test
      * @returns {boolean}: true iff the value is in the provided list
@@ -227,6 +320,17 @@ class InRangeFilter extends PrimitiveFilter {
     super(table, column);
     this.maxVal = maxVal;
     this.minVal = minVal;
+  }
+
+  /**
+   * Equals for an in_range filter: the other filter must be an instance of in_range filter, the super must be true,
+   * and the maxVal, minVal, and increment must be identical.  
+   * @param {Filter} otherFilter: the filter to be checked for equality
+   */
+
+  equals (otherFilter) {
+    return otherFilter instanceof InRangeFilter && super.equals(otherFilter) && this.maxVal == otherFilter.maxVal &&
+      this.minVal == otherFilter.minVal;
   }
 
   /**
@@ -266,7 +370,6 @@ class InRangeFilter extends PrimitiveFilter {
  *
  * @typedef {booleanFilterSpec | notFilterSpec | inListFilterSpec | inRangeFilterSpec} FilterSpec
  */
-
 /**
  * A filter constructor.  Takes as input a filterSpec and a table, and returns a Filter
  * @param {GalyleoTable} table
@@ -280,10 +383,10 @@ export function constructFilter (table, filterSpec) {
   if (filterSpec.operator == 'IN_LIST') {
     return new InListFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.values);
   }
-  if (filterSpec.operator == 'NOT') {
-    return new NotFilter(table, constructFilter(table, filterSpec.argument));
-  }
   const args = filterSpec.arguments.map(subFilterSpec => constructFilter(table, subFilterSpec));
+  if (filterSpec.operator == 'NOT') {
+    return new NotFilter(table, args);
+  }
   if (filterSpec.operator == 'AND') {
     return new AndFilter(table, args);
   }
