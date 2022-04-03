@@ -371,10 +371,11 @@ export class GalyleoTable {
     values = values.sort((a, b) => a - b);
     const shift = values.slice(1);
     const deltas = shift.map((val, index) => val - values[index]);
-    const incr = deltas.reduce((acc, cur) => cur > 0 && (isNaN(acc) || cur < acc), NaN);
+    const minPositive = (a, b) => a <= 0 ? b : b <= 0 ? a : Math.min(a, b);
+    const incr = deltas.slice(1).reduce((acc, cur) => minPositive(acc, cur), deltas[0]);
     return {
-      max_val: values[0],
-      min_val: values[values.length - 1],
+      min_val: values[0],
+      max_val: values[values.length - 1],
       increment: incr
     };
   }
@@ -496,7 +497,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
  * @property {string} name - the table name, required
  * @property {GalyleoColumn []} columns - the columns of the table
  * @property {GalyleoDataTable?} rows -- if present, this is an explicit table with the rows resident
- * @property {GalyleoRemoteTableSpec} connector -- if present, used to make a remote table
+ * @property {GalyleoRemoteTableSpec} url -- if present, used to make a remote table
  */
 
 export function constructGalyleoTable (galyleoTableSpec) {
@@ -505,12 +506,11 @@ export function constructGalyleoTable (galyleoTableSpec) {
   if (galyleoTableSpec.rows != null) {
     return new ExplicitGalyleoTable(columns, name, galyleoTableSpec.rows);
   }
-  if (galyleoTableSpec.connector != null) {
-    const connector = galyleoTableSpec.connector;
-    if (connector.hasOwnProperty('dashboard_name')) {
-      return new RemoteGalyleoTable(columns, name, connector.url, connector.dashboard_name);
+  if (galyleoTableSpec.url != null) {
+    if (galyleoTableSpec.hasOwnProperty('dashboard_name')) {
+      return new RemoteGalyleoTable(columns, galyleoTableSpec.url, name, galyleoTableSpec.dashboard_name);
     } else {
-      return new RemoteGalyleoTable(columns, name, connector.url);
+      return new RemoteGalyleoTable(columns, galyleoTableSpec.url, name);
     }
   }
   // should never get here
