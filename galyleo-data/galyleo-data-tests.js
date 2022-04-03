@@ -39,7 +39,7 @@ describe('Explicit Table', () => {
     const schema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
     const rows = [['a', 2], ['b', 1]];
     const table = constructGalyleoTable({ name: 'test1', columns: schema, rows: rows });
-    expect(table.tableType).to.eql('ExplicitGalyleoTable');
+    expect(table).to.be.instanceof(ExplicitGalyleoTable);
     expect(table.columns).to.eql(schema);
     expect(table.rows).to.eql(rows);
     expect(table.name).to.eql('test1');
