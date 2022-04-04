@@ -130,20 +130,24 @@ describe('Remote Table', () => {
 describe('Filter Creation and Test', () => {
   /* const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector }); */
   const table = constructGalyleoTable(explicitTableConstructor);
-  it('Should create filters and find values based on them', () => {
-    const inListExplicit = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });
+  const inListExplicit = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });
+  it('Should create an in-list filter and populate its fields correctly, and return the correct answer on test values', () => {
     expect(inListExplicit.table).to.eql(table);
     expect(inListExplicit.column).to.eql(0);
     expect(isEqualSets(inListExplicit.valueSet, new Set(['b']))).to.eql(true);
     assert(isEqualSets(inListExplicit.valueSet, new Set(['b'])));
     assert(inListExplicit._filterValue_('b'));
     assert(!inListExplicit._filterValue_('a'));
-    const inListExplicit2 = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });
+  });
+  const inListExplicit2 = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });
+  const inListExplicit3 = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['a'] });
+  it('Should show equivalent filters are equal', () => {
     assert(inListExplicit2.equals(inListExplicit));
     assert(!inListExplicit2.equals(null));
-    const inListExplicit3 = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['a'] });
     assert(!inListExplicit3.equals(inListExplicit));
-    const inRangeExplicit = constructFilter(table, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 });
+  });
+  const inRangeExplicit = constructFilter(table, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 });
+  it('Should create an in-range filter and populate its fields correctly, and return the correct answer on test values', () => {
     expect(inRangeExplicit.table).to.eql(table);
     expect(inRangeExplicit.column).to.eql(1);
     expect(inRangeExplicit.maxVal).to.eql(2);
@@ -153,10 +157,14 @@ describe('Filter Creation and Test', () => {
     assert(inRangeExplicit._filterValue_(2));
     assert(!inRangeExplicit._filterValue_(3));
     assert(!inRangeExplicit._filterValue_(0));
-    const inRangeExplicit2 = constructFilter(table, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 });
+  });
+  const inRangeExplicit2 = constructFilter(table, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 });
+  it('Should test equality for   in-range filters  correctly', () => {
     assert(inRangeExplicit2.equals(inRangeExplicit));
     assert(!inRangeExplicit.equals(inListExplicit));
-    const notFilter = constructFilter(table, { operator: 'NOT', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
+  });
+  const notFilter = constructFilter(table, { operator: 'NOT', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
+  it('Should create a not filter and populate its fields correctly, and the arguments must be populated correctly', () => {
     expect(notFilter.table).to.eql(table);
     expect(notFilter.args.length).to.eql(1);
     assert(notFilter.args[0].equals(inRangeExplicit2));
@@ -180,5 +188,59 @@ describe('Filter Creation and Test', () => {
     const andFilter5 = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
     expect(andFilter5.args.length).to.eql(3);
     assert(!andFilter.equals(andFilter5));
+  });
+});
+
+const randint = (low, high) => Math.floor(Math.random() * (high - low) + low);
+
+describe('Filter Interaction with Tables', () => {
+  const names = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William',	'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper'];
+  const rows = names.map(name => [name, randint(20, 70)]);
+  const table = constructGalyleoTable({ name: 'test1', columns: explicitSchema, rows: rows });
+  const numbers = rows.map(row => row[1]).sort((a, b) => a - b);
+  const rangeFilterSpec = { operator: 'IN_RANGE', column: 'age', min_val: numbers[3], max_val: numbers[7] };
+  const inRangeFilter = constructFilter(table, rangeFilterSpec);
+  const rangeFilterRows = rows.filter(row => row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
+  it('should execute an in-range filter', () => {
+    table.getFilteredRows(inRangeFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(rangeFilterRows);
+    });
+  });
+  const nameList = rangeFilterRows.map(row => row[0]).slice(1);
+  const inListFilterSpec = { operator: 'IN_LIST', column: 'name', values: nameList };
+  const inListFilter = constructFilter(table, inListFilterSpec);
+  const listFilterRows = rows.filter(row => nameList.indexOf(row[0]) >= 0);
+  it('Should execute an in-list filter', () => {
+    table.getFilteredRows(inListFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(listFilterRows);
+    });
+  });
+  const notInRangeFilterList = rows.filter(row => row[1] < rangeFilterSpec.min_val || row[1] > rangeFilterSpec.max_val);
+  const notRangeFilter = constructFilter(table, { operator: 'NOT', arguments: [rangeFilterSpec] });
+  it('Should execute a not in-range filter', () => {
+    table.getFilteredRows(notRangeFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(notInRangeFilterList);
+    });
+  });
+  const notInListFilterList = rows.filter(row => nameList.indexOf(row[0]) < 0);
+  const notListFilter = constructFilter(table, { operator: 'NOT', arguments: [inListFilterSpec] });
+  it('Should execute a not in-list filter', () => {
+    table.getFilteredRows(notListFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(notInListFilterList);
+    });
+  });
+  const andFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) && row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
+  const andFilter = constructFilter(table, { operator: 'AND', arguments: [inListFilterSpec, rangeFilterSpec] });
+  it('Should execute an and filter', () => {
+    table.getFilteredRows(andFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(andFilterList);
+    });
+  });
+  const orFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) || (row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val));
+  const orFilter = constructFilter(table, { operator: 'OR', arguments: [inListFilterSpec, rangeFilterSpec] });
+  it('Should execute an or  filter', () => {
+    table.getFilteredRows(orFilter).then(filteredRows => {
+      expect(filteredRows).to.eql(orFilterList);
+    });
   });
 });
