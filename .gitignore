@@ -14,3 +14,9 @@ jupyterlab-universal-extension/.ipynb_checkpoints/Untitled12-checkpoint.ipynb
 jupyterlab-universal-extension/.ipynb_checkpoints/Untitled13-checkpoint.ipynb
 jupyterlab-universal-extension/.ipynb_checkpoints/Untitled14-checkpoint.ipynb
 jupyterlab-universal-extension/.ipynb_checkpoints/Untitled15-checkpoint.ipynb
+jupyterlab-universal-extension/lib/editor.d.ts
+jupyterlab-universal-extension/lib/editor.js
+jupyterlab-universal-extension/lib/manager.d.ts
+jupyterlab-universal-extension/lib/manager.js
+jupyterlab-universal-extension/package-lock.json
+jupyterlab-universal-extension/package.json

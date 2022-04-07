@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "private": false,
   "description": "Extension that allows to dynamically load any snapshotted tool built in lively as an extension.",
-  "keywords": ["jupyter", "jupyterlab", "jupyterlab-extension"],
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
   "license": "BSD-3-Clause",
   "author": "Robin Schreiber",
   "files": [
@@ -20,7 +24,10 @@
     "watch": "tsc -w"
   },
   "lint-staged": {
-    "**/*{.ts,.tsx,.css,.json,.md}": ["prettier --write", "git add"]
+    "**/*{.ts,.tsx,.css,.json,.md}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "dependencies": {
     "@jupyter-widgets/base": "^5.0.0-alpha.2",
@@ -72,6 +79,10 @@
   },
   "jupyterlab": {
     "extension": "lib/extension.js",
-    "outputDir": "@engageLively/galyleo"
+    "outputDir": "@engageLively/galyleo",
+    "_build": {
+      "load": "static/remoteEntry.b81cd75e7cec52195865.js",
+      "extension": "./extension"
+    }
   }
 }

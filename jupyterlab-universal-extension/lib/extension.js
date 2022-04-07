@@ -315,7 +315,6 @@ function activateGalyleo(app, docmanager, editorTracker, labShell, restorer, mar
     mainMenu.fileMenu.newMenu.addGroup([{ command: newCommand }], 30);
     mainMenu.helpMenu.addGroup([helpCommand]);
     // Add the Galyleo Menu to the main menu
-    //@ts-ignore
     const menu = new widgets_1.Menu({ commands: app.commands });
     menu.title.label = 'Galyleo';
     menu.addItem({
