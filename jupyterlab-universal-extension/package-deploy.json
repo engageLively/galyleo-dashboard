@@ -72,6 +72,6 @@
   },
   "jupyterlab": {
     "extension": "lib/extension.js",
-    "outputDir": "@engageLively/galyleo"
+    "outputDir": "@jupyterlab/lively-universal-extension"
   }
 }

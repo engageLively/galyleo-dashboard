@@ -79,7 +79,7 @@
   },
   "jupyterlab": {
     "extension": "lib/extension.js",
-    "outputDir": "@engageLively/galyleo",
+    "outputDir": "@jupyterlab/lively-universal-extension",
     "_build": {
       "load": "static/remoteEntry.b81cd75e7cec52195865.js",
       "extension": "./extension"
