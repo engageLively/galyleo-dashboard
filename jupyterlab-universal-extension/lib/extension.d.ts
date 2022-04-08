@@ -14,7 +14,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 export declare class GalyleoModel extends CodeEditor.Model implements DocumentRegistry.ICodeModel {
     contentChanged: any;
     stateChanged: any;
-    sharedModel: models.ISharedFile;
+    sharedModel: models.YFile;
     readOnly: boolean;
     defaultKernelName: string;
     defaultKernelLanguage: string;

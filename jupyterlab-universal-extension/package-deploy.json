@@ -39,7 +39,7 @@
     "@jupyterlab/notebook": "^3.0.4",
     "@jupyterlab/rendermime": "^3.0.4",
     "@jupyterlab/services": "^6.0.5",
-    "@jupyterlab/translation": "3.0.9",
+    "@jupyterlab/translation": "^3.0.9",
     "@jupyterlab/ui-components": "^3.0.5",
     "@jupyterlab/settingregistry": "^3.0.3",
     "@lumino/messaging": "^1.4.3",
