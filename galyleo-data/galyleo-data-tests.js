@@ -84,7 +84,7 @@ describe('Explicit Table', () => {
 
 const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
 const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
-const runRemoteTests = false; // set to true if we want to really run the remote tests
+const runRemoteTests = true; // set to true if we want to really run the remote tests
 
 describe('Remote Table', () => {
   const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
@@ -92,8 +92,7 @@ describe('Remote Table', () => {
     expect(remoteTable.tableType).to.eql('RemoteGalyleoTable');
     expect(remoteTable.columns).to.eql(remoteSchema);
     expect(remoteTable.url).to.eql(connector.url);
-    expect(remoteTable.parameters).to.eql({ table_name: 'electoral_college' });
-    expect(remoteTable.getUrlParameterString).to.eql('table_name=electoral_college');
+    expect(remoteTable.headers).to.eql({ 'Table-Name': 'electoral_college' });
   });
 
   if (runRemoteTests) {
