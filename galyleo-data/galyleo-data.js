@@ -569,12 +569,10 @@ export class RemoteGalyleoTable extends GalyleoTable {
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
     super(columns, tableName, this._getRowsFromURL_);
-    this.parameters = { table_name: tableName };
-    this.getUrlParameterString = `table_name=${tableName}`;
+    this.headers = { 'Table-Name': tableName };
     if (connector.dashboardName != null) {
       this.dashboardName = connector.dashboardName;
-      this.parameters.dashboard_name = connector.dashboardName;
-      this.getUrlString = `${this.getUrlParameterString}&dashboard_name=${connector.dashboardName}`;
+      this.headers['Dashboard-Name'] = connector.dashboardName;
     }
     // If the connector indicates that polling should take place, simply raise the dataUpdated signal every
     // connector.interval seconds; the client(s), (typically only the dashboard controller) will decide what to do.
@@ -586,6 +584,32 @@ export class RemoteGalyleoTable extends GalyleoTable {
   }
 
   /**
+    * Set up an URL with data to be requested, and then return the resulting webResource.  
+    * Allocates the webResource and fills in the appropriate flags and initializes the header
+    * fields
+    * @param: url {string}: the string with the url to be polled
+    * @param: method {string}: either 'get' or 'post', default to post
+    * @returns: {WebResource}: the resource to use, ready for request
+    */
+  _getWebResource_ (url, method = 'get') {
+    const webResource = resource(url);
+    webResource.method = method;
+    webResource.useCors = true;
+    webResource.useProxy = false;
+    Object.keys(this.headers).forEach(key => webResource.headers[key] = this.headers[key]);
+    return webResource;
+  }
+
+  /**
+     * A thin overlay on getFilteredRows, for internal use only.  It provides the getRows() function for 
+     * the super.  For this class, getRows() is just getFilteredRows(null)
+     * @returns {GalyleoDataTable} all the rows of this.table
+     */
+  _getRowsFromURL_ () {
+    return this.getFilteredRows(null);
+  }
+
+  /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
      * @param {FilterSpec?} filterSpec specification of the filter to use if non-null
@@ -593,15 +617,10 @@ export class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getFilteredRows (filterSpec = null) {
-    const webResource = resource(`${this.url}/get_filtered_rows`);
-    webResource.method = 'post';
-    webResource.useCors = true;
-    webResource.useProxy = false;
-    const parameters = { ...this.parameters };
+    const webResource = this._getWebResource_(`${this.url}/get_filtered_rows`);
     if (filterSpec != null) {
-      parameters.filter_spec = filterSpec;
+      webResource.body = JSON.stringify(filterSpec);
     }
-    webResource.body = JSON.stringify(parameters);
     return await webResource.readJson();
   }
 
@@ -613,10 +632,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @returns {{{string | number}[]} | NumericSpec} --
      */
   async _executeGetRequest_ (request, columnName) {
-    const webResource = resource(`${this.url}/${request}?${this.getUrlParameterString}&column_name=${columnName}`);
-    webResource.method = 'get';
-    webResource.useCors = true;
-    webResource.useProxy = false;
+    const webResource = this._getWebResource_(`${this.url}/${request}?column_name=${columnName}`);
     return await webResource.readJson();
   }
 
