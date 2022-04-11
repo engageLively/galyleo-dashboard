@@ -1,5 +1,6 @@
 import { resource } from 'lively.resources';
 import { signal } from 'lively.bindings';
+import Inspector, { inspect } from 'lively.ide/js/inspector.js';
 /*
 BSD 3-Clause License
 
@@ -55,7 +56,7 @@ export class Filter {
 
   /**
      * Return the indices of the rows of the table parameter which match this filter
-     * Must be implemented by eacy subclass.
+     * Must be implemented by each subclass.
      * For internal use only
      * @param {GalyleoDataTable} rows
      * @returns [{number}] {indices of matching rows}
@@ -65,12 +66,12 @@ export class Filter {
   }
 
   /**
-     * Return the rows of the table which match the filter.  Should not be overridden: this
+     * Return the rows of the original rows which match the filter.  Should not be overridden: this
      * is an overlay on _getRows_ and is used for final reporting
+     * @parame {GalyleoDataTable} rows to filter
      * @returns {GalyleoDataTable} Subset of the table which passes the filter
      */
-  getRows () {
-    const rows = this.table.getRows();
+  getRows (rows) {
     const indexes = this._getRows_(rows); // should we catch the error here, or pass it?
     return indexes.map(index => rows[index]);
   }
@@ -155,8 +156,8 @@ class AndFilter extends BooleanFilter {
      */
   _getRows_ (rows) {
     let result = [...Array(rows.length).keys()];
-    this.arguments.forEach(containedFilter => {
-      result = containedFilter._get_rows(rows).filter(index => result.indexOf(index) >= 0);
+    this.args.forEach(containedFilter => {
+      result = containedFilter._getRows_(rows).filter(index => result.indexOf(index) >= 0);
     });
     return result;
   }
@@ -183,10 +184,10 @@ class OrFilter extends BooleanFilter {
      */
   _getRows_ (rows) {
     let result = new Set();
-    this.arguments.forEach(containedFilter => {
-      containedFilter._get_rows(rows).forEach(index => { result.add(index); });
+    this.args.forEach(containedFilter => {
+      containedFilter._getRows_(rows).forEach(index => { result.add(index); });
     });
-    return [...result];
+    return [...result].sort((a, b) => a - b);
   }
 
   /**
@@ -210,7 +211,7 @@ class NotFilter extends BooleanFilter {
      * @returns [{number}] {indices of matching rows}
      */
   _getRows_ (rows) {
-    let inverse = this.arguments[0]._getRows_(rows);
+    let inverse = this.args[0]._getRows_(rows);
     return [...Array(rows.length).keys()].filter(index => inverse.indexOf(index) < 0);
   }
 
@@ -262,7 +263,7 @@ class PrimitiveFilter extends Filter {
      * @returns [{number}] {indices of matching rows}
      */
   _getRows_ (rows) {
-    const values = this.table.getRows().map(row => row[this.column]);
+    const values = rows.map(row => row[this.column]);
     const indices = [...Array(values.length).keys()];
     return indices.filter(index => this._filterValue_(values[index]));
   }
@@ -394,8 +395,20 @@ export function constructFilter (table, filterSpec) {
 }
 
 /**
- * A function which returns the rows of a data table.
- * @typedef {() => GalyleoDataTable} TableFunction 
+ * A function which takes in a GalyleoDataTable object and processes it; typically a callback to
+ * getRows(), getFilteredRows(), getNumericSpec(), getAllValues()
+ * @typedef {({GalyleoDataTable}) => void} GalyleoCallBack
+ */
+
+/**
+  * A function with takes in an error message and processes it; typically the error callback to 
+  * getRows(), getFilteredRows(), getNumericSpec(), getAllValues()
+  * @typedef {({string}) => void} GalyleoErrorCallback
+  */
+
+/**
+ * A function which gets the rows of a table, and then either calls the callback or error callback provided.
+ * @typedef {({GalyleoCallBack}, {GalyleoErrorCallback}) => void} TableFunction 
  *
  * A function which listens for updates to a GalyleoTable
  * @typedef {(GalyleoTable) => void} GalyleoUpdateListener
@@ -421,7 +434,7 @@ export class GalyleoTable {
 
   constructor (columns, tableName, getRows) {
     this.columns = columns;
-    this.name = tableName;
+    this.tableName = tableName;
     this.getRows = getRows;
     this.updateListeners = new Set();
   }
@@ -468,38 +481,66 @@ export class GalyleoTable {
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
+     * @param {GalyleoCallback} callback Callback to use when the rows are found
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
      * @param {FilterSpec} filterSpec specification of the filter to use
-     * @returns {GalyleoDataTable} the rows which pass the filter
      */
 
-  async getFilteredRows (filterSpec = null) {
-    const rows = this.getRows();
-    if (filterSpec) {
-      const filter = new Filter(filterSpec, this);
+  /* getFilteredRows (callback, errorFunction, filterSpec = null) {
+    this.getRows(rows => {
+      if (filterSpec) {
+        const madeFilter = constructFilter(this, filterSpec);
+        try {
+          callback(madeFilter.getRows(rows));
+        } catch (error) {
+          errorFunction(error);
+        }
+      } else {
+        callback(rows);
+      }
+    }, errorFunction);
 
-      const filteredIndices = filter.filter(rows);
-      return filteredIndices.map(i => rows[i]);
-    } else {
-      return rows;
-    }
-  }
+    this.getRows(rows => {
+      const insp = new Inspector();
+      if (filterSpec) {
+        const madeFilter = constructFilter(this, filterSpec);
+        try {
+          const filteredRows = madeFilter.getRows();
+        } catch (error) {
+          insp.targetObject = madeFilter;
+          insp.openInWindow();
+          return;
+        }
+        callback(filteredIndices.map(i => rows[i]));
+      } else {
+        callback(rows);
+      }
+    }, errorFunction); 
+  } */
+
+  /**
+   * callback function for success in getAllValues
+   * @typedef ({{string | number}[]}) => void GalyleoValueListCallback
+   */
 
   /**
      * getAllValues: returns all of the distinct values in a column, sorted in increasing order
      * @param {string} columnName name of the column to get the values for
-     * @returns {{string | number}[]} all values for the column
+     * @param {GalyleoValueListCallback} callback Callback to use with the value list
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when there's an error in generating the value list
      */
 
-  async getAllValues (columnName) {
+  getAllValues (columnName, callback, errorFunction) {
     const index = this.getColumnIndex(columnName);
-    const rows = this.getRows();
-    const result = [...new Set(rows.map(row => row[index]))];
-    if (this.columns.type == 'number') {
-      result.sort((a, b) => a - b);
-    } else {
-      result.sort();
-    }
-    return result;
+    this.getRows(rows => {
+      const result = [...new Set(rows.map(row => row[index]))];
+      if (this.columns.type == 'number') {
+        result.sort((a, b) => a - b);
+      } else {
+        result.sort();
+      }
+      callback(result);
+    }, error => errorFunction(error));
   }
 
   /**
@@ -510,23 +551,27 @@ export class GalyleoTable {
      */
 
   /**
+   * callback function for success in getNumericSpec
+   * @typedef (NumericSpec) => void NumericSpecCallback
+   */
+
+  /**
      * getNumericSpec: returns the numeric spec for a column, to set up numeric filters
      * @param {string} columnName name of the column to get the numeric spec for
-     * @returns {NumericSpec} The numeric spec for this column
+     * @param {NumericSpecCallback} callback Callback to use with the numeric spec
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when there's an error in generating the numeric spec
      */
 
-  async getNumericSpec (columnName) {
-    let values = await this.getAllValues(columnName);
-    values = values.sort((a, b) => a - b);
-    const shift = values.slice(1);
-    const deltas = shift.map((val, index) => val - values[index]);
-    const minPositive = (a, b) => a <= 0 ? b : b <= 0 ? a : Math.min(a, b);
-    const incr = deltas.slice(1).reduce((acc, cur) => minPositive(acc, cur), deltas[0]);
-    return {
-      min_val: values[0],
-      max_val: values[values.length - 1],
-      increment: incr
-    };
+  async getNumericSpec (columnName, callback, errorFunction) {
+    this.getAllValues(columnName,
+      values => {
+        values = values.sort((a, b) => a - b);
+        const shift = values.slice(1);
+        const deltas = shift.map((val, index) => val - values[index]);
+        const minPositive = (a, b) => a <= 0 ? b : b <= 0 ? a : Math.min(a, b);
+        const incr = deltas.slice(1).reduce((acc, cur) => minPositive(acc, cur), deltas[0]);
+        callback({ min_val: values[0], max_val: values[values.length - 1], increment: incr });
+      }, error => errorFunction(error));
   }
 }
 
@@ -538,12 +583,119 @@ export class ExplicitGalyleoTable extends GalyleoTable {
   /**
    * Construct an ExplicitGalyleoTable
    * @param {GalyleoColumn[]} columns - The columns of the Table.
+   * @paramm {string} tableName - The name of the table
    * @param {GalyleoDataTable} rows - the rows of the table
    */
   constructor (columns, tableName, rows) {
     this.rows = rows;
-    super(columns, tableName, _ => this.rows);
+    super(columns, tableName, (callback, error) => callback(this.rows));
     this.tableType = 'ExplicitGalyleoTable';
+  }
+
+  /**
+     * getFilteredRows: returns the rows of the table which pass a filter
+     * If the filterSpec is null, just returns all the rows of the table
+     * @param {GalyleoCallback} callback Callback to use when the rows are found
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
+     * @param {FilterSpec} filterSpec specification of the filter to use
+     */
+
+  getFilteredRows (callback, errorFunction, filterSpec = null) {
+    if (filterSpec) {
+      const madeFilter = constructFilter(this, filterSpec);
+      try {
+        callback(madeFilter.getRows(this.rows));
+      } catch (error) {
+        console.log(`Error: ${error}`);
+        errorFunction(error);
+      }
+    } else {
+      callback(this.rows);
+    }
+  }
+}
+
+/**
+ * A class to do fetches and call success/error callbacks.  An overlay on resource()
+ */
+export class URLFetcher {
+  constructor (url, tableName) {
+    this.url = url;
+    this.table_name = tableName;
+    this.headers = { 'Table-Name': tableName };
+    this.body = null;
+  }
+
+  set tableName (tableName) {
+    this.table_name = tableName;
+    this.headers = { 'Table-Name': tableName };
+  }
+
+  set dashboardName (dashboardName = null) {
+    if (dashboardName) {
+      this.dashboard_name = dashboardName;
+      this.headers = { 'Dashboard-Name': dashboardName };
+    } else {
+      this.dashboard_name = dashboardName;
+      delete this.headers['Dashboard-Name'];
+    }
+  }
+
+  /**
+   * Add a Body to the request.  The body is just an object which will be JSON-encoded and sent with the
+   * request.  Typically used with POST data.
+   * @param {Object} Body -- the body to be added
+   */
+
+  addBody (body) {
+    this.body = body;
+  }
+
+  makeResource () {
+    this.webResource = resource(this.url);
+    if (this.body) {
+      this.webResource.body = this.body;
+    }
+    this.webResource.useCors = true;
+    this.webResource.useProxy = false;
+    Object.keys(this.headers).forEach(key => this.webResource.headers[key] = this.headers[key]);
+    return this.webResource;
+  }
+
+  /**
+   * Post the request, then do the appropriate callback, or error if there is one
+   * @param callback -- function to call back on success
+   * @param errorFunction -- function to call on error
+   */
+  post (callback, errorFunction) {
+    if (!this.webResource) {
+      this.makeResource();
+    }
+    this.webResouce.post().then(response => callback(response)).catch(error => errorFunction(error));
+  }
+
+  /**
+   * Get the request, parsing the json response, then do the appropriate callback, or error if there is one
+   * @param callback -- function to call back on success
+   * @param errorFunction -- function to call on error
+   */
+  readJson (callback, errorFunction) {
+    if (!this.webResource) {
+      this.makeResource();
+    }
+    this.webResource.readJson().then(response => callback(response)).catch(error => errorFunction(error));
+  }
+
+  /**
+   * Get the request, then do the appropriate callback, or error if there is one.  Note that this doesn't parse
+   * @param callback -- function to call back on success
+   * @param errorFunction -- function to call on error
+   */
+  read (callback, errorFunction) {
+    if (!this.webResource) {
+      this.makeResource();
+    }
+    this.webResouce.read().then(response => callback(response)).catch(error => errorFunction(error));
   }
 }
 
@@ -584,44 +736,41 @@ export class RemoteGalyleoTable extends GalyleoTable {
   }
 
   /**
-    * Set up an URL with data to be requested, and then return the resulting webResource.  
-    * Allocates the webResource and fills in the appropriate flags and initializes the header
-    * fields
-    * @param: url {string}: the string with the url to be polled
-    * @param: method {string}: either 'get' or 'post', default to post
-    * @returns: {WebResource}: the resource to use, ready for request
-    */
-  _getWebResource_ (url, method = 'get') {
-    const webResource = resource(url);
-    webResource.method = method;
-    webResource.useCors = true;
-    webResource.useProxy = false;
-    Object.keys(this.headers).forEach(key => webResource.headers[key] = this.headers[key]);
-    return webResource;
+     * A thin overlay on getFilteredRows, for internal use only.  It provides the getRows() function for 
+     * the super.  For this class, getRows(callback, errorFunction) is just getFilteredRows(null)
+     * @param {GalyleoCallback} callback Callback to use when the rows are found
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
+     */
+  _getRowsFromURL_ (callback, errorFunction) {
+    return this.getFilteredRows(callback, errorFunction, null);
   }
 
   /**
-     * A thin overlay on getFilteredRows, for internal use only.  It provides the getRows() function for 
-     * the super.  For this class, getRows() is just getFilteredRows(null)
-     * @returns {GalyleoDataTable} all the rows of this.table
-     */
-  _getRowsFromURL_ () {
-    return this.getFilteredRows(null);
+  * Make a URL Fetcher for an URL, filling in table and dashboardName.  Internal use only.
+  * @param  {string} URL: url to make the fetcher for
+  */
+  _makeURLFetcher_ (url) {
+    const result = new URLFetcher(url, this.tableName);
+    if (this.dashboardName) {
+      result.dashboardName = this.dashboardName;
+    }
+    return result;
   }
 
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
+     * @param {GalyleoCallback} callback Callback to use when the rows are found
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
      * @param {FilterSpec?} filterSpec specification of the filter to use if non-null
-     * @returns {GalyleoDataTable} the rows which pass the filter
      */
 
-  async getFilteredRows (filterSpec = null) {
-    const webResource = this._getWebResource_(`${this.url}/get_filtered_rows`);
-    if (filterSpec != null) {
-      webResource.body = JSON.stringify(filterSpec);
+  getFilteredRows (callback, errorFunction, filterSpec = null) {
+    const urlFetcher = this._makeURLFetcher_(`${this.url}/get_filtered_rows`);
+    if (filterSpec) {
+      urlFetcher.addBody({ filter: filterSpec });
     }
-    return await webResource.readJson();
+    urlFetcher.post(callback, errorFunction);
   }
 
   /**
@@ -629,21 +778,23 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * The body of both methods is the same, so just have them return this
      * @param {string} request -- the request
      * @param {string} columnName -- the name of the column to make the request for
-     * @returns {{{string | number}[]} | NumericSpec} --
+     * @param {GalyleoCallback} callback Callback to use when request succeeds
+     * @param {GalyleoErrorCallback} errorFunction callback to use on error
      */
-  async _executeGetRequest_ (request, columnName) {
-    const webResource = this._getWebResource_(`${this.url}/${request}?column_name=${columnName}`);
-    return await webResource.readJson();
+  _executeGetRequest_ (request, columnName, callback, errorFunction) {
+    const urlFetcher = this._makeURLFetcher_(`${this.url}/${request}?column_name=${columnName}`);
+    urlFetcher.readJson(callback, errorFunction);
   }
 
   /**
      * getAllValues: returns all of the distinct values in a column, sorted in increasing order
      * @param {string} columnName name of the column to get the values for
-     * @returns {{string | number}[]} all values for the column
+     * @param {GalyleoCallback} callback Callback to use when request succeeds
+     * @param {GalyleoErrorCallback} errorFunction callback to use on error
      */
 
-  async getAllValues (columnName) {
-    return await this._executeGetRequest_('get_all_values', columnName);
+  getAllValues (columnName, callback, errorFunction) {
+    return this._executeGetRequest_('get_all_values', columnName, callback, errorFunction);
   }
 
   /**
@@ -656,11 +807,12 @@ export class RemoteGalyleoTable extends GalyleoTable {
   /**
      * getNumericSpec: returns the numeric spec for a column, to set up numeric filters
      * @param {string} columnName name of the column to get the numeric spec for
-     * @returns {NumericSpec} The numeric spec for this column
+     * @param {GalyleoCallback} callback Callback to use when request succeeds
+     * @param {GalyleoErrorCallback} errorFunction callback to use on error
      */
 
-  async getNumericSpec (columnName) {
-    return await this._executeGetRequest_('get_numeric_spec', columnName);
+  getNumericSpec (columnName, callback, errorFunction) {
+    this._executeGetRequest_('get_numeric_spec', columnName, callback, errorFunction);
   }
 }
 
