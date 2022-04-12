@@ -642,6 +642,17 @@ export class URLFetcher {
   }
 
   /**
+   * Add a header to the request.  The header value is either a number or string -- it's up to the caller
+   * to put it into the right form (by, for example, using JSON.stringify on an object)
+   * @param {string} key -- the header key
+   * @param {string | number} value -- the header value
+   */
+
+  addHeader (key, value) {
+    this.headers[key] = value;
+  }
+
+  /**
    * Add a Body to the request.  The body is just an object which will be JSON-encoded and sent with the
    * request.  Typically used with POST data.
    * @param {Object} Body -- the body to be added
@@ -768,9 +779,9 @@ export class RemoteGalyleoTable extends GalyleoTable {
   getFilteredRows (callback, errorFunction, filterSpec = null) {
     const urlFetcher = this._makeURLFetcher_(`${this.url}/get_filtered_rows`);
     if (filterSpec) {
-      urlFetcher.addBody({ filter: filterSpec });
+      urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
     }
-    urlFetcher.post(callback, errorFunction);
+    urlFetcher.readJson(callback, errorFunction);
   }
 
   /**
