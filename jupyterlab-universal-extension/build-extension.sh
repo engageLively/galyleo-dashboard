@@ -4,7 +4,7 @@
 # https://jupyterlab.readthedocs.io/en/stable/extension/extension_dev.html
 # for a description of prebuilt extensions
 cp  package-deploy.json package.json
+npm run clean
 npm install
 npm run build
 jupyter labextension build
-

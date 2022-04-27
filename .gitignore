@@ -20,3 +20,12 @@ jupyterlab-universal-extension/lib/manager.d.ts
 jupyterlab-universal-extension/lib/manager.js
 jupyterlab-universal-extension/package-lock.json
 jupyterlab-universal-extension/package.json
+.devcontainer/add-notice.sh
+.devcontainer/devcontainer.json
+.devcontainer/Dockerfile
+.devcontainer/noop.txt
+jupyterlab-universal-extension/.devcontainer/devcontainer.json
+jupyterlab-universal-extension/.devcontainer/docker-compose.yml
+jupyterlab-universal-extension/.devcontainer/Dockerfile
+jupyterlab-universal-extension/.ipynb_checkpoints/untitled.gd-checkpoint.json
+jupyterlab-universal-extension/@engageLively/galyleo/package.json
