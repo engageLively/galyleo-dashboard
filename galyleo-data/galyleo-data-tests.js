@@ -31,7 +31,7 @@ BSD 3-Clause License
 */
 /* global declare, it, describe, beforeEach, afterEach */
 import { expect, done } from 'mocha-es6';
-import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable } from './galyleo-data.js';
+import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView } from './galyleo-data.js';
 import { resource } from 'lively.resources';
 import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
 import { connect } from 'lively.bindings';
@@ -39,7 +39,6 @@ import { connect } from 'lively.bindings';
 const explicitSchema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
 const explicitRows = [['a', 2], ['b', 1]];
 const explicitTableConstructor = { name: 'test1', columns: explicitSchema, rows: explicitRows };
-
 const isEqualSets = (set1, set2) => (set1.size === set2.size) && (set1.size === new Set([...set1, ...set2]).size);
 
 /*
@@ -88,7 +87,7 @@ describe('Explicit Table', () => {
 
 const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
 const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
-const runRemoteTests = true; // set to true if we want to really run the remote tests
+const runRemoteTests = false; // set to true if we want to really run the remote tests
 const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
 
 describe('Remote Table', () => {
@@ -283,5 +282,71 @@ describe('Filter Interaction with Remote Tables', () => {
       },
       error => assert(false),
       { operator: 'IN_RANGE', column: 'Year', max_val: 1964, min_val: 1960 });
+  });
+});
+
+// Set up for the view test
+const testNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William',	'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper'];
+const testRows = testNames.map((name, index) => [name, 20 + 3 * index]);
+const testTable = constructGalyleoTable({ name: 'test1', columns: explicitSchema, rows: testRows });
+const rangeFilter = { operator: 'IN_RANGE', column: 'age', max_val: testRows[5][1], min_val: testRows[1][1] }; // selects rows 1-5, inclusive
+const listFilter = { operator: 'IN_LIST', column: 'name', values: testNames.slice(5) }; // selects 5-end
+const filterDictionary = { rangeF: rangeFilter, listF: listFilter };
+const viewSpec1 = { name: 'testView1', tableName: 'test1', columns: ['name'], filters: ['listF'] };
+const view1 = new GalyleoView(viewSpec1);
+const viewSpec2 = { name: 'testView2', tableName: 'test1', columns: ['age'], filters: ['rangeF'] };
+const view2 = new GalyleoView(viewSpec2);
+const viewSpec3 = { name: 'testView3', tableName: 'test1', columns: ['name', 'age'], filters: ['listF', 'rangeF'] };
+const view3 = new GalyleoView(viewSpec3);
+const log = [];
+// check the good views
+describe('Creation of valid views', () => {
+  it('Should give the right intermediate form', () => {
+    expect(view1.toDictionary()).to.eql(viewSpec1);
+    expect(view2.toDictionary()).to.eql(viewSpec2);
+    expect(view3.toDictionary()).to.eql(viewSpec3);
+  });
+  it('Should form the right filters1', () => {
+    expect(view1._getFilter_(filterDictionary, testTable)).to.eql(listFilter);
+  });
+  it('Should form the right filters2', () => {
+    expect(view2._getFilter_(filterDictionary, testTable)).to.eql(rangeFilter);
+  });
+  it('Should form the right filters3', () => {
+    expect(view3._getFilter_(filterDictionary, testTable)).to.eql({ operator: 'AND', arguments: [listFilter, rangeFilter] });
+  });
+  const tableDict = { test1: testTable };
+
+  it('Should get the right data1', () => {
+    view1.getData(filterDictionary, tableDict, rows => {
+      const expected = testRows.slice(5).map(row => [row[0]]);
+      expect(rows).to.eql(expected);
+    }, () => assert(false), log);
+  });
+  it('Should get the right data2', () => {
+    view2.getData(filterDictionary, tableDict, rows => {
+      const expected = testRows.slice(1, 6).map(row => [row[1]]);
+      expect(rows).to.eql(expected);
+    }, () => assert(false), log);
+  });
+  it('Should get the right data3', () => {
+    view3.getData(filterDictionary, tableDict, rows => {
+      const expected = [testRows[5]];
+      expect(rows).to.eql(expected);
+    }, () => assert(false), log);
+  });
+  it('Should return undefined', () => {
+    view1.getData(filterDictionary, {}, rows => {
+      expect(rows).to.eql(undefined);
+    }, () => assert(false));
+  });
+  // hit the table column names
+  const badColumns = [{ name: 'name1', type: 'string' }, { name: 'age1', type: 'number' }];
+  const testTable2 = constructGalyleoTable({ name: 'testView2', columns: badColumns, rows: testRows });
+  // filters are now invalid
+  it('Should return undefined', () => {
+    view3.getData(filterDictionary, {}, rows => {
+      expect(rows).to.eql(undefined);
+    }, () => assert(false));
   });
 });

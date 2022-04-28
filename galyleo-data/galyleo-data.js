@@ -371,6 +371,25 @@ class InRangeFilter extends PrimitiveFilter {
  *
  * @typedef {booleanFilterSpec | notFilterSpec | inListFilterSpec | inRangeFilterSpec} FilterSpec
  */
+
+/**
+ * Check that a filterSpec is valid for a table.  This means that the column name maps to an actual
+ * column in the table and, for a numeric filter, that the column type is a number
+  * @param {GalyleoTable} table
+ * @param {filterSpec} FilterSpec
+ * @returns true/false if this is/is not a valid FilterSpec
+ */
+export function checkSpecValid (table, filterSpec) {
+  if (filterSpec.operator == 'IN_RANGE' || filterSpec.operator == 'IN_LIST') {
+    const index = table.getColumnIndex(filterSpec.column);
+    if (index < 0) {
+      return false;
+    }
+    return filterSpec.operator == 'IN_RANGE' ? table.columns[index].type == 'number' : true;
+  }
+  return filterSpec.arguments.reduce((acc, spec) => acc && checkSpecValid(table, spec), true);
+}
+
 /**
  * A filter constructor.  Takes as input a filterSpec and a table, and returns a Filter
  * @param {GalyleoTable} table
@@ -616,6 +635,7 @@ export class ExplicitGalyleoTable extends GalyleoTable {
       try {
         callback(madeFilter.getRows(this.rows));
       } catch (error) {
+        window.alert(error);
         console.log(`Error: ${error}`);
         errorFunction(error);
       }
@@ -881,4 +901,137 @@ export function constructGalyleoTable (galyleoTableSpec) {
   }
   // should never get here
   return null;
+}
+
+/**
+ * @typedef {Object <string, FilterSpec>}FilterDictionary.  A Dictionary of FilterSpecs, indexed by Name
+ */
+
+/**
+ * @typedef GalyleoViewSpec.  Dictionary Specification of a GalyleoView.
+ * @property {string} name -- name of the view
+ * @property {string} tableName -- name of the table that this view subsets
+ * @property {[string]} columns -- The names of the columns of the table represented in this view
+ * @property {[string]} filters -- The names of the filters for this column
+ */
+
+/**
+ * Class for a GalyleoView.  A View is a restricted subset of a table, and it returns the 
+ * subset of the columns that have been selected and the rows selected by the filters which are passed
+ * @property {string} name -- name of the view
+ * @property {string} tableName -- name of the table that this view subsets
+ * @property {[string]} columns -- The names of the columns of the table represented in this view
+ * @property {[string]} filters -- The names of the filters for this column
+ */
+
+export class GalyleoView {
+  /**
+   * Build a GalyleoView from a specification
+   * @param {GalyleoViewSpec} viewSpec: specification of the view
+   */
+  constructor (viewSpec) {
+    Object.assign(this, viewSpec);
+  }
+
+  /**
+   * Return the ViewSpec for this View
+   * @returns {GalyleoViewSpec}
+   */
+  toDictionary () {
+    return {
+      name: this.name,
+      tableName: this.tableName,
+      columns: this.columns,
+      filters: this.filters
+    };
+  }
+
+  /**
+   * Return the set of constructed filters from a FilterDictionary
+   * Internal use only, broken out separately for debugging and testing.
+   * @param {FilterDictionary} filterSpecs: the specifications of the filters to be used
+   * @param {GalyleoTable} table: table for this view
+   * @returns {filterSpec}: the specification of the actual filter to use
+   */
+  _getFilter_ (filterSpecs, table) {
+    const matchingSpecs = this.filters.map(filterName => filterSpecs[filterName]);
+    const validSpecs = matchingSpecs.filter(spec => checkSpecValid(table, spec));
+    return validSpecs.length == 0 ? null : validSpecs.length == 1 ? validSpecs[0] : { operator: 'AND', arguments: validSpecs };
+  }
+
+  _getColumnIndexes_ (table) {
+    return this.columns.map(column => table.getColumnIndex(column)).filter(columnIndex => columnIndex >= 0);
+  }
+
+  /**
+   * Return the set of matching rows and columns from a table, given a list of
+   * FilterNames and Specs, and a dictionary of tables.  *Note that if a table
+   * without this.tableName is NOT in the dictionary, returns undefined
+   * @param {FilterDictionary} filterSpecs
+   * @param {Object <string, GalyleoTable>} tableDictionary: Dictionary of tables
+   * @param {GalyleoCallback} callback Callback to use when the rows are found
+   * @param {GalyleoErrorCallback} errorFunction Callback to use there is an error
+   */
+  getData (filterSpecs, tableDictionary, callback, errorFunction, log) {
+    // We resolve the table only when we're asked for the data, so that we aren't tied
+    // to a particular table.  Late binding is your friend...
+    const table = tableDictionary[this.tableName];
+    if (!table) {
+      callback(undefined);
+      return;
+    }
+    const columnIndexes = this._getColumnIndexes_(table);
+    const getSelectedColumns = row => row.filter((item, index) => columnIndexes.indexOf(index) >= 0);
+    if (columnIndexes.length <= 0) {
+      callback(undefined);
+      return;
+    }
+    const actualFilter = this._getFilter_(filterSpecs, table);
+
+    table.getFilteredRows(rows => {
+      const rowsToSend = rows.map(row => getSelectedColumns(row));
+      callback(rowsToSend);
+    }, errorFunction, actualFilter);
+  }
+}
+
+/**
+ * Class for a DashboardDataManager.  There will only be one of these per Dashboard, and it's arguable whether this
+ * code should live in the Dashboard class.  It's here for ease of testing and to maintain all the data manipulation
+ * code in a single module.
+ */
+export class GalyleoDataManager {
+  /**
+   * Construct a new DataManager.  Just initializes tables and views
+   * @property {Object <string, GalyleoTable>} tables
+   * @property {Object <string, GalyleoView>} views
+   */
+  constructor () {
+    this.tables = {};
+    this.views = {};
+  }
+
+  /**
+   * Add a table from a specification
+   * @param {GalyleoTableSpec} tableSpec specification of the table to add
+   */
+  addTable (spec) {
+    this.tables[spec.name] = constructGalyleoTable(spec);
+  }
+
+  /**
+   * Add a table from a specification
+   * @param {GalyleoTableSpec} tableSpec specification of the table to add
+   */
+  addTable (tableSpec) {
+    this.tables[tableSpec.name] = constructGalyleoTable(tableSpec);
+  }
+
+  /**
+   * Add a view from a specification
+   * @param {GalyleoViewSpec} viewSpec specification of the table to add
+   */
+  addTable (viewSpec) {
+    this.views[viewSpec.name] = new GalyleoView(viewSpec);
+  }
 }

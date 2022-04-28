@@ -1,0 +1,88 @@
+{
+  "name": "@jupyterlab/lively-universal-extension",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Extension that allows to dynamically load any snapshotted tool built in lively as an extension.",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "license": "BSD-3-Clause",
+  "author": "Robin Schreiber",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write '**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}'",
+    "watch": "tsc -w"
+  },
+  "lint-staged": {
+    "**/*{.ts,.tsx,.css,.json,.md}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "@jupyter-widgets/base": "^5.0.0-alpha.2",
+    "@jupyter-widgets/base-manager": "^1.0.0-alpha.2",
+    "@jupyterlab/application": "^3.0.4",
+    "@jupyterlab/apputils": "^3.0.3",
+    "@jupyterlab/cells": "^3.0.4",
+    "@jupyterlab/coreutils": "^5.0.2",
+    "@jupyterlab/docmanager": "^3.0.4",
+    "@jupyterlab/docregistry": "^3.0.0",
+    "@jupyterlab/filebrowser": "^3.0.0-rc.0",
+    "@jupyterlab/fileeditor": "^3.0.4",
+    "@jupyterlab/launcher": "^3.0.0-rc.0",
+    "@jupyterlab/mainmenu": "^3.0.0-rc.0",
+    "@jupyterlab/markdownviewer": "^3.0.4",
+    "@jupyterlab/notebook": "^3.0.4",
+    "@jupyterlab/rendermime": "^3.0.4",
+    "@jupyterlab/services": "^6.0.5",
+    "@jupyterlab/translation": "3.0.9",
+    "@jupyterlab/ui-components": "^3.0.5",
+    "@jupyterlab/settingregistry": "^3.0.3",
+    "@lumino/messaging": "^1.4.3",
+    "@lumino/widgets": "^1.18.0",
+    "@lumino/signaling": "^1.7.2",
+    "@lumino/coreutils": "^1.8.2",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "run": "^1.4.0",
+    "@jupyterlab/shared-models": "^3.1.8"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^3.0.4",
+    "@types/react": "^16.8.22",
+    "@types/react-dom": "^16.8.4",
+    "husky": "^2.4.1",
+    "lint-staged": "^8.2.1",
+    "prettier": "^1.18.2",
+    "rimraf": "^2.6.3",
+    "tslint": "^5.18.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.5.2"
+  },
+  "resolutions": {
+    "@types/react": "~16.4.13"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "jupyterlab": {
+    "extension": "lib/extension.js",
+    "outputDir": "lively_universal_extension/labextension",
+    "_build": {
+      "load": "static/remoteEntry.8f8ae9927c3aa1379470.js",
+      "extension": "./extension"
+    }
+  }
+}
