@@ -547,7 +547,7 @@ export class GalyleoTable {
      * @param {string} columnName name of the column to get the values for
      */
 
-  async getAllValues (columnName) {
+  getAllValues (columnName) {
     const index = this.getColumnIndex(columnName);
     const rows = await this.getRows();
     const result = [...rows.map(row => row[index])];
@@ -804,6 +804,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
+     * @param {GalyleoCallback} callback Callback to use when the rows are found
+     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
      * @param {FilterSpec?} filterSpec specification of the filter to use if non-null
      */
 
@@ -831,8 +833,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName name of the column to get the values for
      */
 
-  async getAllValues (columnName) {
-    return await this._executeGetRequest_('get_all_values', columnName);
+  getAllValues (columnName, callback, errorFunction) {
+    return this._executeGetRequest_('get_all_values', columnName, callback, errorFunction);
   }
 
   /**
@@ -847,8 +849,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName name of the column to get the numeric spec for
      */
 
-  async getNumericSpec (columnName) {
-    return await this._executeGetRequest_('get_numeric_spec', columnName);
+  getNumericSpec (columnName, callback, errorFunction) {
+    this._executeGetRequest_('get_numeric_spec', columnName, callback, errorFunction);
   }
 }
 

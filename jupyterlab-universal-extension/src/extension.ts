@@ -40,12 +40,14 @@ import {
   TranslationBundle
 } from '@jupyterlab/translation';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { YFile } from '@jupyterlab/shared-models';
 
 export class GalyleoModel extends CodeEditor.Model
   implements DocumentRegistry.ICodeModel {
   contentChanged: any;
   stateChanged: any;
-  sharedModel: models.ISharedFile;
+  // sharedModel: models.ISharedFile;
+  sharedModel: models.YFile;
 
   readOnly = false;
   // we dont need those
@@ -61,6 +63,7 @@ export class GalyleoModel extends CodeEditor.Model
     this.session = UUID.uuid4(); // could be we dont even need that one...
     this.contentChanged = new Signal(this);
     this.stateChanged = new Signal(this);
+    this.sharedModel = new YFile();
   }
 
   get dirty() {

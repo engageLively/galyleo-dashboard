@@ -33,6 +33,7 @@ const manager_1 = require("./manager");
 const widgets_1 = require("@lumino/widgets");
 const translation_1 = require("@jupyterlab/translation");
 const settingregistry_1 = require("@jupyterlab/settingregistry");
+const shared_models_1 = require("@jupyterlab/shared-models");
 class GalyleoModel extends codeeditor_1.CodeEditor.Model {
     constructor(options) {
         super(options);
@@ -45,6 +46,7 @@ class GalyleoModel extends codeeditor_1.CodeEditor.Model {
         this.session = coreutils_1.UUID.uuid4(); // could be we dont even need that one...
         this.contentChanged = new signaling_1.Signal(this);
         this.stateChanged = new signaling_1.Signal(this);
+        this.sharedModel = new shared_models_1.YFile();
     }
     get dirty() {
         return this._dirty;
