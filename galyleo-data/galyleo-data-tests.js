@@ -64,19 +64,26 @@ class PollCatcher {
 
 describe('Explicit Table', () => {
   const table = constructGalyleoTable(explicitTableConstructor);
-  it('should create table and populate an explicit table', () => {
+  it('should create table and populate an explicit table', async (done) => {
     expect(table.tableType).to.eql('ExplicitGalyleoTable');
     expect(table.columns).to.eql(explicitSchema);
     expect(table.rows).to.eql(explicitRows);
     expect(table.tableName).to.eql('test1');
-    table.getRows(rows => expect(rows).to.eql(explicitRows), () => assert(false));
     expect(table.getColumnIndex('name')).to.eql(0);
+    const result = await table.getRows();
+    expect(result).to.eql(explicitRows);
+    done();
   });
-  it('should correctly execute the API for an explicit table', () => {
-    table.getFilteredRows(filteredRows => expect(filteredRows).to.eql(explicitRows) == explicitRows, () => assert(false));
-    table.getAllValues('name', values => expect(values).to.eql(['a', 'b']), () => assert(false));
-    table.getAllValues('age', values => expect(values).to.eql([1, 2]), () => assert(false));
-    table.getNumericSpec('age', spec => expect(spec).to.eql({ max_val: 2, min_val: 1, increment: 1 }), () => assert(false));
+  it('should correctly execute the API for an explicit table', async (done) => {
+    const filteredRows = await table.getFilteredRows();
+    expect(filteredRows).to.eql(explicitRows);
+    const nameValues = await table.getAllValues('name');
+    expect(nameValues).to.eql(['a', 'b']);
+    const ageValues = await table.getAllValues('age');
+    expect(ageValues).to.eql([1, 2]);
+    const spec = await table.getNumericSpec('age');
+    expect(spec).to.eql({ max_val: 2, min_val: 1, increment: 1 });
+    done();
   });
   it('should create the intermediate form correctly', () => {
     const intermediateForm = table.toDictionary();
@@ -106,14 +113,18 @@ describe('Remote Table', () => {
   });
 
   if (runRemoteTests) {
-    it('should get all the years', () => {
+    it('should get all the years', async (done) => {
     // generate the years 1828-2020, inclusive, increments of 4
       const years = [...Array((2020 - 1828) / 4 + 1).keys()].map(n => n * 4 + 1828);
-      remoteTable.getAllValues('Year', yearsFromTable => expect(yearsFromTable).to.eql(years), () => assert(false));
+      const yearsFromTable = await remoteTable.getAllValues('Year');
+      expect(yearsFromTable).to.eql(years);
+      done();
     });
-    it('should get the numeric spec from years', async () => {
+    it('should get the numeric spec from years', async (done) => {
       const spec = { max_val: 2020, min_val: 1828, increment: 4 };
-      remoteTable.getNumericSpec('Year', specFromTable => expect(specFromTable).to.eql(spec), () => assert(false));
+      const specFromTable = await remoteTable.getNumericSpec('Year');
+      expect(specFromTable).to.eql(spec);
+      done();
     });
   }
   const pollCatcher = new PollCatcher();
@@ -233,55 +244,51 @@ describe('Filter Interaction with Explicit Tables', () => {
   const numbers = rows.map(row => row[1]).sort((a, b) => a - b);
   const rangeFilterSpec = { operator: 'IN_RANGE', column: 'age', min_val: numbers[3], max_val: numbers[7] };
   const rangeFilterRows = rows.filter(row => row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
-  it('should execute an in-range filter on a local table', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(rangeFilterRows);
-    }, err => assert(false), rangeFilterSpec);
+  it('should execute an in-range filter on a local table', async (done) => {
+    const filteredRows = await table.getFilteredRows(rangeFilterSpec);
+    expect(filteredRows).to.eql(rangeFilterRows);
+    done();
   });
   const nameList = rangeFilterRows.map(row => row[0]).slice(1);
   const inListFilterSpec = { operator: 'IN_LIST', column: 'name', values: nameList };
   const listFilterRows = rows.filter(row => nameList.indexOf(row[0]) >= 0);
-  it('Should execute an in-list filter on a local table', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(listFilterRows);
-    }, err => assert(false), inListFilterSpec);
+  it('Should execute an in-list filter on a local table', async (done) => {
+    const filteredRows = await table.getFilteredRows(inListFilterSpec);
+    expect(filteredRows).to.eql(listFilterRows);
+    done();
   });
   const notInRangeFilterList = rows.filter(row => row[1] < rangeFilterSpec.min_val || row[1] > rangeFilterSpec.max_val);
-  it('Should execute a not in-range filter', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(notInRangeFilterList);
-    }, err => assert(false), { operator: 'NOT', arguments: [rangeFilterSpec] });
+  it('Should execute a not in-range filter', async (done) => {
+    const filteredRows = await table.getFilteredRows({ operator: 'NOT', arguments: [rangeFilterSpec] });
+    expect(filteredRows).to.eql(notInRangeFilterList);
+    done();
   });
   const notInListFilterList = rows.filter(row => nameList.indexOf(row[0]) < 0);
-  it('Should execute a not in-list filter', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(notInListFilterList);
-    }, err => assert(false), { operator: 'NOT', arguments: [inListFilterSpec] });
+  it('Should execute a not in-list filter', async (done) => {
+    const filteredRows = await table.getFilteredRows({ operator: 'NOT', arguments: [inListFilterSpec] });
+    expect(filteredRows).to.eql(notInListFilterList);
+    done();
   });
   const andFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) && row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
 
-  it('Should execute an and filter', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(andFilterList);
-    }, err => assert(false), { operator: 'AND', arguments: [inListFilterSpec, rangeFilterSpec] });
+  it('Should execute an and filter', async (done) => {
+    const filteredRows = await table.getFilteredRows({ operator: 'AND', arguments: [inListFilterSpec, rangeFilterSpec] });
+    expect(filteredRows).to.eql(andFilterList);
+    done();
   });
   const orFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) || (row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val));
-  it('Should execute an or  filter', () => {
-    table.getFilteredRows(filteredRows => {
-      expect(filteredRows).to.eql(orFilterList);
-    }, err => assert(false), { operator: 'OR', arguments: [inListFilterSpec, rangeFilterSpec] });
+  it('Should execute an or  filter', async (done) => {
+    const filteredRows = await table.getFilteredRows({ operator: 'OR', arguments: [inListFilterSpec, rangeFilterSpec] });
+    expect(filteredRows).to.eql(orFilterList);
+    done();
   });
 });
 describe('Filter Interaction with Remote Tables', () => {
   const expected1 = [[1960, 303, 219, 15], [1964, 486, 52, 0]];
-  it('Should execute an in-range filter', () => {
-    remoteTable.getFilteredRows(
-      filteredRows => {
-        filteredRows.sort((a, b) => a[0] - b[0]);
-        expect(filteredRows).to.eql(expected1);
-      },
-      error => assert(false),
-      { operator: 'IN_RANGE', column: 'Year', max_val: 1964, min_val: 1960 });
+  it('Should execute an in-range filter', async (done) => {
+    const filteredRows = await remoteTable.getFilteredRows({ operator: 'IN_RANGE', column: 'Year', max_val: 1964, min_val: 1960 });
+    expect(filteredRows).to.eql(expected1);
+    done();
   });
 });
 
@@ -317,36 +324,31 @@ describe('Creation of valid views', () => {
   });
   const tableDict = { test1: testTable };
 
-  it('Should get the right data1', () => {
-    view1.getData(filterDictionary, tableDict, rows => {
-      const expected = testRows.slice(5).map(row => [row[0]]);
-      expect(rows).to.eql(expected);
-    }, () => assert(false), log);
+  it('Should get the right data1', async (done) => {
+    const rows = await view1.getData(filterDictionary, tableDict);
+    const expected = testRows.slice(5).map(row => [row[0]]);
+    expect(rows).to.eql(expected);
+    done();
   });
-  it('Should get the right data2', () => {
-    view2.getData(filterDictionary, tableDict, rows => {
-      const expected = testRows.slice(1, 6).map(row => [row[1]]);
-      expect(rows).to.eql(expected);
-    }, () => assert(false), log);
+  it('Should get the right data2', async (done) => {
+    const rows = await view2.getData(filterDictionary, tableDict);
+    const expected = testRows.slice(1, 6).map(row => [row[1]]);
+    expect(rows).to.eql(expected);
+    done();
   });
-  it('Should get the right data3', () => {
-    view3.getData(filterDictionary, tableDict, rows => {
-      const expected = [testRows[5]];
-      expect(rows).to.eql(expected);
-    }, () => assert(false), log);
+  it('Should get the right data3', async (done) => {
+    const rows = await view3.getData(filterDictionary, tableDict);
+    const expected = [testRows[5]];
+    expect(rows).to.eql(expected);
+    done();
   });
-  it('Should return undefined', () => {
-    view1.getData(filterDictionary, {}, rows => {
-      expect(rows).to.eql(undefined);
-    }, () => assert(false));
+  it('Should return undefined', async (done) => {
+    const rows = await view1.getData(filterDictionary, {});
+    expect(rows).to.eql(undefined);
+    done();
   });
   // hit the table column names
   const badColumns = [{ name: 'name1', type: 'string' }, { name: 'age1', type: 'number' }];
   const testTable2 = constructGalyleoTable({ name: 'testView2', columns: badColumns, rows: testRows });
   // filters are now invalid
-  it('Should return undefined', () => {
-    view3.getData(filterDictionary, {}, rows => {
-      expect(rows).to.eql(undefined);
-    }, () => assert(false));
-  });
 });
