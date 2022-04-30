@@ -349,6 +349,11 @@ describe('Creation of valid views', () => {
   });
   // hit the table column names
   const badColumns = [{ name: 'name1', type: 'string' }, { name: 'age1', type: 'number' }];
-  const testTable2 = constructGalyleoTable({ name: 'testView2', columns: badColumns, rows: testRows });
+  const testTable2 = constructGalyleoTable({ name: 'test1', columns: badColumns, rows: testRows });
   // filters are now invalid
+  it('should return undefined', async (done) => {
+    const rows = await view1.getData(filterDictionary, { test1: testTable2 });
+    expect(rows).to.eql(undefined);
+    done();
+  });
 });

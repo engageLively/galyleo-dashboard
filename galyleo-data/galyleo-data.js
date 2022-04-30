@@ -547,7 +547,7 @@ export class GalyleoTable {
      * @param {string} columnName name of the column to get the values for
      */
 
-  getAllValues (columnName) {
+  async getAllValues (columnName) {
     const index = this.getColumnIndex(columnName);
     const rows = await this.getRows();
     const result = [...rows.map(row => row[index])];
@@ -804,8 +804,6 @@ export class RemoteGalyleoTable extends GalyleoTable {
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
-     * @param {GalyleoCallback} callback Callback to use when the rows are found
-     * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
      * @param {FilterSpec?} filterSpec specification of the filter to use if non-null
      */
 
@@ -833,8 +831,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName name of the column to get the values for
      */
 
-  getAllValues (columnName, callback, errorFunction) {
-    return this._executeGetRequest_('get_all_values', columnName, callback, errorFunction);
+  async getAllValues (columnName) {
+    return await this._executeGetRequest_('get_all_values', columnName);
   }
 
   /**
@@ -849,8 +847,8 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName name of the column to get the numeric spec for
      */
 
-  getNumericSpec (columnName, callback, errorFunction) {
-    this._executeGetRequest_('get_numeric_spec', columnName, callback, errorFunction);
+  async getNumericSpec (columnName) {
+    return await this._executeGetRequest_('get_numeric_spec', columnName);
   }
 }
 
@@ -979,6 +977,31 @@ export class GalyleoDataManager {
   }
 
   /**
+   * Convert a dictionary of objects to a dictionary of the dictionary form of each object
+   * Internal, used by toDictionary()
+   * @param {Map} objectoToConvert
+   * @ returns {{Map}}
+   */
+
+  _generateDictionary_ (objectToConvert) {
+    const names = Object.keys(objectToConvert);
+    const result = {};
+    names.forEach(name => result[name] = objectToConvert[name].toDictionary());
+    return result;
+  }
+
+  /**
+   * Generate the intermediate form as a dictionary.  Just generates the dictionary form of the tables and views
+   */
+
+  toDictionary () {
+    return {
+      tables: this._generateDictionary_(this.tables),
+      views: this._generateDictionary_(this.views)
+    };
+  }
+
+  /**
    * Add a table from a specification
    * @param {GalyleoTableSpec} tableSpec specification of the table to add
    */
@@ -987,18 +1010,86 @@ export class GalyleoDataManager {
   }
 
   /**
-   * Add a table from a specification
-   * @param {GalyleoTableSpec} tableSpec specification of the table to add
+   * Add a view  from a specification
+   * @param {GalyleoViewSoec} tableSpec specification of the table to add
    */
-  addTable (tableSpec) {
-    this.tables[tableSpec.name] = constructGalyleoTable(tableSpec);
+  addView (viewSpec) {
+    this.views[viewSpec.name] = new GalyleoView(viewSpec);
   }
 
   /**
-   * Add a view from a specification
-   * @param {GalyleoViewSpec} viewSpec specification of the table to add
+   * Get all the tables which contain a column, narrowing it to the specific set of requested types
+   * if specified.  Internal routine used by getAllValues and getNumericSpec
+   * @param {string} columnName: column to get all the values for
+   * @param {Set}: set of types to look for.  If empty, look for them all
+   * @param {string?} tableName: if specified, look only at this table
    */
-  addTable (viewSpec) {
-    this.views[viewSpec.name] = new GalyleoView(viewSpec);
+  _getMatchingTables_ (columnName, types, tableName = null) {
+    const allNames = Object.keys(this.tables);
+    if (allNames.length == 0) {
+      return [];
+    }
+    const names = tableName ? [tableName] : allNames;
+    const tables = names.map(name => this.tables[name]);
+    const matchingTables = tables.filter(table => table.getColumnIndex(columnName) >= 0);
+    if (types.size == 0) {
+      return matchingTables;
+    } else {
+      return matchingTables.filter(table => types.has(table.columns[table.getColumnIndex(columnName)].type));
+    }
+  }
+
+  /**
+   * Get all the values for a column.  This is just an overlay on table.getAllValues() if the table is
+   * specified, or it returns all the values for all the columns of that name over the dashboard if the table
+   * is not specified
+   * @param {string} columnName: column to get all the values for
+   * @param {string?} tableName: if specified, look only at this table
+   * @returns {[any]} sorted list of all values in the columns
+   */
+  async getAllValues (columnName, tableName = null) {
+    const tables = this._getMatchingTables_(columnName, new Set(), tableName);
+    if (tables.length == 0) {
+      return [];
+    }
+    // A little macro to pull the column type
+    const columnType = (table, column) => table.columns[table.getColumnIndex[column]].type;
+    // get all the values from all the tables
+    let result = await tables[0].getAllValues();
+    for (const table in tables.slice(1)) {
+      result = result.concat(await table.getAllValues());
+    }
+    // [...new Set(list)] is an easy way to get rid of duplicates
+    result = [...new Set(result)];
+    // If the resulting list is all numeric, sort by number, otherwise alphabetic, and return
+    const types = new Set(tables.map(table => columnType(table, columnName)));
+    if (types == new Set(['number'])) {
+      result.sort((a, b) => a - b);
+    } else {
+      result.sort;
+    }
+    return result;
+  }
+
+  /**
+   * Get the numeric specifier for a column.  This is just an overlay on table.getNumeric() if the table is
+   * specified, or it returns all the values for all the columns of that name over the dashboard if the table
+   * is not specified
+   * @param {string} columnName: column to get all the values for
+   * @param {string?} tableName: if specified, look only at this table
+   * @returns {GalyleoNumericSpec} the numeric 
+   */
+  async getNumericSpec (columnName, tableName = null) {
+    const tables = this._getMatchingTables_(columnName, new Set(['number']), tableName);
+    if (tables.length == 0) {
+      return null;
+    }
+    const result = await tables[0].getNumericSpec(columnName);
+    for (const table in tables.slice(1)) {
+      const tableResult = await table.getNumericSpec(columnName);
+      result.max_val = Math.max(result.max_val, tableResult.max_val);
+      result.min_val = Math.min(result.min_val, tableResult.min_val);
+      result.increment = Math.min(result.increment, tableResult.increment);
+    }
   }
 }
