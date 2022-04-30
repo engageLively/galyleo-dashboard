@@ -31,7 +31,7 @@ BSD 3-Clause License
 */
 /* global declare, it, describe, beforeEach, afterEach */
 import { expect, done } from 'mocha-es6';
-import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView } from './galyleo-data.js';
+import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView, GalyleoDataManager } from './galyleo-data.js';
 import { resource } from 'lively.resources';
 import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
 import { connect } from 'lively.bindings';
@@ -94,7 +94,7 @@ describe('Explicit Table', () => {
 
 const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
 const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
-const runRemoteTests = false; // set to true if we want to really run the remote tests
+const runRemoteTests = true; // set to true if we want to really run the remote tests
 const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
 
 describe('Remote Table', () => {
@@ -284,12 +284,14 @@ describe('Filter Interaction with Explicit Tables', () => {
   });
 });
 describe('Filter Interaction with Remote Tables', () => {
-  const expected1 = [[1960, 303, 219, 15], [1964, 486, 52, 0]];
-  it('Should execute an in-range filter', async (done) => {
-    const filteredRows = await remoteTable.getFilteredRows({ operator: 'IN_RANGE', column: 'Year', max_val: 1964, min_val: 1960 });
-    expect(filteredRows).to.eql(expected1);
-    done();
-  });
+  if (runRemoteTests) {
+    const expected1 = [[1960, 303, 219, 15], [1964, 486, 52, 0]];
+    it('Should execute an in-range filter', async (done) => {
+      const filteredRows = await remoteTable.getFilteredRows({ operator: 'IN_RANGE', column: 'Year', max_val: 1964, min_val: 1960 });
+      expect(filteredRows).to.eql(expected1);
+      done();
+    });
+  }
 });
 
 // Set up for the view test
@@ -354,6 +356,152 @@ describe('Creation of valid views', () => {
   it('should return undefined', async (done) => {
     const rows = await view1.getData(filterDictionary, { test1: testTable2 });
     expect(rows).to.eql(undefined);
+    done();
+  });
+});
+
+// const arrayTestForEquality = (ar1, ar2) => ar1 && ar2 && ar1.length == ar2.length && ar1.reduce((res, val, i) => val == ar2[i], true);
+describe('Data Manager Tests', () => {
+  const dataManager = new GalyleoDataManager();
+  const firstNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William', 'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper', 'Tom', 'Dick', 'Harry', 'Bob', 'Jane', 'Jill', 'Sujata'];
+  const lastNames = [
+    'SMITH',
+    'JOHNSON',
+    'WILLIAMS',
+    'BROWN',
+    'JONES',
+    'GARCIA',
+    'MILLER',
+    'DAVIS',
+    'RODRIGUEZ',
+    'MARTINEZ',
+    'HERNANDEZ',
+    'LOPEZ',
+    'GONZALEZ',
+    'WILSON',
+    'ANDERSON',
+    'THOMAS',
+    'TAYLOR',
+    'MOORE',
+    'JACKSON',
+    'MARTIN',
+    'LEE',
+    'PEREZ',
+    'THOMPSON',
+    'WHITE',
+    'HARRIS',
+    'SANCHEZ',
+    'CLARK'];
+  const fnames1 = firstNames.slice(0, 10);
+  const fnames2 = firstNames.slice(10);
+  fnames2.push(firstNames[0]);
+  const lnames1 = lastNames.slice(0, 10);
+  const lnames2 = lastNames.slice(10);
+  lnames2.push(lastNames[0]);
+  const rows1 = fnames1.map((name, index) => [name, 20 + index, lnames1[index]]);
+  const rows2 = fnames2.map((name, index) => [name, 30 + index, lnames2[index]]);
+  const schema1 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'number' }, { name: 'last_name', type: 'string' }];
+  const schema2 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'string' }, { name: 'last_name', type: 'string' }];
+  const tableSpec1 = { name: 'test1', columns: schema1, rows: rows1 };
+  const tableSpec2 = { name: 'test2', columns: schema2, rows: rows2 };
+  const expectedResult = {
+    tables: {
+      test1: { columns: schema1, rows: rows1 }, test2: { columns: schema2, rows: rows2 }
+    },
+    views: {}
+  };
+  it('Should add tables correctly and return the right dictionary', () => {
+    dataManager.addTable(tableSpec1);
+    dataManager.addTable(tableSpec2);
+    expect(dataManager.toDictionary()).to.eql(expectedResult);
+  });
+  const viewSpec = {
+    name: 'view1', tableName: 'test1', columns: ['first_name', 'last_name'], filters: ['foo']
+  };
+  const expectedResult1 = {
+    tables: {
+      test1: { columns: schema1, rows: rows1 }, test2: { columns: schema2, rows: rows2 }
+    },
+    views: { view1: viewSpec }
+  };
+  it('Should add Views correctly and return the right dictionary', () => {
+    dataManager.addView(viewSpec);
+    expect(dataManager.toDictionary()).to.eql(expectedResult1);
+  });
+  it('should not find any tables', async (done) => {
+    expect(await dataManager.getAllValues()).to.eql([]);
+    expect(await dataManager.getAllValues('test3')).to.eql([]);
+    done();
+  });
+  const allValues1 = firstNames.slice();
+  allValues1.sort();
+  it('Should find all the first names', async (done) => {
+    const result = await dataManager.getAllValues('first_name');
+    expect(result).to.eql(allValues1);
+    done();
+  });
+  const firstValues = fnames1.slice();
+  firstValues.sort();
+
+  it('Should find the first set of  first names', async (done) => {
+    const result = await dataManager.getAllValues('first_name', 'test1');
+    expect(result).to.eql(firstValues);
+    done();
+  });
+  const firstAges = rows1.map(row => row[1]);
+  firstAges.sort((a, b) => a - b);
+  it('Should sort first ages numerically', async (done) => {
+    const result = await dataManager.getAllValues('age', 'test1');
+    expect(result).to.eql(firstAges);
+    done();
+  });
+  const secondAges = rows2.map(row => row[1]);
+  secondAges.sort();
+  it('Should sort second ages alphabetically', async (done) => {
+    const result = await dataManager.getAllValues('age', 'test2');
+    expect(result).to.eql(secondAges);
+    done();
+  });
+  const allAges = firstAges.concat(secondAges);
+  allAges.sort();
+  it('Should sort all ages alphabetically', async (done) => {
+    const result = await dataManager.getAllValues('age');
+    expect(result).to.eql(allAges);
+    done();
+  });
+  it('should find the numeric spec for test1', async (done) => {
+    const numericSpec = await dataManager.tables.test1.getNumericSpec('age');
+    const result = await dataManager.getNumericSpec('age', 'test1');
+    expect(result).to.eql(numericSpec);
+    done();
+  });
+  it('should find the same numeric spec for test1', async (done) => {
+    const numericSpec = await dataManager.tables.test1.getNumericSpec('age');
+    const result = await dataManager.getNumericSpec('age');
+    expect(result).to.eql(numericSpec);
+    done();
+  });
+  it('should return null', async (done) => {
+    const result = await dataManager.getNumericSpec('age', 'test2');
+    expect(result).to.eql(null);
+    done();
+  });
+  // switch the type of table2 column age to number and try again
+  const schema3 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'number' }, { name: 'last_name', type: 'string' }];
+  const tableSpec3 = { name: 'test3', columns: schema3, rows: rows2 };
+  const dataManager1 = new GalyleoDataManager();
+  dataManager1.addTable(tableSpec1);
+  dataManager1.addTable(tableSpec3);
+  it('should merge the numeric specs for all', async (done) => {
+    const numericSpec1 = await dataManager1.tables.test1.getNumericSpec('age');
+    const numericSpec3 = await dataManager1.tables.test3.getNumericSpec('age');
+    const expectedResult = {
+      min_val: Math.min(numericSpec1.min_val, numericSpec3.min_val),
+      increment: Math.min(numericSpec1.increment, numericSpec3.increment),
+      max_val: Math.max(numericSpec1.max_val, numericSpec3.max_val)
+    };
+    const result = await dataManager1.getNumericSpec('age');
+    expect(result).to.eql(expectedResult);
     done();
   });
 });

@@ -498,6 +498,16 @@ export class GalyleoTable {
   }
 
   /**
+     * getColumnType: returns the type corresponding to a column name
+     * @param {string} columnName
+     * @returns {string} type of the column, or null if it's invalid
+     */
+  getColumnType (columnName) {
+    const index = this.getColumnIndex(columnName);
+    return index < 0 ? null : this.columns[index].type;
+  }
+
+  /**
      * getFilteredRows: returns the rows of the table which pass a filter
      * If the filterSpec is null, just returns all the rows of the table
      * @param {GalyleoCallback} callback Callback to use when the rows are found
@@ -1031,6 +1041,7 @@ export class GalyleoDataManager {
     }
     const names = tableName ? [tableName] : allNames;
     const tables = names.map(name => this.tables[name]);
+
     const matchingTables = tables.filter(table => table.getColumnIndex(columnName) >= 0);
     if (types.size == 0) {
       return matchingTables;
@@ -1052,21 +1063,22 @@ export class GalyleoDataManager {
     if (tables.length == 0) {
       return [];
     }
-    // A little macro to pull the column type
-    const columnType = (table, column) => table.columns[table.getColumnIndex[column]].type;
+
     // get all the values from all the tables
-    let result = await tables[0].getAllValues();
-    for (const table in tables.slice(1)) {
-      result = result.concat(await table.getAllValues());
+    let result = await tables[0].getAllValues(columnName);
+    const remaining = tables.slice(1);
+    for (let i = 0; i < remaining.length; i++) {
+      result = result.concat(await remaining[i].getAllValues(columnName));
     }
     // [...new Set(list)] is an easy way to get rid of duplicates
     result = [...new Set(result)];
     // If the resulting list is all numeric, sort by number, otherwise alphabetic, and return
-    const types = new Set(tables.map(table => columnType(table, columnName)));
-    if (types == new Set(['number'])) {
+    const allNumbers = tables.reduce((result, table) => result && table.getColumnType(columnName) == 'number', true);
+
+    if (allNumbers) {
       result.sort((a, b) => a - b);
     } else {
-      result.sort;
+      result.sort();
     }
     return result;
   }
@@ -1085,11 +1097,12 @@ export class GalyleoDataManager {
       return null;
     }
     const result = await tables[0].getNumericSpec(columnName);
-    for (const table in tables.slice(1)) {
-      const tableResult = await table.getNumericSpec(columnName);
+    for (let i = 1; i < tables.length; i++) {
+      const tableResult = await tables[i].getNumericSpec(columnName);
       result.max_val = Math.max(result.max_val, tableResult.max_val);
       result.min_val = Math.min(result.min_val, tableResult.min_val);
       result.increment = Math.min(result.increment, tableResult.increment);
     }
+    return result;
   }
 }
