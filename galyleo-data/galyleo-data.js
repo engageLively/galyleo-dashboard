@@ -864,14 +864,19 @@ export class RemoteGalyleoTable extends GalyleoTable {
 
 /**
  * @typedef (Object) GalyleoTableSpec
- * @property {string} name - the table name, required
  * @property {GalyleoColumn []} columns - the columns of the table
  * @property {GalyleoDataTable?} rows -- if present, this is an explicit table with the rows resident
  * @property {GalyleoRemoteTableSpec} connector -- if present, used to make a remote table
  */
 
-export function constructGalyleoTable (galyleoTableSpec) {
-  const name = galyleoTableSpec.name;
+/**
+ * Construct a GalyleoTable from a GalyleoTableSpec and a name.  Looks
+ * at the intermediate form and builds the right kind of table
+ * @param {string} name: name of the table
+ * @param {GalyleoTableSpec} galyleoTableSpec: specification of the table
+ */
+
+export function constructGalyleoTable (name, galyleoTableSpec) {
   const columns = galyleoTableSpec.columns;
   if (galyleoTableSpec.rows != null) {
     return new ExplicitGalyleoTable(columns, name, galyleoTableSpec.rows);
@@ -898,10 +903,9 @@ export function constructGalyleoTable (galyleoTableSpec) {
 /**
  * Class for a GalyleoView.  A View is a restricted subset of a table, and it returns the 
  * subset of the columns that have been selected and the rows selected by the filters which are passed
- * @property {string} name -- name of the view
- * @property {string} tableName -- name of the table that this view subsets
+ * @property {string} table -- name of the table that this view subsets
  * @property {[string]} columns -- The names of the columns of the table represented in this view
- * @property {[string]} filters -- The names of the filters for this column
+ * @property {[string]} filterNames -- The names of the filters for this column
  */
 
 export class GalyleoView {
@@ -910,7 +914,9 @@ export class GalyleoView {
    * @param {GalyleoViewSpec} viewSpec: specification of the view
    */
   constructor (viewSpec) {
-    Object.assign(this, viewSpec);
+    this.tableName = viewSpec.table;
+    this.columns = viewSpec.columns;
+    this.filters = viewSpec.filterNames;
   }
 
   /**
@@ -919,10 +925,9 @@ export class GalyleoView {
    */
   toDictionary () {
     return {
-      name: this.name,
-      tableName: this.tableName,
+      table: this.tableName,
       columns: this.columns,
-      filters: this.filters
+      filterNames: this.filters
     };
   }
 
@@ -987,6 +992,14 @@ export class GalyleoDataManager {
   }
 
   /**
+   * Clear the state of the DataManager.  Identical to new()
+   */
+  clear () {
+    this.tables = {};
+    this.views = {};
+  }
+
+  /**
    * Convert a dictionary of objects to a dictionary of the dictionary form of each object
    * Internal, used by toDictionary()
    * @param {Map} objectoToConvert
@@ -1013,18 +1026,20 @@ export class GalyleoDataManager {
 
   /**
    * Add a table from a specification
+   * @param {string} name name of the table
    * @param {GalyleoTableSpec} tableSpec specification of the table to add
    */
-  addTable (spec) {
-    this.tables[spec.name] = constructGalyleoTable(spec);
+  addTable (name, spec) {
+    this.tables[name] = constructGalyleoTable(name, spec);
   }
 
   /**
    * Add a view  from a specification
-   * @param {GalyleoViewSoec} tableSpec specification of the table to add
+   * @param {string} name name of the view
+   * @param {GalyleoViewSoec} viewSpec specification of the view to add
    */
-  addView (viewSpec) {
-    this.views[viewSpec.name] = new GalyleoView(viewSpec);
+  addView (name, viewSpec) {
+    this.views[name] = new GalyleoView(viewSpec);
   }
 
   /**

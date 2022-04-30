@@ -38,7 +38,7 @@ import { connect } from 'lively.bindings';
 
 const explicitSchema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
 const explicitRows = [['a', 2], ['b', 1]];
-const explicitTableConstructor = { name: 'test1', columns: explicitSchema, rows: explicitRows };
+const explicitTableConstructor = { columns: explicitSchema, rows: explicitRows };
 const isEqualSets = (set1, set2) => (set1.size === set2.size) && (set1.size === new Set([...set1, ...set2]).size);
 
 /*
@@ -63,7 +63,7 @@ class PollCatcher {
 }
 
 describe('Explicit Table', () => {
-  const table = constructGalyleoTable(explicitTableConstructor);
+  const table = constructGalyleoTable('test1', explicitTableConstructor);
   it('should create table and populate an explicit table', async (done) => {
     expect(table.tableType).to.eql('ExplicitGalyleoTable');
     expect(table.columns).to.eql(explicitSchema);
@@ -95,7 +95,7 @@ describe('Explicit Table', () => {
 const connector = { url: 'https://engagelively.wl.r.appspot.com/' };
 const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', type: 'number' }, { name: 'Republican', type: 'number' }, { name: 'Other', type: 'number' }];
 const runRemoteTests = true; // set to true if we want to really run the remote tests
-const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector });
+const remoteTable = constructGalyleoTable('electoral_college', { columns: remoteSchema, connector: connector });
 
 describe('Remote Table', () => {
   it('should create  and populate a remote table', () => {
@@ -129,7 +129,7 @@ describe('Remote Table', () => {
   }
   const pollCatcher = new PollCatcher();
   const pollingConnector = { url: 'https://engagelively.wl.r.appspot.com/', dashboardName: 'foo', interval: 1 };
-  const remoteTable2 = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: pollingConnector });
+  const remoteTable2 = constructGalyleoTable('electoral_college', { columns: remoteSchema, connector: pollingConnector });
 
   it('should poll every second', () => {
     remoteTable2.registerUpdateListener(pollCatcher);
@@ -155,8 +155,8 @@ describe('Remote Table', () => {
 });
 
 describe('Filter Creation and Test', () => {
-  /* const remoteTable = constructGalyleoTable({ name: 'electoral_college', columns: remoteSchema, connector: connector }); */
-  const table = constructGalyleoTable(explicitTableConstructor);
+  /* const remoteTable = constructGalyleoTable( 'electoral_college', {columns: remoteSchema, connector: connector }); */
+  const table = constructGalyleoTable('test1', explicitTableConstructor);
   const inListExplicit = constructFilter(table, { operator: 'IN_LIST', column: 'name', values: ['b'] });
   it('Should create an in-list filter and populate its fields correctly', () => {
     expect(inListExplicit.table).to.eql(table);
@@ -240,7 +240,7 @@ const randint = (low, high) => Math.floor(Math.random() * (high - low) + low);
 describe('Filter Interaction with Explicit Tables', () => {
   const names = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William',	'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper'];
   const rows = names.map(name => [name, randint(20, 70)]);
-  const table = constructGalyleoTable({ name: 'test1', columns: explicitSchema, rows: rows });
+  const table = constructGalyleoTable('test1', { columns: explicitSchema, rows: rows });
   const numbers = rows.map(row => row[1]).sort((a, b) => a - b);
   const rangeFilterSpec = { operator: 'IN_RANGE', column: 'age', min_val: numbers[3], max_val: numbers[7] };
   const rangeFilterRows = rows.filter(row => row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
@@ -297,15 +297,15 @@ describe('Filter Interaction with Remote Tables', () => {
 // Set up for the view test
 const testNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William',	'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper'];
 const testRows = testNames.map((name, index) => [name, 20 + 3 * index]);
-const testTable = constructGalyleoTable({ name: 'test1', columns: explicitSchema, rows: testRows });
+const testTable = constructGalyleoTable('test1', { columns: explicitSchema, rows: testRows });
 const rangeFilter = { operator: 'IN_RANGE', column: 'age', max_val: testRows[5][1], min_val: testRows[1][1] }; // selects rows 1-5, inclusive
 const listFilter = { operator: 'IN_LIST', column: 'name', values: testNames.slice(5) }; // selects 5-end
 const filterDictionary = { rangeF: rangeFilter, listF: listFilter };
-const viewSpec1 = { name: 'testView1', tableName: 'test1', columns: ['name'], filters: ['listF'] };
+const viewSpec1 = { table: 'test1', columns: ['name'], filterNames: ['listF'] };
 const view1 = new GalyleoView(viewSpec1);
-const viewSpec2 = { name: 'testView2', tableName: 'test1', columns: ['age'], filters: ['rangeF'] };
+const viewSpec2 = { table: 'test1', columns: ['age'], filterNames: ['rangeF'] };
 const view2 = new GalyleoView(viewSpec2);
-const viewSpec3 = { name: 'testView3', tableName: 'test1', columns: ['name', 'age'], filters: ['listF', 'rangeF'] };
+const viewSpec3 = { table: 'test1', columns: ['name', 'age'], filterNames: ['listF', 'rangeF'] };
 const view3 = new GalyleoView(viewSpec3);
 const log = [];
 // check the good views
@@ -351,7 +351,7 @@ describe('Creation of valid views', () => {
   });
   // hit the table column names
   const badColumns = [{ name: 'name1', type: 'string' }, { name: 'age1', type: 'number' }];
-  const testTable2 = constructGalyleoTable({ name: 'test1', columns: badColumns, rows: testRows });
+  const testTable2 = constructGalyleoTable('test1', { columns: badColumns, rows: testRows });
   // filters are now invalid
   it('should return undefined', async (done) => {
     const rows = await view1.getData(filterDictionary, { test1: testTable2 });
@@ -402,8 +402,8 @@ describe('Data Manager Tests', () => {
   const rows2 = fnames2.map((name, index) => [name, 30 + index, lnames2[index]]);
   const schema1 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'number' }, { name: 'last_name', type: 'string' }];
   const schema2 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'string' }, { name: 'last_name', type: 'string' }];
-  const tableSpec1 = { name: 'test1', columns: schema1, rows: rows1 };
-  const tableSpec2 = { name: 'test2', columns: schema2, rows: rows2 };
+  const tableSpec1 = { columns: schema1, rows: rows1 };
+  const tableSpec2 = { columns: schema2, rows: rows2 };
   const expectedResult = {
     tables: {
       test1: { columns: schema1, rows: rows1 }, test2: { columns: schema2, rows: rows2 }
@@ -411,12 +411,12 @@ describe('Data Manager Tests', () => {
     views: {}
   };
   it('Should add tables correctly and return the right dictionary', () => {
-    dataManager.addTable(tableSpec1);
-    dataManager.addTable(tableSpec2);
+    dataManager.addTable('test1', tableSpec1);
+    dataManager.addTable('test2', tableSpec2);
     expect(dataManager.toDictionary()).to.eql(expectedResult);
   });
   const viewSpec = {
-    name: 'view1', tableName: 'test1', columns: ['first_name', 'last_name'], filters: ['foo']
+    table: 'test1', columns: ['first_name', 'last_name'], filterNames: ['foo']
   };
   const expectedResult1 = {
     tables: {
@@ -425,7 +425,7 @@ describe('Data Manager Tests', () => {
     views: { view1: viewSpec }
   };
   it('Should add Views correctly and return the right dictionary', () => {
-    dataManager.addView(viewSpec);
+    dataManager.addView('view1', viewSpec);
     expect(dataManager.toDictionary()).to.eql(expectedResult1);
   });
   it('should not find any tables', async (done) => {
@@ -490,11 +490,11 @@ describe('Data Manager Tests', () => {
   const schema3 = [{ name: 'first_name', type: 'string' }, { name: 'age', type: 'number' }, { name: 'last_name', type: 'string' }];
   const tableSpec3 = { name: 'test3', columns: schema3, rows: rows2 };
   const dataManager1 = new GalyleoDataManager();
-  dataManager1.addTable(tableSpec1);
-  dataManager1.addTable(tableSpec3);
+  dataManager1.addTable('table1', tableSpec1);
+  dataManager1.addTable('table3', tableSpec3);
   it('should merge the numeric specs for all', async (done) => {
-    const numericSpec1 = await dataManager1.tables.test1.getNumericSpec('age');
-    const numericSpec3 = await dataManager1.tables.test3.getNumericSpec('age');
+    const numericSpec1 = await dataManager1.tables.table1.getNumericSpec('age');
+    const numericSpec3 = await dataManager1.tables.table3.getNumericSpec('age');
     const expectedResult = {
       min_val: Math.min(numericSpec1.min_val, numericSpec3.min_val),
       increment: Math.min(numericSpec1.increment, numericSpec3.increment),
