@@ -414,6 +414,7 @@ describe('Data Manager Tests', () => {
     dataManager.addTable('test1', tableSpec1);
     dataManager.addTable('test2', tableSpec2);
     expect(dataManager.toDictionary()).to.eql(expectedResult);
+    expect(dataManager.tableNames).to.eql(['test1', 'test2']);
   });
   const viewSpec = {
     table: 'test1', columns: ['first_name', 'last_name'], filterNames: ['foo']
@@ -427,6 +428,7 @@ describe('Data Manager Tests', () => {
   it('Should add Views correctly and return the right dictionary', () => {
     dataManager.addView('view1', viewSpec);
     expect(dataManager.toDictionary()).to.eql(expectedResult1);
+    expect(dataManager.viewNames).to.eql(['view1']);
   });
   it('should not find any tables', async (done) => {
     expect(await dataManager.getAllValues()).to.eql([]);

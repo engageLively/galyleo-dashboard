@@ -1,6 +1,7 @@
 import { resource } from 'lively.resources';
 import { signal } from 'lively.bindings';
 import Inspector, { inspect } from 'lively.ide/js/inspector.js';
+
 /*
 BSD 3-Clause License
 
@@ -997,6 +998,22 @@ export class GalyleoDataManager {
   clear () {
     this.tables = {};
     this.views = {};
+  }
+
+  /**
+   * Get the names of the tables, as a list
+   * @returns {[{string}]}
+   */
+  get tableNames () {
+    return Object.keys(this.tables);
+  }
+
+  /**
+   * Get the names of the views, as a list
+   * @returns {[{string}]}
+   */
+  get viewNames () {
+    return Object.keys(this.views);
   }
 
   /**
