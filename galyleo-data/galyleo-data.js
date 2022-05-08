@@ -376,7 +376,7 @@ class InRangeFilter extends PrimitiveFilter {
 /**
  * Check that a filterSpec is valid for a table.  This means that the column name maps to an actual
  * column in the table and, for a numeric filter, that the column type is a number
-  * @param {GalyleoTable} table
+ * @param {GalyleoTable} table
  * @param {filterSpec} FilterSpec
  * @returns true/false if this is/is not a valid FilterSpec
  */
@@ -1083,6 +1083,26 @@ export class GalyleoDataManager {
   }
 
   /**
+   * Get the type of a column, optionally with the tableName specified.
+   * @param {string} columnName: column to get all the types for
+   * @param {string?} tableName: if specified, look only at this table
+   * @returns {[string]} sorted list of all types for the columns
+   */
+  getColumnTypes (columnName, tableName = null) {
+    const keys = tableName ? [tableName] : Object.keys(this.tables);
+    const matchingTables = keys.map(key => this.tables[key]).filter(table => table);
+    const allTypes = matchingTables.map(table => table.getColumnType(columnName));
+    const result = [];
+    allTypes.forEach(type => {
+      if (type && result.indexOf(type) < 0) {
+        result.push(type);
+      }
+    });
+    result.sort();
+    return result;
+  }
+
+  /**
    * Get all the values for a column.  This is just an overlay on table.getAllValues() if the table is
    * specified, or it returns all the values for all the columns of that name over the dashboard if the table
    * is not specified
@@ -1136,5 +1156,15 @@ export class GalyleoDataManager {
       result.increment = Math.min(result.increment, tableResult.increment);
     }
     return result;
+  }
+
+  /**
+  * Prepare the data for a view or a table.  This is used by
+  * dashboard.displayPreview and dashboard.drawChart, to get the data ready to
+  * be plotted
+  * @param {string} viewOrTableName: name of the view or table to be plotted
+  */
+  prepareData (viewOrTable) {
+
   }
 }

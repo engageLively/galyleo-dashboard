@@ -416,6 +416,16 @@ describe('Data Manager Tests', () => {
     expect(dataManager.toDictionary()).to.eql(expectedResult);
     expect(dataManager.tableNames).to.eql(['test1', 'test2']);
   });
+  it('Should find the right column types 1', () => {
+    expect(dataManager.getColumnTypes('first_name')).to.eql(['string']);
+  });
+  it('Should find the right column types 2', () => {
+    log.push(dataManager.getColumnTypes('age'));
+    expect(dataManager.getColumnTypes('age')).to.eql(['number', 'string']);
+  });
+  it('Should find the right column types 3', () => {
+    // expect(dataManager.getColumnTypes('foo').to.eql([]));
+  });
   const viewSpec = {
     table: 'test1', columns: ['first_name', 'last_name'], filterNames: ['foo']
   };
