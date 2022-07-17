@@ -376,19 +376,25 @@ class InRangeFilter extends PrimitiveFilter {
 /**
  * Check that a filterSpec is valid for a table.  This means that the column name maps to an actual
  * column in the table and, for a numeric filter, that the column type is a number
- * @param {GalyleoTable} table
+  * @param {GalyleoTable} table
  * @param {filterSpec} FilterSpec
  * @returns true/false if this is/is not a valid FilterSpec
  */
 export function checkSpecValid (table, filterSpec) {
-  if (filterSpec.operator == 'IN_RANGE' || filterSpec.operator == 'IN_LIST') {
-    const index = table.getColumnIndex(filterSpec.column);
-    if (index < 0) {
-      return false;
+  try {
+    if (filterSpec.operator == 'IN_RANGE' || filterSpec.operator == 'IN_LIST') {
+      const index = table.getColumnIndex(filterSpec.column);
+      if (index < 0) {
+        return false;
+      }
+      return filterSpec.operator == 'IN_RANGE' ? table.columns[index].type == 'number' : true;
     }
-    return filterSpec.operator == 'IN_RANGE' ? table.columns[index].type == 'number' : true;
+    return filterSpec.arguments.reduce((acc, spec) => acc && checkSpecValid(table, spec), true);
+  } catch (err) {
+    console.log(filterSpec);
+    console.log(err);
+    return false;
   }
-  return filterSpec.arguments.reduce((acc, spec) => acc && checkSpecValid(table, spec), true);
 }
 
 /**
@@ -950,6 +956,20 @@ export class GalyleoView {
   }
 
   /**
+   * Get the column structures as a list, returning both type and name.  Returns a list of
+   * the form {type: type, name: name}
+   * param {Object <string, GalyleoTable>} tableDictionary: Dictionary of tables
+   */
+  fullColumns (tableDictionary) {
+    const table = tableDictionary[this.tableName];
+    if (!table) {
+      return undefined;
+    }
+    const columnIndexes = this._getColumnIndexes_(table);
+    return columnIndexes.map(index => table.columns[index]);
+  }
+
+  /**
    * Return the set of matching rows and columns from a table, given a list of
    * FilterNames and Specs, and a dictionary of tables.  *Note that if a table
    * without this.tableName is NOT in the dictionary, returns undefined
@@ -964,14 +984,17 @@ export class GalyleoView {
       return undefined;
     }
     const columnIndexes = this._getColumnIndexes_(table);
-    const getSelectedColumns = row => row.filter((item, index) => columnIndexes.indexOf(index) >= 0);
+    // const getSelectedColumns = row => row.filter((item, index) => columnIndexes.indexOf(index) >    0);
+    const reorderRow = row => columnIndexes.map(index => row[index]);
+
     if (columnIndexes.length <= 0) {
       return undefined;
     }
     const actualFilter = this._getFilter_(filterSpecs, table);
 
     const rows = await table.getFilteredRows(actualFilter);
-    const rowsToSend = rows.map(row => getSelectedColumns(row));
+    // const rowsToSend = rows.map(row => getSelectedColumns(row));
+    const rowsToSend = rows.map(row => reorderRow(row));
     return rowsToSend;
   }
 }
@@ -1083,26 +1106,6 @@ export class GalyleoDataManager {
   }
 
   /**
-   * Get the type of a column, optionally with the tableName specified.
-   * @param {string} columnName: column to get all the types for
-   * @param {string?} tableName: if specified, look only at this table
-   * @returns {[string]} sorted list of all types for the columns
-   */
-  getColumnTypes (columnName, tableName = null) {
-    const keys = tableName ? [tableName] : Object.keys(this.tables);
-    const matchingTables = keys.map(key => this.tables[key]).filter(table => table);
-    const allTypes = matchingTables.map(table => table.getColumnType(columnName));
-    const result = [];
-    allTypes.forEach(type => {
-      if (type && result.indexOf(type) < 0) {
-        result.push(type);
-      }
-    });
-    result.sort();
-    return result;
-  }
-
-  /**
    * Get all the values for a column.  This is just an overlay on table.getAllValues() if the table is
    * specified, or it returns all the values for all the columns of that name over the dashboard if the table
    * is not specified
@@ -1156,15 +1159,5 @@ export class GalyleoDataManager {
       result.increment = Math.min(result.increment, tableResult.increment);
     }
     return result;
-  }
-
-  /**
-  * Prepare the data for a view or a table.  This is used by
-  * dashboard.displayPreview and dashboard.drawChart, to get the data ready to
-  * be plotted
-  * @param {string} viewOrTableName: name of the view or table to be plotted
-  */
-  prepareData (viewOrTable) {
-
   }
 }
