@@ -466,6 +466,14 @@ export class GalyleoTable {
   }
 
   /**
+   * The names of the table's columns, as a list
+   */
+
+  get columnNames() {
+    return this.columns.map(column => column.name)
+  }
+
+  /**
    * Register an update listener.  This should be a function which is called with a single updateListener
    * argument; the listener  will get called when the table is updated
    * @parameter {GalyleoUpdateListenerObject} listener
@@ -513,6 +521,16 @@ export class GalyleoTable {
     const index = this.getColumnIndex(columnName);
     return index < 0 ? null : this.columns[index].type;
   }
+
+   /**
+   * Get all the columns of one of the specified types, or all of the columns of any type
+   * @param {[string]} typeList
+   * @returns [string] list of column names
+   */
+    getColumnsOfTypes(typeList) {
+      const columnMatches = column => typeList.length > 0? typeList.indexOf(column.type) >= 0:true;
+      return this.columns.filter(column => columnMatches(column)).map(column => column.name)
+    }
 
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
@@ -591,6 +609,7 @@ export class GalyleoTable {
   /**
      * getNumericSpec: returns the numeric spec for a column, to set up numeric filters
      * @param {string} columnName name of the column to get the numeric spec for
+     * @returns {NumericSpec}
      */
 
   async getNumericSpec (columnName) {
@@ -902,9 +921,9 @@ export function constructGalyleoTable (name, galyleoTableSpec) {
 /**
  * @typedef GalyleoViewSpec.  Dictionary Specification of a GalyleoView.
  * @property {string} name -- name of the view
- * @property {string} tableName -- name of the table that this view subsets
+ * @property {string} table -- name of the table that this view subsets
  * @property {[string]} columns -- The names of the columns of the table represented in this view
- * @property {[string]} filters -- The names of the filters for this column
+ * @property {[string]} filterNames -- The names of the filters for this column
  */
 
 /**
@@ -1160,4 +1179,55 @@ export class GalyleoDataManager {
     }
     return result;
   }
+
+  /**
+   * Get all the columns of one of the specified types, or all of the columns of any type
+   * @param {[string]} typeList
+   * @param {string?} tableName
+   * @returns [string] list of column names
+   */
+  getColumnsOfTypes(typeList, tableName) {
+    if (tableName && this.tables[tableName]) {
+      return this.tables[tableName].getColumnsOfTypes(typeList)
+    }
+    const result = []
+    Object.keys(this.tables).forEach(table => {
+      this.tables[table].getColumnsOfTypes(typeList).forEach(columnName => {
+        if (result.indexOf(columnName) < 0) {
+          result.push(columnName)
+        }
+      })
+    })
+    return result;
+  }
+
+  /**
+   * Get all the types for a column name, optionally restricted to 
+   * a single table
+   * @param {string} columnName
+   * @param {string?} tableName
+   * @returns [string] list of types
+   */
+  getTypes(columnName, tableName = null) {
+    if (tableName && this.tables[tableName]) {
+      return [this.tables[tableName].getColumnType(columnName)]
+    } else {
+      const hasColumn = (table, columnName) => table.columnNames.indexOf(columnName) >= 0
+      const tableNamesWithColumn = this.tableNames.filter(name => hasColumn(this.tables[name], columnName))
+      if (tablesWithColumn.length == 0) {
+        return []
+      }
+      const tablesWithColumn = tableNamesWithColumn.map(name => this.tables[name])
+      const result = [tablesWithColumn[0].getColumnType()]
+      tablesWithColumn.slice(1).forEach(table => {
+        const colType = table.getColumnType(columnName);
+        if (result.indexOf(colType) < 0) {
+          result.push(colType)
+        }
+      })
+      return result
+    }
+
+  }
+
 }

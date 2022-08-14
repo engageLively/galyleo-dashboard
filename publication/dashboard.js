@@ -1,12 +1,13 @@
-/*global URLSearchParams*/
-import googleCharts from "users/robin/uploads/chart-loader.js";
-import { Morph } from "lively.morphic/morph.js";
-import { resource } from "lively.resources/index.js";
-import { Color, pt, Rectangle, Point } from "lively.graphics/index.js";
-import { ShadowObject, morph } from "lively.morphic/index.js";
-import { connect } from "lively.bindings/index.js";
-import { promise, obj } from "lively.lang/index.js";
-import { ExpressionSerializer } from "lively.serializer2/index.js";
+/* global URLSearchParams */
+import googleCharts from 'users/robin/uploads/chart-loader.js';
+import { Morph } from 'lively.morphic/morph.js';
+import { resource } from 'lively.resources/index.js';
+import { Color, pt, Rectangle, Point } from 'lively.graphics/index.js';
+import { ShadowObject, morph } from 'lively.morphic/index.js';
+import { connect } from 'lively.bindings/index.js';
+import { promise, obj } from 'lively.lang/index.js';
+import { ExpressionSerializer } from 'lively.serializer2/index.js';
+import { GalyleoDataManager, GalyleoView } from 'galyleo-data/galyleo-data.js';
 
 export default class PublishedDashboard extends Morph {
   static get properties () {
@@ -66,6 +67,8 @@ export default class PublishedDashboard extends Morph {
     if (logo) {
       this.addMorph(logo);
     }
+    this._ensureDataManager_();
+    this.dataManager.clear();
   }
 
   async _initURLPrompt_ (url, message) {
@@ -388,12 +391,12 @@ export default class PublishedDashboard extends Morph {
       this.tables = {};
       Object.keys(storedForm.tables).forEach(tableName => {
         this.addTable({ name: tableName, table: storedForm.tables[tableName] });
-        this.dataManager.addTable(tableName, storedForm.tables[tableName])
+        this.dataManager.addTable(tableName, storedForm.tables[tableName]);
       });
       this.views = {};
       Object.keys(storedForm.views).forEach(viewName => {
         this.views[viewName] = storedForm.views[viewName];
-        this.dataManager.views[viewName] = storedForm.views[viewName]
+        this.dataManager.views[viewName] = new GalyleoView(storedForm.views[viewName]);
       });
       // charts and filters have been initialized to empty dictionaries by
       // clear
@@ -748,9 +751,10 @@ export default class PublishedDashboard extends Morph {
   //    galyleoColumn: {type, name}
   // returns:
   //    {type, id, label}
-  __createGVizColumn__(galyleoColumn) {
-    return {id: galyleoColumn.name, label:galyleoColumn.name, type:galyleoColumn.type}
+  __createGVizColumn__ (galyleoColumn) {
+    return { id: galyleoColumn.name, label: galyleoColumn.name, type: galyleoColumn.type };
   }
+
   // Prepare the data for a view or a table.  This is used by
   // displayPreview and drawChart, to get the data ready to be plotted
   // parameters:
@@ -760,13 +764,13 @@ export default class PublishedDashboard extends Morph {
   async prepareDataWithDataManager (viewOrTable) {
     if (this.dataManager.tableNames.indexOf(viewOrTable) >= 0) {
       const table = this.dataManager.tables[viewOrTable];
-      const columns = table.columns.map(column =>  this.__createGVizColumn__(column));
+      const columns = table.columns.map(column => this.__createGVizColumn__(column));
       const rows = await table.getRows();
-      const result =  new this.gViz.DataTable(columns);
+      const result = new this.gViz.DataTable({ cols: columns });
       result.addRows(rows);
       return result;
     } else if (this.dataManager.viewNames.indexOf(viewOrTable) >= 0) {
-      return this.__prepareViewDataWithDataManager__(viewOrTable);
+      return await this.__prepareViewDataWithDataManager__(viewOrTable);
     } else {
       return null;
     }
@@ -837,12 +841,15 @@ export default class PublishedDashboard extends Morph {
   // parameters:
   //   view: a View structure created by the View Editor and stored as a value
   //         in this.views
+  //    useDataManager: a boolean which tells us whether to use the data manager
   // returns:
   //    a list of objects suitable for use by GoogleDataTable.getFilteredRows()
-  __getFiltersForView__ (view) {
+  __getFiltersForView__ (view, useDataManager = false) {
     // const filters = view.filterList.map(filter => filter.filter).concat(view.filterNames.map(name => this.__getFilterForName__(name)));
-    const filters = view.filterNames.map(name => this.__getFilterForName__(name));
-    return filters.filter(filter => this.__filterValid__(filter));
+    const filterForName = name => useDataManager ? this.__getDataManagerFilterForName__(name) : this.__getFilterForName__(name);
+    const filters = view.filterNames.map(name => filterForName(name));
+    // return filters.filter(filter => this.__filterValid__(filter));
+    return filters;
   }
 
   // Prepare the data for a view.  A view has an underlying table,
@@ -890,19 +897,20 @@ export default class PublishedDashboard extends Morph {
   //   viewName: The name of the view to turn into a DataView object
   // returns:
   //    The data view object ready to be displayed.
-  __prepareViewDataWithDataManager__ (viewName) {
+  async __prepareViewDataWithDataManager__ (viewName) {
     const aView = this.dataManager.views[viewName];
     if (!aView) {
       return;
     }
-    const filterSpecs = {}
+    const filterSpecs = {};
     aView.filters.forEach(filterName => {
-      filterSpecs[filterName] = this.__getDataManagerFilterForName__(filterName) 
-    })
+      filterSpecs[filterName] = this.__getDataManagerFilterForName__(filterName);
+    });
     const columns = aView.fullColumns(this.dataManager.tables).map(column => this.__createGVizColumn__(column));
-    const result = new this.gViz.DataTable(columns)
-    const rows = aView.getData(filterSpecs, this.dataManager.tables)
+    const result = new this.gViz.DataTable({ cols: columns });
+    const rows = await aView.getData(filterSpecs, this.dataManager.tables);
     result.addRows(rows);
+    return result;
   }
 
   /* -- Code that deals with Charts.  This takes care of prepping chart titles,
@@ -925,6 +933,21 @@ export default class PublishedDashboard extends Morph {
     }
   }
 
+  // Hack!  A utility to get column names for a table, independent of
+  // whether it's a Google Table or a Galyleo Table
+  // parameters:
+  //    table: a table which is either aGoogle Table or a Galyleo Table
+  // returns: 
+  //    an ordered list of the column names
+  _getColumnNames_ (table) {
+    if (table.hasOwnProperty('cols')) {
+      // Google table!
+      return table.cols.map(col => col.id);
+    } else {
+      return table.columns.map(column => column.name);
+    }
+  }
+
   // make the title corresponding to a table.  This is used by a chart
   // when the chart is drawn.  Called by __makeTitle__.  Returns a string
   // which is the title.  The string will be of the form
@@ -934,10 +957,39 @@ export default class PublishedDashboard extends Morph {
   // returns:
   //    the string which is the title.
   __makeTitleForTable__ (aTable, tableName) {
-    const seriesColumns = aTable.cols.slice(1).map(col => col.id);
+    const columns = this._getColumnNames_(aTable);
+    // const seriesColumns = aTable.cols.slice(1).map(col => col.id);
     // const headerString = seriesColumns.join(', ');
     // return `${headerString} v ${aTable.cols[0].id}`;
-    return this.__makeHeaderString__(aTable.cols[0].id, seriesColumns, tableName);
+    // return this.__makeHeaderString__(aTable.cols[0].id, seriesColumns, tableName);
+    return this.__makeHeaderString__(columns[0], columns.slice(1), tableName);
+  }
+
+  __filterString__ (filter) {
+    const fields = Object.keys(filter);
+    if (fields.indexOf('column') >= 0) {
+      if (fields.indexOf('values') >= 0) {
+        if (filter.values.length == 0) {
+          return null;
+        } else if (filter.values.length == 1) {
+          return `${filter.column} = ${filter.values[0]}`;
+        } else {
+          return `${filter.column} in ${filter.values}`;
+        }
+      }
+      if (fields.indexOf('max_value') >= 0) {
+        return `${filter.max_value} >= ${filter.column} >= ${filter.min_value}`;
+      }
+      return null;
+    } else {
+      const columnName = filter.columnName;
+      if (fields.indexOf('value') >= 0) {
+        return `${columnName} = ${filter.value}`;
+      } else if (fields.indexOf('minValue') >= 0) {
+        return `${filter.maxValue} >= ${columnName} >= ${filter.minValue}`;
+      }
+      return null;
+    }
   }
 
   // make the title corresponding to a view.  This is used by a chart
@@ -949,14 +1001,16 @@ export default class PublishedDashboard extends Morph {
   // parameters:
   //    a table which is a value in this.views
   //    The name of the table/view
+  //    A flag which tells us whether to use the data manager
   // returns:
   //    The string which is the title.
+  // viewName = 'Pct v Party'; aView = this.dataManager.views[viewName], useDataManager = true
 
-  __makeTitleForView__ (aView, viewName) {
+  __makeTitleForView__ (aView, viewName, useDataManager) {
     const seriesColumns = aView.columns.slice(1);
     const headerString = this.__makeHeaderString__(aView.columns[0], seriesColumns, viewName);
-    const filters = this.__getFiltersForView__(aView);
-    const filterString = filter => {
+    const filters = this.__getFiltersForView__(aView, useDataManager);
+    /* const filterString = filter => {
       const fields = Object.keys(filter);
       const columnName = filter.columnName;
       if (fields.indexOf('value') >= 0) {
@@ -965,9 +1019,9 @@ export default class PublishedDashboard extends Morph {
         return `${filter.maxValue} >= ${columnName} >= ${filter.minValue}`;
       }
       return null;
-    };
+    }; */
     if (filters.length > 0) {
-      const filterStrings = filters.map(filter => filterString(filter));
+      const filterStrings = filters.map(filter => this.__filterString__(filter));
       const realStrings = filterStrings.filter(string => string);
       const joinedString = realStrings.join(', ');
       return `${headerString} where ${joinedString}`;
@@ -991,22 +1045,28 @@ export default class PublishedDashboard extends Morph {
       return;
     }
     let title; const name = chart.viewOrTable;
-    if (this.tableNames.indexOf(name) >= 0) {
-      title = this.__makeTitleForTable__(this.tables[name], name);
-    } else if (this.viewNames.indexOf(chart.viewOrTable) >= 0) {
-      title = this.__makeTitleForView__(this.views[name], name);
+    const useDataManager = !!this.dataManager;
+    const tableDict = useDataManager ? this.dataManager.tables : this.tables;
+    const viewDict = useDataManager ? this.dataManager.views : this.views;
+    const tableNames = Object.keys(tableDict);
+    const viewNames = Object.keys(viewDict);
+
+    if (tableNames.indexOf(name) >= 0) {
+      title = this.__makeTitleForTable__(tableDict[name], name);
+    } else if (viewNames.indexOf(chart.viewOrTable) >= 0) {
+      title = this.__makeTitleForView__(viewDict[name], name, useDataManager);
     } else {
       return null;
     }
     chart.options.title = title;
   }
-  
+
   // ensure a data manager.  This is called from onLoad(), and
   // loadDashboardFromURL.  Just makes sure that there is a DataManager available
-  
-  _ensureDataManager_() {
+
+  _ensureDataManager_ () {
     if (!this.dataManager) {
-      this.dataManager = new GalyleoDataManager()
+      this.dataManager = new GalyleoDataManager();
     }
   }
 
@@ -1179,7 +1239,7 @@ export default class PublishedDashboard extends Morph {
       chart.filter = filter;
     } */
     const dataTable = await this.prepareDataWithDataManager(chart.viewOrTable);
-    const dataManagerFilter = await this.__prepareChartDataManagerFilter__(chart.viewOrTable)
+    const dataManagerFilter = await this.__prepareChartDataManagerFilter__(chart.viewOrTable);
     if (!(chart.dataManagerFilter && chart.dataManagerFilter.column == dataManagerFilter.column)) {
       chart.dataManagerFilter = dataManagerFilter;
     }
@@ -1244,11 +1304,11 @@ export default class PublishedDashboard extends Morph {
   //    the name of the chart to be drawn.
   // this.drawChart('PartyPercentChart')undefined
 
-  drawChart (chartName) {
+  async drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
     this.__makeTitle__(chart);
-    const wrapper = this.__makeWrapper__(chart, chartName);
+    const wrapper = await this.__makeWrapper__(chart, chartName);
     this.lastWrapper = wrapper;
     chart.chartMorph.drawChart(wrapper);
   }
@@ -1329,12 +1389,13 @@ export default class PublishedDashboard extends Morph {
   //   the dataManagerFilter object for the chart, to be added to the specification.
   async __prepareChartDataManagerFilter__ (viewOrTableName) {
     let tableName;
-    const dataManagerFilter = {operator: "IN_LIST"}
+    const dataManagerFilter = { operator: 'IN_LIST' };
     if (this.dataManager.views[viewOrTableName]) {
       const view = this.dataManager.views[viewOrTableName];
-      dataManagerFilter.column = view.columns[0]
-      tableName =view.tableName
+      dataManagerFilter.column = view.columns[0];
+      tableName = view.tableName;
     } else if (this.dataManager.tables[viewOrTableName]) {
+      const table = this.dataManager.tables[viewOrTableName];
       dataManagerFilter.column = table.columns[0].name;
       tableName = viewOrTableName;
     } else {
@@ -1342,7 +1403,7 @@ export default class PublishedDashboard extends Morph {
     }
     const values = await this.dataManager.getAllValues(dataManagerFilter.column, tableName);
     if (values && values.length > 0) {
-      dataManagerFilter.values =[ values[0]];
+      dataManagerFilter.values = [values[0]];
     }
     return dataManagerFilter;
   }
@@ -1534,19 +1595,5 @@ export default class PublishedDashboard extends Morph {
     return result.sort();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

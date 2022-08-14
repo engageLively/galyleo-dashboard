@@ -1562,15 +1562,18 @@ class Dashboard extends Morph {
   async makeFilterMorph (columnName, filterType, filterPart, tableName = null) {
     const morph = await resource(filterPart).read();
     if (filterType == 'Range') {
-      const parameters = this.__getRangeParameters__(columnName, tableName);
-      morph.init(columnName, tableName, parameters.min, parameters.max, parameters.increment);
+      // const parameters = this.__getRangeParameters__(columnName, tableName);
+      // morph.init(columnName, tableName, parameters.min, parameters.max, parameters.increment);
+      const parameters = await this.dataManager,getNumericSpec(columnName, tableName)
+      morph.init(columnName, tableName, parameters.min_val, parameters.max_val, parameters.increment);
     } else if (filterType == 'NumericSelect') {
       // Numeric values, with a max, min, and an increment between them.  The
       // idea is that we offer a numeric object, e.g., a slider, which lets
       // the viewer pick any value between max and min, separated by increment
       // Notice this works best when the column is regularly incrementd
       // Get all the values, throw out the non-numbers, and sort in ascending order
-      let values = this.__getAllValues__(columnName, tableName);
+      // let values = this.__getAllValues__(columnName, tableName);
+      let values = await this.dataManager.getAllValues(columnName, tableName);
 
       values = values.map(value => Number(value)).filter(value => !isNaN(value));
       values.sort((a, b) => a - b);
@@ -1585,9 +1588,11 @@ class Dashboard extends Morph {
       // see galyleo/SliderFilter for an example of this filter
       morph.init(columnName, tableName, values[0], values[values.length - 1], differences[0]);
     } else {
-      const types = this.__getTypes__(columnName, tableName);
+      // const types = this.__getTypes__(columnName, tableName);
+      const types = this.dataManager.getTypes(columnName, tableName)
       const isString = types && types.length == 1 && types[0] == 'string';
-      const values = this.__getAllValues__(columnName);
+      // const values = this.__getAllValues__(columnName);
+      const values = await this.dataManager.getAllValues(columnName, tableName);
       morph.init(columnName, values, tableName, isString);
     }
     return morph;
@@ -1647,7 +1652,7 @@ class Dashboard extends Morph {
   async createViewEditor (viewName) {
     // viewName must exist as a key in views: this is checked by the caller,
     // but suspenders and belt
-    if (this.viewNames.indexOf(viewName) < 0) {
+    if (this.dataManager.viewNames.indexOf(viewName) < 0) {
       return;
     }
     if (!this.viewBuilders) {
@@ -1699,6 +1704,37 @@ class Dashboard extends Morph {
     }
   }
 
+  // Convert a GalyleoColumn to a Google Viz Column
+  // Should migrate into a Google-specific library
+  // parameters:
+  //    galyleoColumn: {type, name}
+  // returns:
+  //    {type, id, label}
+  __createGVizColumn__(galyleoColumn) {
+    return {id: galyleoColumn.name, label:galyleoColumn.name, type:galyleoColumn.type}
+  }
+
+  // Prepare the data for a view or a table.  This is used by
+  // displayPreview and drawChart, to get the data ready to be plotted
+  // parameters:
+  //   viewOrTable: the name of the Table/View to prepare the data for
+  // returns:
+  //   a DataView or DataTable object
+  async prepareDataWithDataManager (viewOrTable) {
+    if (this.dataManager.tableNames.indexOf(viewOrTable) >= 0) {
+      const table = this.dataManager.tables[viewOrTable];
+      const columns = table.columns.map(column =>  this.__createGVizColumn__(column));
+      const rows = await table.getRows();
+      const result =  new this.gViz.DataTable({cols: columns});
+      result.addRows(rows);
+      return result;
+    } else if (this.dataManager.viewNames.indexOf(viewOrTable) >= 0) {
+      return await this.__prepareViewDataWithDataManager__(viewOrTable);
+    } else {
+      return null;
+    }
+  }
+
   // Preview a view or table
   // Shows the data in the Table/View in a window, using the Google Table
   // chart to show the data.
@@ -1732,6 +1768,23 @@ class Dashboard extends Morph {
       return this.filters[widgetOrChartName].morph.filter;
     } else if (this.charts[widgetOrChartName]) {
       return this.charts[widgetOrChartName].filter;
+    } else {
+      return null;
+    }
+  }
+
+    // get a filter for a name.  The name is either the name of a filter
+  // or the name of a chart, and so check both lists and return the filter
+  // appropriately.  Used by __prepareDataForViewDataManager__
+  // parameters:
+  //   widgetOrChartName: the name of a widget or a chart
+  // returns:
+  //   the associated filter object (or null if not found)
+  __getDataManagerFilterForName__ (widgetOrChartName) {
+    if (this.filters[widgetOrChartName]) {
+      return this.filters[widgetOrChartName].morph.dataManagerFilter;
+    } else if (this.charts[widgetOrChartName]) {
+      return this.charts[widgetOrChartName].dataManagerFilter;
     } else {
       return null;
     }
@@ -1809,6 +1862,32 @@ class Dashboard extends Morph {
 
     dataView.setColumns(columnIndexes);
     return dataView;
+  }
+
+  // Prepare the data for a view using the data manager.  A view has an underlying table,
+  // named filters.  This method takes
+  // the underlying table, uses the named columns of the view to
+  // get the columns of the table, then runs all the filters over the
+  // table to get the underlying rows, returning this in a Google Data View
+  // object.  Used by prepareDataWithDataManager
+  // parameters:
+  //   viewName: The name of the view to turn into a DataView object
+  // returns:
+  //    The data view object ready to be displayed.
+  async __prepareViewDataWithDataManager__ (viewName) {
+    const aView = this.dataManager.views[viewName];
+    if (!aView) {
+      return;
+    }
+    const filterSpecs = {}
+    aView.filters.forEach(filterName => {
+      filterSpecs[filterName] = this.__getDataManagerFilterForName__(filterName) 
+    })
+    const columns = aView.fullColumns(this.dataManager.tables).map(column => this.__createGVizColumn__(column));
+    const result = new this.gViz.DataTable({cols: columns})
+    const rows = await aView.getData(filterSpecs, this.dataManager.tables)
+    result.addRows(rows);
+    return result;
   }
 
   /* -- Code that deals with Charts.  This takes care of prepping chart titles,
@@ -1994,6 +2073,9 @@ class Dashboard extends Morph {
     if (goAhead) {
       delete this.views[viewName];
       this.dashboardController.update();
+      if (this.dataManager) {
+        delete this.dataManager.views[viewName]
+      }
     }
   }
 
@@ -2174,7 +2256,7 @@ class Dashboard extends Morph {
 
   addView (viewName, viewSpec) {
     this.views[viewName] = viewSpec;
-    this.dashboardManager.addView(viewSpec);
+    this.dashboardManager.addView(viewName, viewSpec);
     if (this.dashboardController) {
       this.dashboardController.update();
     }
@@ -2278,14 +2360,19 @@ class Dashboard extends Morph {
   // NB: wrappers are incompatible with the serializer, since they store the
   //     HTML Div of the chart.  Do not serialize.
 
-  __makeWrapper__ (chart, chartName) {
+  async __makeWrapper__ (chart, chartName) {
     // this.__makeWrapper__(this.charts[this.chartNames[0]])
-    const dataTable = this.prepareData(chart.viewOrTable);
+    /* const dataTable = this.prepareData(chart.viewOrTable);
     if (!dataTable) return null;
     const filter = this.__prepareChartFilter__(chart.viewOrTable);
     if (!filter) return null;
     if (!(chart.filter && chart.filter.columnName == filter.columnName)) {
       chart.filter = filter;
+    } */
+    const dataTable = await this.prepareDataWithDataManager(chart.viewOrTable);
+    const dataManagerFilter = await this.__prepareChartDataManagerFilter__(chart.viewOrTable)
+    if (!(chart.dataManagerFilter && chart.dataManagerFilter.column == dataManagerFilter.column)) {
+      chart.dataManagerFilter = dataManagerFilter;
     }
     const wrapper = new this.gViz.ChartWrapper({
       chartType: chart.chartType,
@@ -2293,7 +2380,8 @@ class Dashboard extends Morph {
     });
     this.lastChartType = [chart.chartType, wrapper.getType()];
     wrapper.setDataTable(dataTable);
-    this.gViz.events.addListener(wrapper, 'select', e => { this.__updateChartFilter__(e, wrapper, chartName); });
+    // this.gViz.events.addListener(wrapper, 'select', e => { this.__updateChartFilter__(e, wrapper, chartName); });
+    this.gViz.events.addListener(wrapper, 'select', e => { this.__updateChartDataManagerFilter__(e, wrapper, chartName); });
     return wrapper;
   }
 
@@ -2318,6 +2406,27 @@ class Dashboard extends Morph {
     }
   }
 
+  // log chart events
+  __updateChartDataManagerFilter__ (e, wrapper, chartName) {
+    const chart = wrapper.getChart();
+    const table = wrapper.getDataTable();
+    const selection = chart.getSelection();
+    const row = selection[0].row == null ? null : selection[0].row;
+    const col = selection[0].col == null ? 0 : selection[0].col;
+    const value = table.getValue(row, col);
+    if (this.charts[chartName].dataManagerFilter) {
+      this.charts[chartName].dataManagerFilter.values = [value];
+      this.drawAllCharts();
+    }
+
+    const record = { event: e, wrapper: wrapper, chart: chart, value: value, name: chartName };
+    if (!this.__chartEvents__) {
+      this.__chartEvents__ = [record];
+    } else {
+      this.__chartEvents__.push(record);
+    }
+  }
+
   // Draw a chart.  This routine is very simple: get the chart for chartName,
   // make its title (this can't be made until just before the chart is drawn,
   // because the title incorporates filter values), make its wrapper, then
@@ -2330,7 +2439,7 @@ class Dashboard extends Morph {
     const chart = this.charts[chartName];
     if (!chart) return;
     this.__makeTitle__(chart);
-    const wrapper = this.__makeWrapper__(chart, chartName);
+    const wrapper = await this.__makeWrapper__(chart, chartName);
     if (wrapper) {
       this.lastWrapper = wrapper;
       chart.chartMorph.drawChart(wrapper);
@@ -2355,7 +2464,7 @@ class Dashboard extends Morph {
     const editor = new this.gViz.ChartEditor();
     const chart = this.charts[chartName];
     if (!chart) return;
-    const wrapper = this.__makeWrapper__(chart, chartName);
+    const wrapper = await this.__makeWrapper__(chart, chartName);
     if (!wrapper) return;
     this.gViz.events.addListener(editor, 'ok', () => {
       const wrapperOut = editor.getChartWrapper();
@@ -2391,6 +2500,7 @@ class Dashboard extends Morph {
       this.dashboardController.update();
     }
     chartSpecification.filter = this.__prepareChartFilter__(chartSpecification.viewOrTable);
+    chartSpecification.dataManagerFilter = await this.__prepareChartDataManagerFilter__(chartSpecification.viewOrTable);
     this.drawChart(chartName);
     if (editChartStyle) {
       this.editChartStyle(chartName);
@@ -2427,6 +2537,38 @@ class Dashboard extends Morph {
       filter.value = values[0];
     }
     return filter;
+  }
+
+  // create a Data Manager Filter for a chartSpecification, to add to the chart record.
+  // Every chart is a Select filter, since clicking on the chart selects
+  // an item from its category axis.  For example, clicking on a region
+  // on a Geo Chart selects the region, clicking on a pie chart selects
+  // the item represented by the wedge, and so on.  The category axis is
+  // always column 0 of  the view/table, so we get that.  The __makeWrapper__
+  // method attaches an event handler to update the value field of the filter.
+  // parameters:
+  //   viewOrTable: the name of the underlying view or table
+  // returns:
+  //   the dataManagerFilter object for the chart, to be added to the specification.
+  async __prepareChartDataManagerFilter__ (viewOrTableName) {
+    let tableName;
+    const dataManagerFilter = {operator: "IN_LIST"}
+    if (this.dataManager.views[viewOrTableName]) {
+      const view = this.dataManager.views[viewOrTableName];
+      dataManagerFilter.column = view.columns[0]
+      tableName =view.tableName
+    } else if (this.dataManager.tables[viewOrTableName]) {
+      const table = this.dataManager.tables[viewOrTableName];
+      dataManagerFilter.column = table.columns[0].name;
+      tableName = viewOrTableName;
+    } else {
+      return null;
+    }
+    const values = await this.dataManager.getAllValues(dataManagerFilter.column, tableName);
+    if (values && values.length > 0) {
+      dataManagerFilter.values =[ values[0]];
+    }
+    return dataManagerFilter;
   }
 
   // get a morph for the chart with name chartName.  This is called by addChart.
@@ -2487,27 +2629,7 @@ class Dashboard extends Morph {
   // only once in this list.
 
   getColumnsOfType (typeList = [], tableName = null) {
-    // this.getColumnsOfType(['number'])
-    // this.tables
-    const typeMatches = (type, typeList) => typeList.length == 0 || (typeList.indexOf(type) >= 0);
-    if (!typeList) {
-      typeList = [];
-    }
-    if (!this.tables) {
-      return [];
-    }
-    let columns = this.__allColumns__();
-    if (tableName) {
-      columns = columns.filter(column => column.tableName == tableName);
-    }
-    columns = columns.filter(column => typeMatches(column.type, typeList));
-    const result = [];
-    columns.forEach(column => {
-      if (result.indexOf(column.name) < 0) {
-        result.push(column.name);
-      }
-    });
-    return result;
+    this.dataManager.getColumnsOfTypes(typeList, tableName)
   }
 
   // Return the records for all of the columns with a specific name (records in
