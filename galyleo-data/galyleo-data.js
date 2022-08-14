@@ -958,6 +958,15 @@ export class GalyleoView {
   }
 
   /**
+   * get the names of the filters of this view. Just an alias for filters,
+   * for backwards compatibility
+   * @returns [String]   
+   */
+   get filterNames () {
+    return this.filters;
+  }
+
+  /**
    * Return the set of constructed filters from a FilterDictionary
    * Internal use only, broken out separately for debugging and testing.
    * @param {FilterDictionary} filterSpecs: the specifications of the filters to be used
