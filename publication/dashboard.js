@@ -965,6 +965,17 @@ export default class PublishedDashboard extends Morph {
     return this.__makeHeaderString__(columns[0], columns.slice(1), tableName);
   }
 
+  // Make a string for a filter.  This just returns a string which displays what
+  // the filter is doing; e.g., a select filter which picks a value v on column
+  // will return column = v. Used by __makeTitleForView__
+  // parameters:
+  //    filter: either a Data Manager filter or a legacy filter, the filter to
+  //             return the string for
+  // returns:
+  //      an explanatory string
+
+ 
+
   __filterString__ (filter) {
     const fields = Object.keys(filter);
     if (fields.indexOf('column') >= 0) {
