@@ -469,8 +469,8 @@ export class GalyleoTable {
    * The names of the table's columns, as a list
    */
 
-  get columnNames() {
-    return this.columns.map(column => column.name)
+  get columnNames () {
+    return this.columns.map(column => column.name);
   }
 
   /**
@@ -522,15 +522,15 @@ export class GalyleoTable {
     return index < 0 ? null : this.columns[index].type;
   }
 
-   /**
+  /**
    * Get all the columns of one of the specified types, or all of the columns of any type
    * @param {[string]} typeList
    * @returns [string] list of column names
    */
-    getColumnsOfTypes(typeList) {
-      const columnMatches = column => typeList.length > 0? typeList.indexOf(column.type) >= 0:true;
-      return this.columns.filter(column => columnMatches(column)).map(column => column.name)
-    }
+  getColumnsOfTypes (typeList) {
+    const columnMatches = column => typeList.length > 0 ? typeList.indexOf(column.type) >= 0 : true;
+    return this.columns.filter(column => columnMatches(column)).map(column => column.name);
+  }
 
   /**
      * getFilteredRows: returns the rows of the table which pass a filter
@@ -962,7 +962,7 @@ export class GalyleoView {
    * for backwards compatibility
    * @returns [String]   
    */
-   get filterNames () {
+  get filterNames () {
     return this.filters;
   }
 
@@ -1195,18 +1195,18 @@ export class GalyleoDataManager {
    * @param {string?} tableName
    * @returns [string] list of column names
    */
-  getColumnsOfTypes(typeList, tableName) {
+  getColumnsOfTypes (typeList, tableName) {
     if (tableName && this.tables[tableName]) {
-      return this.tables[tableName].getColumnsOfTypes(typeList)
+      return this.tables[tableName].getColumnsOfTypes(typeList);
     }
-    const result = []
+    const result = [];
     Object.keys(this.tables).forEach(table => {
       this.tables[table].getColumnsOfTypes(typeList).forEach(columnName => {
         if (result.indexOf(columnName) < 0) {
-          result.push(columnName)
+          result.push(columnName);
         }
-      })
-    })
+      });
+    });
     return result;
   }
 
@@ -1217,26 +1217,24 @@ export class GalyleoDataManager {
    * @param {string?} tableName
    * @returns [string] list of types
    */
-  getTypes(columnName, tableName = null) {
+  getTypes (columnName, tableName = null) {
     if (tableName && this.tables[tableName]) {
-      return [this.tables[tableName].getColumnType(columnName)]
+      return [this.tables[tableName].getColumnType(columnName)];
     } else {
-      const hasColumn = (table, columnName) => table.columnNames.indexOf(columnName) >= 0
-      const tableNamesWithColumn = this.tableNames.filter(name => hasColumn(this.tables[name], columnName))
-      if (tablesWithColumn.length == 0) {
-        return []
+      const hasColumn = (table, columnName) => table.columnNames.indexOf(columnName) >= 0;
+      const tableNamesWithColumn = this.tableNames.filter(name => hasColumn(this.tables[name], columnName));
+      if (tableNamesWithColumn.length == 0) {
+        return [];
       }
-      const tablesWithColumn = tableNamesWithColumn.map(name => this.tables[name])
-      const result = [tablesWithColumn[0].getColumnType()]
+      const tablesWithColumn = tableNamesWithColumn.map(name => this.tables[name]);
+      const result = [tablesWithColumn[0].getColumnType()];
       tablesWithColumn.slice(1).forEach(table => {
         const colType = table.getColumnType(columnName);
         if (result.indexOf(colType) < 0) {
-          result.push(colType)
+          result.push(colType);
         }
-      })
-      return result
+      });
+      return result;
     }
-
   }
-
 }
