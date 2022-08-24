@@ -1,8 +1,8 @@
 import { GalyleoSideBar } from '../../side-bar.cp.js';
-import { component } from 'lively.morphic/components/core.js';
 import { pt } from 'lively.graphics';
+import { component, part } from 'lively.morphic';
 
-// GalyleoSideBarJp.openInWorld()
+// part(GalyleoSideBarJp).openInWorld()
 const GalyleoSideBarJp = component(GalyleoSideBar, {
   name: 'galyleo/side bar/jp',
   extent: pt(324.8, 668),
@@ -31,16 +31,16 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             textAndAttributes: ['フィルル', null]
           }]
         }, {
-          name: 'charts tab',
-          submorphs: [{
-            name: 'tab label',
-            textAndAttributes: ['チャート', null]
-          }]
-        }, {
           name: 'views tab',
           submorphs: [{
             name: 'tab label',
             textAndAttributes: ['ビュウー', null]
+          }]
+        }, {
+          name: 'charts tab',
+          submorphs: [{
+            name: 'tab label',
+            textAndAttributes: ['チャート', null]
           }]
         }]
       },
