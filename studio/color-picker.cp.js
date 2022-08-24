@@ -1,11 +1,9 @@
 import { ColorPicker } from 'lively.ide/styling/color-picker.cp.js';
-import { component, add } from 'lively.morphic/components/core.js';
+import { Color, pt, rect } from 'lively.graphics';
+import { TilingLayout, component, add } from 'lively.morphic';
 import { GalyleoDropDown, GalyleoTextInput, GalyleoNumberInput, GalyleoDropDownList } from './shared.cp.js';
-import { Color } from 'lively.graphics/color.js';
-import { pt, rect } from 'lively.graphics/geometry-2d.js';
-import { TilingLayout } from 'lively.morphic';
 
-// GalyleoColorPicker.openInWorld()
+// GalyleoColorPicker.edit()
 const GalyleoColorPicker = component(ColorPicker, {
   name: 'galyleo/color picker',
   borderRadius: { topLeft: 10, topRight: 10, bottomLeft: 3, bottomRight: 3 },

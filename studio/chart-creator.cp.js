@@ -1,10 +1,9 @@
-import { ViewModel, without, part, add, component } from 'lively.morphic/components/core.js';
-import { GalyleoWindow, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
-import { pt, Color } from 'lively.graphics';
+import { ViewModel, without, part, add, component } from 'lively.morphic';
+import { pt, Color, rect } from 'lively.graphics';
+import { connect } from 'lively.bindings';
 import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
-import { rect } from 'lively.graphics/geometry-2d.js';
-import { connect } from 'lively.bindings/index.js';
+import { GalyleoWindow, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
 
 /**
  * The second generation of chart builder.  Very simple.  Consists of two
