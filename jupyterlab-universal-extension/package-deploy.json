@@ -78,6 +78,7 @@
   },
   "jupyterlab": {
     "extension": true,
+    "schemaDir": "schema",
     "outputDir": "lively-universal-extension/labextension"
   },
   "jupyter-releaser": {

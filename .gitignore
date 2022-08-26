@@ -18,6 +18,10 @@ jupyterlab-universal-extension/lib/editor.d.ts
 jupyterlab-universal-extension/lib/editor.js
 jupyterlab-universal-extension/lib/manager.d.ts
 jupyterlab-universal-extension/lib/manager.js
+jupyterlab-universal-extension/lib/extension.d.ts
+jupyterlab-universal-extension/lib/extension.js
+jupyterlab-universal-extension/lib/constants.d.ts
+jupyterlab-universal-extension/lib/constants.js
 jupyterlab-universal-extension/package-lock.json
 jupyterlab-universal-extension/package.json
 .devcontainer/add-notice.sh
@@ -29,3 +33,4 @@ jupyterlab-universal-extension/.devcontainer/docker-compose.yml
 jupyterlab-universal-extension/.devcontainer/Dockerfile
 jupyterlab-universal-extension/.ipynb_checkpoints/untitled.gd-checkpoint.json
 jupyterlab-universal-extension/@engageLively/galyleo/package.json
+studio/dashboard1.js
