@@ -1,6 +1,5 @@
 import { GalyleoTopBar } from '../../top-bar.cp.js';
-import { component } from 'lively.morphic/components/core.js';
-import { Icon } from 'lively.morphic';
+import { Icon, component } from 'lively.morphic';
 
 // GalyleoTopBarJp.openInWorld();
 const GalyleoTopBarJp = component(GalyleoTopBar, {

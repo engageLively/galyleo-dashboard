@@ -540,10 +540,10 @@ class SliderWithValueModel extends ViewModel {
               target: 'value input',
               signal: 'decrement',
               handler: () => {
-                this.models.slider.decrementValue(); 
+                this.models.slider.decrementValue();
               }
             },
-            
+
             {
               target: 'value input',
               signal: 'increment',
@@ -609,7 +609,7 @@ class DoubleSliderWithValuesModel extends ViewModel {
               target: 'min input',
               signal: 'decrement',
               handler: () => {
-                this.models.doubleSlider.decrementMinValue(); 
+                this.models.doubleSlider.decrementMinValue();
               }
             },
             {
@@ -750,7 +750,9 @@ const SliderInputLabel = component({
   ]
 });
 
-connect(SliderInputLabel.getSubmorphNamed('sliderValue'), 'onInput', SliderInputLabel, 'onInput');
+// turn this into a view model
+// const C = SliderInputLabel.getComponent();
+// connect(C.getSubmorphNamed('sliderValue'), 'onInput', SliderInputLabel, 'onInput');
 
 // part(Slider).openInWorld()
 const Slider = component({
@@ -846,14 +848,14 @@ const SliderWithValue = component({
       name: 'slider',
       submorphs: [{
         name: 'knob',
-        position: pt(84.4,0)
-      }] 
+        position: pt(84.4, 0)
+      }]
     }), part(SliderInputLabel, { name: 'value input' }), {
       name: 'indicator',
       borderColor: Color.rgb(23, 160, 251),
       borderRadius: 31,
       extent: pt(49.5, 47.8),
-      fill: Color.rgba(255,76,76,0.54)
+      fill: Color.rgba(255, 76, 76, 0.54)
     }
   ]
 });

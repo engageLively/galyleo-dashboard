@@ -1,5 +1,15 @@
 {
   "name": "galyleo-dashboard",
   "version": "0.1.0",
-  "main": "studio/index.js"
+  "main": "studio/index.js",
+  "type": "module",
+  "dependencies": {
+    "@rollup/plugin-json": "4.1.0",
+    "rollup": "^2.70.2",
+    "rollup-plugin-polyfill-node": "0.9.0",
+    "rollup-plugin-export-default": "1.4.0"
+  },
+  "scripts": {
+    "build": ". ../scripts/lively-next-flatn-env.sh; lively_next_flatn_env $(dirname \"$(pwd)\"); export FLATN_DEV_PACKAGE_DIRS=$FLATN_DEV_PACKAGE_DIRS:$(pwd); node --inspect --no-warnings --experimental-import-meta-resolve --experimental-loader ../flatn/resolver.mjs build.mjs"
+  }
 }

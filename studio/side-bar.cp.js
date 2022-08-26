@@ -301,7 +301,7 @@ export class EntityControlModel extends ViewModel {
           this.ui.entryList.items = items;
         },
         get () {
-          return this.ui.entryList.items;
+          return this.ui.entryList?.items;
         }
       },
       bindings: {
@@ -418,7 +418,7 @@ export class ViewControlModel extends EntityControlModel {
 
 // GalyleoPropertiesPanel.get('clip mode selector').owner.master.auto.derivedMorph.ownerChain()
 // PropertiesPanel.openInWorld()
-// GalyleoPropertiesPanel.openInWorld()
+// GalyleoPropertiesPanel.edit()
 // m = GalyleoPropertiesPanel.get('background fill input')
 // m.master._overriddenProps.get(m)
 const GalyleoPropertiesPanel = component(PropertiesPanel, {
@@ -644,16 +644,17 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
     name: 'effects control',
     visible: true,
     master: GalyleoPropertySection,
-    viewModel: new GalyleoBodyControlModel({
+    defaultViewModel: GalyleoBodyControlModel,
+    viewModel: {
       activeSectionComponent: GalyleoPropertySection,
       hoverSectionComponent: GalyleoPropertySection,
       inactiveSectionComponent: GalyleoPropertySectionInactive,
       dynamicPropertyComponent: GalyleoDynamicProperty
-    })
+    }
   }]
 });
 
-// ControlPanel.openInWorld()
+// ControlPanel.edit()
 const ControlPanel = component({
   name: 'control panel',
   extent: pt(262.6, 238.8),
@@ -720,7 +721,7 @@ const ControlPanel = component({
   ]
 });
 
-// GalyleoSideBar.openInWorld()
+// part(GalyleoSideBarControls)
 const GalyleoSideBarControls = component({
   name: 'galyleo/side bar controls',
   clipMode: 'hidden',
@@ -814,7 +815,7 @@ const GalyleoSideBarControls = component({
     submorphs: [
       part(ControlPanel, {
         name: 'chart control',
-        viewModel: new ChartControlModel(),
+        viewModelClass: ChartControlModel,
         submorphs: [{
           name: 'v wrapper',
           submorphs: [{
@@ -831,7 +832,7 @@ const GalyleoSideBarControls = component({
       }),
       part(ControlPanel, {
         name: 'view control',
-        viewModel: new ViewControlModel(),
+        viewModelClass: ViewControlModel,
         position: pt(288.5, 233.5),
         submorphs: [{
           name: 'v wrapper',
@@ -849,7 +850,7 @@ const GalyleoSideBarControls = component({
       }),
       part(ControlPanel, {
         name: 'table control',
-        viewModel: new TableControlModel(),
+        viewModelClass: TableControlModel,
         position: pt(12.7, 510.6),
         submorphs: [{
           name: 'v wrapper',
@@ -867,7 +868,7 @@ const GalyleoSideBarControls = component({
       }),
       part(ControlPanel, {
         name: 'filter control',
-        viewModel: new FilterControlModel(),
+        viewModelClass: FilterControlModel,
         position: pt(16.8, 258.7),
         submorphs: [{
           name: 'v wrapper',
@@ -941,10 +942,10 @@ const GalyleoSideBarControls = component({
   })]
 });
 
-// GalyleoSideBar.openInWorld()
+// part(GalyleoSideBar)
 // GalyleoSideBar.get('background fill input').master._overriddenProps.get(GalyleoSideBar.get('background fill input'))
 const GalyleoSideBar = component({
-  defaultViewModel: DashboardControl,
+  viewModelClass: DashboardControl,
   name: 'galyleo/side bar',
   layout: new TilingLayout({
     axis: 'column',
