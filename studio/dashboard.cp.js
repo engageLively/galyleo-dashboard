@@ -8,7 +8,7 @@ import { resource } from 'lively.resources/src/helpers.js';
 import { pt, Rectangle, Point, Color, rect } from 'lively.graphics/index.js';
 
 import { LoadingIndicator } from 'lively.components';
-import { obj, promise, arr } from 'lively.lang';
+import { obj, promise, arr, string } from 'lively.lang';
 import { connect } from 'lively.bindings/index.js';
 import { getClassName } from 'lively.serializer2/class-helper.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
@@ -17,7 +17,8 @@ import { GalyleoSearch } from './inputs/search.cp.js';
 import { NamedFilter, SelectFilter } from './filters.cp.js';
 import { ViewBuilder } from './view-creator.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
-import { checkSpecValid, GalyleoDataManager } from '../data/galyeo-data.js';
+
+import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 
 // import './jupiter-drive-resource.js';
 
@@ -193,7 +194,7 @@ const LoadDialog = component(GalyleoWindow, {
 });
 
 export class Dashboard extends ViewModel {
-  /** 
+  /**
    * Properties.
    * 1. Tables: a dictionary of the tables for this dashboard.  Each table
    *    is a Google Data Table.  See:
@@ -667,7 +668,7 @@ export class Dashboard extends ViewModel {
    * sure that the path we have reflects the current state of the drive.  This could
    * have been done in the extension code, but doing it here gives us more insight
    * into what is going on. In any case, do nothing if our current file is unaffected,
-   * change the currentFilePath if it is affected 
+   * change the currentFilePath if it is affected
    * @param { object } drive - The JupyterLab drive.  See: https://jupyterlab.readthedocs.io/en/stable/api/classes/services.drive-1.html
    * @param { object } changedInfo - The current change to the drive.  See https://jupyterlab.readthedocs.io/en/stable/api/interfaces/services.contents.ichangedargs.html
    */
@@ -1267,7 +1268,7 @@ export class Dashboard extends ViewModel {
     try {
       this.clear();
       const snapObject = snapshot.toObject();
-      
+
       this.dataManager.tables = snapObject.tables.toObject();
       this.dataManager.views = snapObject.views.toObject();
       const descriptors = this._getObjectsFromSnapshot_(snapObject);
@@ -1415,7 +1416,7 @@ export class Dashboard extends ViewModel {
   /**
    * Copy fields from a descriptor to a morph.  This is the mirror of _getFields_.
    * Similar to Object.assign() but copies only specific fields
-   * Used by _restoreFromSaved_ 
+   * Used by _restoreFromSaved_
    * @param { Morph } morph - Morph to copy contents to.
    * @param { object } descriptor - The descriptor to copy from.
    * @param { object[] } fields - The fields to copy. This is a list of the form [{name, validCheck, default}] and __getField__ returns the value to be used for each field (the value given if valid, default if not)
@@ -1436,7 +1437,7 @@ export class Dashboard extends ViewModel {
 
   /**
    * The actual body of restoreFromJSONForm.  Broken out as a separate
-   * routine for testing. 
+   * routine for testing.
    * @param { object } storedForm - An object created by _perpareSerialization
    */
   async _restoreFromSaved (storedForm) {
@@ -1630,7 +1631,6 @@ export class Dashboard extends ViewModel {
 
   /* -- Utility code to explore the global data structures  -- */
 
-
   /**
    * The keys of the tables property
    */
@@ -1816,10 +1816,10 @@ export class Dashboard extends ViewModel {
       return result;
     } else if (this.dataManager.viewNames.indexOf(viewOrTable) >= 0) {
       return await this.__prepareViewData__(viewOrTable);
-       } else {
+    } else {
       return null;
-       }
     }
+  }
 
   /**
    * Initialize a view editor.  Just register it as the viewBuilder for this
@@ -1835,7 +1835,7 @@ export class Dashboard extends ViewModel {
     editor.center = this.canvas.globalBounds().center();
     editor.init(viewName, this);
   }
-  
+
   /**
    * Preview a view or table
    * Shows the data in the Table/View in a window, using the Google Table
@@ -1919,8 +1919,6 @@ export class Dashboard extends ViewModel {
     return filtersInView.filter(filter => this._filterValid(filter, table));
   }
 
-  
-
   /**
    * Prepare the data for a view.  A view has an underlying table,
    * named filters, a list of internal filters.  This method takes
@@ -1972,7 +1970,7 @@ export class Dashboard extends ViewModel {
   // whether it's a Google Table or a Galyleo Table
   // parameters:
   //    table: a table which is either aGoogle Table or a Galyleo Table
-  // returns: 
+  // returns:
   //    an ordered list of the column names
   _getColumnNames (table) {
     if (table.hasOwnProperty('cols')) {
@@ -1983,7 +1981,7 @@ export class Dashboard extends ViewModel {
     }
   }
 
-   /**
+  /**
    * Make the title corresponding to a table.  This is used by a chart
    * when the chart is drawn.  Called by __makeTitle__.  Returns a string
    * which is the title.  The string will be of the form
@@ -2057,7 +2055,7 @@ export class Dashboard extends ViewModel {
     }
   }
 
-   /**
+  /**
     * make a title for the chart.  This will product a title of the form:
     * "<Data Series List> v <X Axis Name> where <filterValues>", where
     * <Data Series List> is just the names of the data series columns, comma-
@@ -2128,7 +2126,7 @@ export class Dashboard extends ViewModel {
       }
     }
   }
-  
+
   /**
    * Delete a filter, first checking to see if it's used in any View.
    * @param { string } filterName - The name of the filter to be removed.
@@ -2220,7 +2218,7 @@ export class Dashboard extends ViewModel {
   //   if (window.EXTENSION_INFO && window.EXTENSION_INFO.currentFilePath && window.EXTENSION_INFO.currentFilePath.length > 0) {
   //     this.checkAndLoad(window.EXTENSION_INFO.currentFilePath);
   //   }
-  // 
+  //
   //   this.gCharts.setOnLoadCallback(() => { });
   //   this._initializeJupyterLabCallbacks();
   //   this.dirty = false;
@@ -2233,7 +2231,6 @@ export class Dashboard extends ViewModel {
     this.dashboardController = controller;
     await this.__loadGoogleChartPackages__();
     ['charts', 'filters'].forEach(prop => {
-
       if (!this[prop]) {
         this[prop] = {};
       }
@@ -2254,6 +2251,7 @@ export class Dashboard extends ViewModel {
     await promise.waitFor(20 * 1000, () => !!window.google);
     await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
   }
+
   /**
    * Each datatable is represented as a Google Chart Data Table
    * and a name, which identifies it here.  This is called internally;
@@ -2313,7 +2311,6 @@ export class Dashboard extends ViewModel {
     }
     this.dirty = true;
   }
-
 
   /**
    * A simple routine to consistency-check a dashboard.   This should
@@ -2412,7 +2409,7 @@ export class Dashboard extends ViewModel {
    * 3. Setting the wrapper's DataTable to the view.
    * After this, the wrapper is returned to be drawn or edited.
    * This is used by drawChart and by editChartStyle
-   * @note 
+   * @note
    * Wrappers are incompatible with the serializer, since they store the HTML Div of the chart. Do not serialize.
    * @param { object } chart - The chart to make the wrapper for.
    * @param { string } chartName - The name of the chart.
@@ -2531,7 +2528,7 @@ export class Dashboard extends ViewModel {
     if (this.dashboardController) {
       this.dashboardController.update();
     }
-    //chartSpecification.filter =                this._prepareChartFilter(chartSpecification.viewOrTable);
+    // chartSpecification.filter =                this._prepareChartFilter(chartSpecification.viewOrTable);
     chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
     this.drawChart(chartName);
     if (editChartStyle) {
@@ -2576,7 +2573,7 @@ export class Dashboard extends ViewModel {
    * Get a morph for the chart with name chartName.  This is called by addChart.
    * It's essentially just building the chart from the googleChartMorph resource,
    * initializing it by passing in the chartName and this, the dashboard it belongs
-   * to, adding it to this and setting its position to the top-left corner.  
+   * to, adding it to this and setting its position to the top-left corner.
    * @param { string } chartName - The name to find/create the chart morph for
    * @returns { Morph } The new morph.
    */
@@ -2647,7 +2644,6 @@ export class Dashboard extends ViewModel {
   __showLog__ () {
     window.alert(this.__log__.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
-  
 }
 
 export { LoadDialog, SaveDialog };

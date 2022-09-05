@@ -1085,7 +1085,7 @@ export class SelectFilterMorph extends Morph {
   }
 }
 
-// SelectFilter.openInWorld()
+// part(SelectFilter).openInWorld()
 const SelectFilter = component(VisualFilter, {
   name: 'select filter',
   type: SelectFilterMorph,
