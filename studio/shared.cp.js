@@ -378,7 +378,6 @@ export class GalyleoListMorph extends Morph {
       list.extent = this.extent.addXY(20, 20);
       scrollBar.height = (list.height - 25) * list.height / list.scrollExtent.y;
       this._positionScrollbar(list.scroll.y);
-      await Promise.all(this.items.map(({ morph }) => morph.master && morph.master.whenReady()));
       this.items.map(m => {
         m.morph.width = this.width - 10;
         if (m.editMode !== this.editMode) m.editMode = this.editMode;
