@@ -126,11 +126,11 @@ export class FilterBuilderModel extends ViewModel {
    * @returns { string[] } A list of column names which match the types the filter can accept.
    */
   getColumns (filterType) {
-    return this.dashboard ? this.dashboard.getColumnsOfType([]) : [];
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfType([]) : [];
   }
 
   getColumnsOfType (typeArray) {
-    return this.dashboard ? this.dashboard.getColumnsOfType(typeArray) : [];
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfType(typeArray) : [];
   }
 
   viewDidLoad () {

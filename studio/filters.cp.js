@@ -109,6 +109,18 @@ export class BooleanFilterMorph extends Morph {
   }
 
   /**
+   * Return the filter as a JavaScript object.  Per the requirement in
+   * GoogleDataTable.getFilteredRows(), this must have a value field.  It also
+   * has a columnName field, which processing in the Dashboard (see
+   * _prepareFilters) turns into a columnIndex given the identity of the table
+   * being used for the filter.
+   */
+
+  get dataManagerFilter () {
+    return { column: this.columnName, operator: 'IN_LIST', values: [this.getSubmorphNamed('aToggle').state] };
+  }
+
+  /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
    */
@@ -240,6 +252,17 @@ export class DateFilterMorph extends Morph {
   get filter () {
     return { columnName: this.columnName, value: this.datePicker.selectedDate };
   }
+
+   /**
+   * Return the filter as a JavaScript object.  Per the requirement in
+   * GoogleDataTable.getFilteredRows(), this must have a value field.  It also
+   * has a columnName field, which processing in the Dashboard (see
+   * _prepareFilters) turns into a columnIndex given the identity of the table
+   * being used for the filter.
+   */
+    get dataManagerFilter () {
+      return { column: this.columnName, operator: 'IN_LIST', values: [this.datePicker.selectedDate] };
+    }
 
   /**
    * Return a short string describing the filter.  This is used to show the
@@ -403,6 +426,18 @@ export class DoubleSliderFilterMorph extends Morph {
   }
 
   /**
+   * Return the filter as a JavaScript object to be used by the DataManager.
+   * Per the requirement in GalyleoFilter, this must have a min_val and a
+   * max_val field.  It also has a column field, with the column name.  The
+   * operator is IN_RANGE
+   */
+
+  get dataManagerFilter () {
+    const range = this.getSubmorphNamed('doubleSlider').range;
+    return { operator: 'IN_RANGE', column: this.columnName, max_val: range.max, min_val: range.min };
+  }
+
+  /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
    */
@@ -546,6 +581,18 @@ export class ListFilterMorph extends Morph {
     return { columnName: this.columnName, value: valueValue };
   }
 
+  /**
+   * Return the filter as a JavaScript object for use with the data manager.
+   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * object with operator 'IN_LIST', column: this.columnName, values: [this.valueField]
+   */
+
+  get dataManagerFilter () {
+    const valueField = this.valueList.selection;
+    const valueValue = this.isString ? `"${valueField}"` : valueField;
+    return { operator: 'IN_LIST', column: this.columnName, values: [valueValue] };
+  }
+
   get filterString () {
     return `${this.columnName} = ${this.valueList.selection}`;
   }
@@ -640,6 +687,15 @@ export class NamedFilterMorph extends Morph {
    */
   get filter () {
     return this.filterMorph.filter;
+  }
+
+  /**
+   * Implement the dataManagerFilter property, which just pulls the dataManagerFilter property
+   * from the embedded filterMorph
+   */
+
+  get dataManagerFilter () {
+    return this.filterMorph.dataManagerFilter;
   }
 
   /**
@@ -854,6 +910,19 @@ export class RangeFilterMorph extends Morph {
   }
 
   /**
+   * Return the filter as a JavaScript object for use with the dataManager.
+   * Per the requirement in galyleo-data.RangeFilter, returns an 
+   * object with operator 'IN_RANGE', column: this.columnName,
+   * max_val, min_val.
+   */
+
+  get dataManagerFilter () {
+    const min = this._inputValue('min');
+    const max = this._inputValue('max');
+    return { operator: 'IN_RANGE', column: this.columnName, max_val: max, min_val: min };
+  }
+
+  /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
    */
@@ -1047,6 +1116,19 @@ export class SelectFilterMorph extends Morph {
   }
 
   /**
+   * Return the filter as a JavaScript object for use with the dataManager.
+   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * object with operator 'IN_LIST', column: this.columnName,
+   * values = [this.valueList.selection]
+   */
+
+  get dataManagerFilter () {
+    const valueField = this.valueList.selection;
+    const valueValue = this.isString ? `"${valueField}"` : valueField;
+    return { operator: 'IN_LIST', column: this.columnName, values: [valueValue] };
+  }
+
+  /**
    * Return a short string describing the filter.  This is used to show the
    * action of the filter in chart titles, etc.
    */
@@ -1195,6 +1277,17 @@ export class SliderFilterMorph extends Morph {
    */
   get filter () {
     return { columnName: this.columnName, value: this.slider.value };
+  }
+
+  /**
+   * Return the filter as a JavaScript object for use with the dataManager.
+   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * object with operator 'IN_LIST', column: this.columnName,
+   * values = [slider.value]
+   */
+
+  get dataManagerFilter () {
+    return { operator: 'IN_LIST', column: this.columnName, values: [this.getSubmorphNamed('slider').value] };
   }
 
   /**
