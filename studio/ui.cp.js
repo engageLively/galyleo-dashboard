@@ -437,7 +437,7 @@ const GalyleoDashboardStudio = component({
   submorphs: [
     part(GalyleoTopBar, { name: 'top bar' }),
     {
-      viewModel: new Dashboard(),
+      defaultViewModel: Dashboard,
       name: 'dashboard',
       extent: pt(715.4, 788.5),
       position: pt(0.9, 48.8),
