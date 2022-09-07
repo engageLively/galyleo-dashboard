@@ -393,158 +393,10 @@ export class Dashboard extends ViewModel {
       this.charts[chartName].chartMorph.remove();
     });
     this.charts = {};
-    this.removeAllMorphs();
+    this.view.removeAllMorphs();
     this.dirty = false;
     if (this.dashboardController) {
       this.dashboardController.update();
-    }
-  }
-
-  // converts the filePath into a jupyterlab:// resource, checks if
-  // the file exists, and checks to ensure if its contents are a valid
-  // Galyleo intermediate form.  If all of that passes, sets the currentFilePath
-  // to the file input and loads the stored form.  If anything fails, throws up
-  // an alert.  Returns true if everything worked, false otherwise
-  // Called from  LoadDialog.load() and this.loadDashboard()
-  // parameters:
-  //   filePath: path to the Galyleo file
-
-  async checkAndLoad (filePath) {
-    const jupyterLabURL = resource(`jupyterlab://${filePath}`);
-    if (await jupyterLabURL.exists()) {
-      const dashboardContents = await jupyterLabURL.read();
-      if (dashboardContents.length == 0) {
-        // new file
-        this.clear();
-        window.EXTENSION_INFO.currentFilePath = filePath;
-        this._updateProjectName_();
-        return true;
-      }
-      const check = this.checkJSONForm(dashboardContents);
-      if (check.valid) {
-        this.restoreFromJSONForm(dashboardContents);
-        window.EXTENSION_INFO.currentFilePath = filePath;
-        this._updateProjectName_();
-        this.l2lRoomName = filePath;
-        this._rejoinL2LRoom_();
-        return true;
-      } else {
-        $world.alert(check.message);
-        return false;
-      }
-    } else {
-      // should we create if it doesn't exist?  discuss.  Easy to do; take
-      // creation code from checkAndSave
-      $world.alert(`${filePath} does not exist`);
-      return false;
-    }
-  }
-
-  // The current set of test dashboards.  To load a test,
-  // this.loadDashboardFromURL(this.testDashboards.name)
-  // It's an object, and needs to be maintained as the test
-
-  get testDashboards () {
-    const dashboards = ['morphsample', 'mtbf_mttr_dashboard', 'test_one', 'testempty', 'testsolid', 'simple_test_table'];
-    const result = {};
-    const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
-    dashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
-    return result;
-  }
-
-  // Convenience method to load a test dashboard easily by name
-
-  loadTestDashboard (dashboardName) {
-    const dashboardUrl = this.testDashboards[dashboardName];
-    if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
-  }
-
-  // load a dashboard from an URL.  Uses checkAndLoad to do the actual work.
-  // This is primarily to support testing -- test dashboards have URLs.  ATM,
-  // no parameters or options aside from the URL; if there are other use cases
-  // these can be added later.
-  // parameters:
-  //    anURL -- the URL to load from
-
-  async loadDashboardFromURL (anURL = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/mtbf_mttr_dashboard.gd.json') {
-    try {
-      const jsonForm = await resource(anURL).readJson();
-      const check = this.checkIntermediateForm(jsonForm);
-      if (check.valid) {
-        await this._restoreFromSaved_(jsonForm);
-      } else {
-        $world.alert(check.message);
-      }
-    } catch (error) {
-      $world.alert(`Error loading from ${anURL}`);
-    }
-  }
-
-  // load a dashboard, optionally from a given path, and optionally
-  // prompting from a file dialog.  Uses checkAndLoad to do the heavy lifting
-  // This is called from the JupyterLab extension.
-  // if showDialog = true and the filePath is non-empty, uses the path
-  // as an initial value for the load dialog
-  // parameters:
-  //   showDialog: get the file name to load from the user,
-  //   path: the file path to load.  Optionally empty
-  async loadDashboardFromFile (filePath, showDialog) {
-    if (this.dirty) {
-      if (!await this.confirm('Warning!  Unsaved changes in current dashboard.  Proceed anyway?')) {
-        return;
-      }
-    }
-    if (showDialog) {
-      const dialog = await resource('part://$world/galyleo/loadDialog').read();
-      dialog.init(this, filePath);
-      dialog.openInWorld();
-    } else {
-      this.checkAndLoad(filePath);
-    }
-  }
-
-  // converts the filePath into a jupyterlab:// resource, checks if
-  // the file exists.  If it doesn't  but the directory exists, create
-  // the file, writes the stored form, and updates the current file path.
-  // to the file input and loads the stored form.  If anything fails, throws up
-  // an alert.  Returns true if everything worked, false otherwise
-  // Called from  SaveDialog.save() and this.saveDashboard()
-  // parameters:
-  //   filePath: path to the Galyleo file
-
-  async checkAndSave (filePath) {
-    const jupyterLabURL = resource(`jupyterlab://${filePath}`);
-    if (!await jupyterLabURL.exists()) {
-      try {
-        await jupyterLabURL.createFile();
-      } catch (error) {
-        window.alert(`Could not create ${filePath} because: ${error}`);
-        return false;
-      }
-    }
-    window.EXTENSION_INFO.currentFilePath = filePath;
-    jupyterLabURL.write(this.prepareJSONForm());
-    this._updateProjectName_();
-    this.dirty = false;
-    return true;
-  }
-
-  // save a dashboard,  optionally
-  // prompting from a file dialog.  Uses checkAndSave to do the heavy lifting
-  // This is called from the JupyterLab extension.
-  // if showDialog = true or the filePath is empty, displays the dialog.  if the
-  // file path is non-empty, uses the path as an initial value for the save dialog
-  // parameters:
-  //   showDialog: get the file name to save from the user,
-  async saveDashboardToFile (showDialog) {
-    const filePath = window.EXTENSION_INFO.currentFilePath;
-    const needToShowDialog = !(filePath && filePath.length > 0);
-    if (showDialog || needToShowDialog) {
-      const dialog = await resource('part://$world/galyleo/saveDialog').read();
-      dialog.init(this, filePath);
-      dialog.openInWorld();
-    } else {
-      this.checkAndSave(filePath);
     }
   }
 
@@ -684,72 +536,12 @@ export class Dashboard extends ViewModel {
   /* -- Code which clears, stores, and loads dashboards from file -- */
 
   /**
-   * Clear the dashboard of all charts, views, tables, and filters.  This
-   * is used in new, and also internally by restoreFromJSONForm.
-   */
-  clear () {
-    this.tables = {};
-    this.views = {};
-    this.filterNames.forEach(filterName => {
-      this.filters[filterName].morph.remove();
-    });
-    this.canvas.fill = Color.rgb(255, 255, 255);
-    this.filters = {};
-    this.chartNames.forEach(chartName => {
-      this.charts[chartName].chartMorph.remove();
-    });
-    this.charts = {};
-    this.canvas.removeAllMorphs();
-    this.dirty = false;
-    if (this.dashboardController) {
-      this.dashboardController.update();
-    }
-  }
-
-  /**
-   * converts the filePath into a jupyterlab:// resource, checks if
-   * the file exists, and checks to ensure if its contents are a valid
-   * Galyleo intermediate form.  If all of that passes, sets the currentFilePath
-   * to the file input and loads the stored form.  If anything fails, throws up
-   * an alert.  Returns true if everything worked, false otherwise
-   * Called from  LoadDialog.load() and this.loadDashboard()
-   * @param { string } filePath -  The path to the Galyleo file
-   */
-  async checkAndLoad (filePath) {
-    const jupyterLabURL = resource(`jupyterlab://${filePath}`);
-    if (await jupyterLabURL.exists()) {
-      const dashboardContents = await jupyterLabURL.read();
-      if (dashboardContents.length === 0) {
-        // new file
-        this.clear();
-        this._updateProjectName(filePath);
-        return true;
-      }
-      const check = this.checkJSONForm(dashboardContents);
-      if (check.valid) {
-        this.restoreFromJSONForm(dashboardContents);
-        this._updateProjectName(filePath);
-        this.l2lRoomName = filePath;
-        return true;
-      } else {
-        $world.alert(check.message);
-        return false;
-      }
-    } else {
-      // should we create if it doesn't exist?  discuss.  Easy to do; take
-      // creation code from checkAndSave
-      $world.alert(`${filePath} does not exist`);
-      return false;
-    }
-  }
-
-  /**
    * The current set of test dashboards.  To load a test,
    * this.loadDashboardFromURL(this.testDashboards.name)
    * It's an object, and needs to be maintained as the test
    */
   get testDashboards () {
-    const dashboards = ['morphsample', 'mtbf_mttr_dashboard', 'test_one', 'testempty', 'testsolid'];
+    const dashboards = ['morphsample', 'mtbf_mttr_dashboard', 'test_one', 'testempty', 'testsolid', 'simple_test_table'];
     const result = {};
     const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
     dashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
@@ -773,86 +565,17 @@ export class Dashboard extends ViewModel {
    * these can be added later.
    * @param { string } anURL - The URL to load from.
    */
-  async loadDashboardFromURL (anURL) {
+  async loadDashboardFromURL (anURL = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/mtbf_mttr_dashboard.gd.json') {
     try {
       const jsonForm = await resource(anURL).readJson();
       const check = this.checkIntermediateForm(jsonForm);
       if (check.valid) {
-        this._restoreFromSaved(jsonForm);
+        await this._restoreFromSaved(jsonForm);
       } else {
         $world.alert(check.message);
       }
     } catch (error) {
       $world.alert(`Error loading from ${anURL}`);
-    }
-  }
-
-  /**
-   * Load a dashboard, optionally from a given path, and optionally
-   * prompting from a file dialog.  Uses checkAndLoad to do the heavy lifting
-   * This is called from the JupyterLab extension.
-   * if showDialog = true and the filePath is non-empty, uses the path
-   * as an initial value for the load dialog.
-   * @param { string } filePath - The file path to load.  Optionally empty.
-   * @param { boolean } showDialog - Get the file name to load from the user
-   */
-  async loadDashboardFromFile (filePath, showDialog) {
-    if (this.dirty) {
-      if (!await this.confirm('Warning!  Unsaved changes in current dashboard.  Proceed anyway?')) {
-        return;
-      }
-    }
-    if (showDialog) {
-      const dialog = part(LoadDialog);
-      dialog.init(this, filePath);
-      dialog.openInWorld();
-    } else {
-      this.checkAndLoad(filePath);
-    }
-  }
-
-  /**
-   * Converts the filePath into a jupyterlab:// resource, checks if
-   * the file exists.  If it doesn't  but the directory exists, create
-   * the file, writes the stored form, and updates the current file path.
-   * to the file input and loads the stored form.  If anything fails, throws up
-   * an alert.  Returns true if everything worked, false otherwise
-   * Called from  SaveDialog.save() and this.saveDashboard().
-   * @param { string } filePath - Path to the Galyleo file
-   */
-  async checkAndSave (filePath) {
-    const jupyterLabURL = resource(`jupyterlab://${filePath}`);
-    if (!await jupyterLabURL.exists()) {
-      try {
-        await jupyterLabURL.createFile();
-      } catch (error) {
-        window.alert(`Could not create ${filePath} because: ${error}`);
-        return false;
-      }
-    }
-    jupyterLabURL.write(this.prepareJSONForm());
-    this._updateProjectName(filePath);
-    this.dirty = false;
-    return true;
-  }
-
-  /**
-   * Save a dashboard,  optionally
-   * prompting from a file dialog.  Uses checkAndSave to do the heavy lifting
-   * This is called from the JupyterLab extension.
-   * if showDialog = true or the filePath is empty, displays the dialog.  if the
-   * file path is non-empty, uses the path as an initial value for the save dialog
-   * @param { boolean } showDialog - Get the file name to save from the user
-   */
-  saveDashboardToFile (showDialog) {
-    const filePath = window.EXTENSION_INFO.currentFilePath;
-    const needToShowDialog = !(filePath && filePath.length > 0);
-    if (showDialog || needToShowDialog) {
-      const dialog = part(SaveDialog);
-      dialog.init(this, filePath);
-      dialog.openInWorld();
-    } else {
-      this.checkAndSave(filePath);
     }
   }
 
@@ -1272,7 +995,7 @@ export class Dashboard extends ViewModel {
       this.dataManager.tables = snapObject.tables.toObject();
       this.dataManager.views = snapObject.views.toObject();
       const descriptors = this._getObjectsFromSnapshot_(snapObject);
-      await this._restoreMorphsFromDescriptors_(descriptors);
+      await this._restoreMorphsFromDescriptors(descriptors);
       this.dashboardController.update();
     } catch (e) {
       console.log(`Error in _restoreFromSnapshot_ :${e}`);
@@ -1635,7 +1358,7 @@ export class Dashboard extends ViewModel {
    * The keys of the tables property
    */
   get tableNames () {
-    return Object.keys(this.tables);
+    return this.dataManager.tableNames;
   }
 
   /**
@@ -1649,7 +1372,7 @@ export class Dashboard extends ViewModel {
    * The keys of the views property
    */
   get viewNames () {
-    return Object.keys(this.views);
+    return this.dataManager.viewNames;
   }
 
   /**
@@ -1815,7 +1538,7 @@ export class Dashboard extends ViewModel {
       result.addRows(rows);
       return result;
     } else if (this.dataManager.viewNames.indexOf(viewOrTable) >= 0) {
-      return await this.__prepareViewData__(viewOrTable);
+      return await this._prepareViewData(viewOrTable);
     } else {
       return null;
     }
@@ -1936,9 +1659,9 @@ export class Dashboard extends ViewModel {
     }
     const filterSpecs = {};
     aView.filters.forEach(filterName => {
-      filterSpecs[filterName] = this.__getFilterForName__(filterName);
+      filterSpecs[filterName] = this._getFilterForName(filterName);
     });
-    const columns = aView.fullColumns(this.dataManager.tables).map(column => this.__createGVizColumn__(column));
+    const columns = aView.fullColumns(this.dataManager.tables).map(column => this._createGVizColumn(column));
     const result = new this.gViz.DataTable({ cols: columns });
     const rows = await aView.getData(filterSpecs, this.dataManager.tables);
     result.addRows(rows);
@@ -2003,7 +1726,7 @@ export class Dashboard extends ViewModel {
   // returns:
   //      an explanatory string
 
-  __filterString__ (filter) {
+  _filterString (filter) {
     const fields = Object.keys(filter);
     if (fields.indexOf('column') >= 0) {
       if (fields.indexOf('values') >= 0) {
@@ -2229,7 +1952,7 @@ export class Dashboard extends ViewModel {
 
   async init (controller) {
     this.dashboardController = controller;
-    await this.__loadGoogleChartPackages__();
+    await this._loadGoogleChartPackages();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
         this[prop] = {};
@@ -2238,6 +1961,9 @@ export class Dashboard extends ViewModel {
     this.gCharts.setOnLoadCallback(() => {});
     this._initializeJupyterLabCallbacks();
     this.dirty = false;
+    if (!this.dataManager) {
+      this.dataManager = new GalyleoDataManager();
+    }
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
   }
@@ -2414,10 +2140,10 @@ export class Dashboard extends ViewModel {
    * @param { object } chart - The chart to make the wrapper for.
    * @param { string } chartName - The name of the chart.
    */
-  _makeWrapper (chart, chartName) {
-    const dataTable = this.prepareData(chart.viewOrTable);
+  async _makeWrapper (chart, chartName) {
+    const dataTable = await this.prepareData(chart.viewOrTable);
     if (!dataTable) return null;
-    const filter = this._prepareChartFilter(chart.viewOrTable);
+    const filter = await this._prepareChartFilter(chart.viewOrTable);
     if (!filter) return null;
     if (!(chart.filter && chart.filter.columnName === filter.columnName)) {
       chart.filter = filter;
@@ -2465,11 +2191,11 @@ export class Dashboard extends ViewModel {
    * pass the wrapper to the chart's morph to be drawn
    * @param { string } chartName - The name of the chart to be drawn.
    */
-  drawChart (chartName) {
+  async drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
     this._makeTitle(chart);
-    const wrapper = this._makeWrapper(chart, chartName);
+    const wrapper = await this._makeWrapper(chart, chartName);
     if (wrapper) {
       this.lastWrapper = wrapper;
       chart.chartMorph.drawChart(wrapper);
@@ -2489,17 +2215,17 @@ export class Dashboard extends ViewModel {
    * wrapper we've created.
    * @param { string } chartName - The name of the chart whose style is to be edited
    */
-  editChartStyle (chartName) {
+  async editChartStyle (chartName) {
     const editor = new this.gViz.ChartEditor();
     const chart = this.charts[chartName];
     if (!chart) return;
-    const wrapper = this._makeWrapper(chart, chartName);
+    const wrapper = await this._makeWrapper(chart, chartName);
     if (!wrapper) return;
-    this.gViz.events.addListener(editor, 'ok', () => {
+    this.gViz.events.addListener(editor, 'ok', async () => {
       const wrapperOut = editor.getChartWrapper();
       chart.chartType = wrapperOut.getChartType();
       chart.options = wrapperOut.getOptions();
-      this.drawChart(chartName);
+      await this.drawChart(chartName);
       editor.closeDialog();
     });
     editor.openDialog(wrapper);
@@ -2530,7 +2256,7 @@ export class Dashboard extends ViewModel {
     }
     // chartSpecification.filter =                this._prepareChartFilter(chartSpecification.viewOrTable);
     chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
-    this.drawChart(chartName);
+    await this.drawChart(chartName);
     if (editChartStyle) {
       this.editChartStyle(chartName);
     }
@@ -2633,17 +2359,18 @@ export class Dashboard extends ViewModel {
   // parameters:
   //     entry: a string or object that is the log entry
 
-  __logEntry__ (entry) {
-    if (!this.__log__) {
-      this.__log__ = [];
+  _logEntry (entry) {
+    if (!this._log) {
+      this._log = [];
     }
-    this.__log__.push({ entry: entry, time: new Date() });
+    this._log.push({ entry: entry, time: new Date() });
   }
 
   // Show the log.  I just got sick of looking for this...
-  __showLog__ () {
-    window.alert(this.__log__.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
+  _showLog () {
+    window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 export { LoadDialog, SaveDialog };

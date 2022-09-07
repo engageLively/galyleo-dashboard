@@ -1,6 +1,8 @@
 import { part } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
 
+// part(GalyleoDashboardStudio).openInWindow()
+
 export async function main () {
   const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en');
   const dashboard = part(GalyleoDashboardStudio);
