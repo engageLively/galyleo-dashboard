@@ -541,7 +541,18 @@ export class Dashboard extends ViewModel {
    * It's an object, and needs to be maintained as the test
    */
   get testDashboards () {
-    const dashboards = ['morphsample', 'mtbf_mttr_dashboard', 'test_one', 'testempty', 'testsolid', 'simple_test_table'];
+    const dashboards = ['bad-fill',
+      'bad-text-padding-and-attributes',
+      'bad-text-parameters',
+      'elections-remote',
+      'filter-test',
+      'morphsample',
+      'mtbf_mttr_dashboard',
+      'simple_test_table',
+      'test_one',
+      'test_views',
+      'testempty',
+      'testsolid'];
     const result = {};
     const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
     dashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
