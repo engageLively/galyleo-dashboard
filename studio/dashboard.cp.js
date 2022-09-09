@@ -14,7 +14,7 @@ import { getClassName } from 'lively.serializer2/class-helper.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
 import { GalyleoWindow, GalyleoConfirmPrompt, PromptButton } from './shared.cp.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
-import { NamedFilter, SelectFilter } from './filters.cp.js';
+import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from './filters.cp.js';
 import { ViewBuilder } from './view-creator.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
 
@@ -348,7 +348,7 @@ export class Dashboard extends ViewModel {
   //    browserModel: the JupyterLab browser.  See: https://jupyterlab.readthedocs.io/en/stable/api/classes/filebrowser.filebrowsermodel-1.html
   //    changedInfo: the current change to the drive.  See https://jupyterlab.readthedocs.io/en/stable/api/interfaces/coreutils.ichangedargs.html
   checkPossibleRenameFromBrowser (browserModel, changedArgs) {
-    if (changedArgs.oldValue.path == window.EXTENSION_INFO.currentFilePath) {
+    if (changedArgs.oldValue.path === window.EXTENSION_INFO.currentFilePath) {
       window.EXTENSION_INFO.currentFilePath = changedArgs.newValue.path;
       this._updateProjectName_();
     }
@@ -365,10 +365,10 @@ export class Dashboard extends ViewModel {
   //    drive: the JupyterLab drive.  See: https://jupyterlab.readthedocs.io/en/stable/api/classes/services.drive-1.html
   //    changedInfo: the current change to the drive.  See https://jupyterlab.readthedocs.io/en/stable/api/interfaces/services.contents.ichangedargs.html
   checkPossibleRename (drive, changedInfo) {
-    if (changedInfo.type != 'rename') {
+    if (changedInfo.type !== 'rename') {
       return;
     }
-    if (changedInfo.oldValue.path == window.EXTENSIONINFO.currentFilePath) {
+    if (changedInfo.oldValue.path === window.EXTENSIONINFO.currentFilePath) {
       window.EXTENSION_INFO.currentFilePath = changedInfo.newValue.path;
       this._updateProjectName_();
     }
@@ -1308,9 +1308,23 @@ export class Dashboard extends ViewModel {
    */
   _ensurePart (componentOrString) {
     if (componentOrString.isComponent) return componentOrString;
-    return ({
+    const parts = {
+      'select filter': SelectFilter,
+      DateFilter: DateFilter,
+      'list filter': ListFilter,
+      'range filter': RangeFilter,
+      SliderFilter: SliderFilter,
+      booleanFilter: BooleanFilter,
+      doubleSliderFilter: DoubleSliderFilter
+    };
+    if (componentOrString.startsWith('part://')) {
+      const pathParts = componentOrString.split('/');
+      const partName = pathParts[pathParts.length - 1];
+      return parts[partName];
+    }
+    /* return ({
       'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
-    })[componentOrString];
+    })[componentOrString]; */
   }
 
   /**
@@ -1450,7 +1464,7 @@ export class Dashboard extends ViewModel {
   async makeFilterMorph (columnName, filterType, filterPart, tableName = null) {
     const morph = part(filterPart);
     if (filterType === 'Range') {
-      const parameters = this.dataManager.getNumericSpec(columnName, tableName);
+      const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
       morph.init(columnName, tableName, parameters.min_val, parameters.max_val, parameters.increment);
     } else if (filterType === 'NumericSelect') {
       // Numeric values, with a max, min, and an increment between them.  The
@@ -1458,7 +1472,7 @@ export class Dashboard extends ViewModel {
       // the viewer pick any value between max and min, separated by increment
       // Notice this works best when the column is regularly incrementd
       // Get all the values, throw out the non-numbers, and sort in ascending order
-      let values = this.dataManager.getAllValues(columnName, tableName);
+      let values = await this.dataManager.getAllValues(columnName, tableName);
 
       values = values.map(value => Number(value)).filter(value => !isNaN(value));
       values.sort((a, b) => a - b);
@@ -1474,7 +1488,7 @@ export class Dashboard extends ViewModel {
       morph.init(columnName, tableName, values[0], values[values.length - 1], differences[0]);
     } else {
       const types = this.dataManager.getTypes(columnName, tableName);
-      const isString = types && types.length == 1 && types[0] == 'string';
+      const isString = types && types.length === 1 && types[0] === 'string';
       const values = await this.dataManager.getAllValues(columnName);
       morph.init(columnName, values, tableName, isString);
     }
@@ -1622,7 +1636,7 @@ export class Dashboard extends ViewModel {
       if (fields.indexOf('minValue') >= 0) {
         return fields.indexOf('maxValue') >= 0 && !isNaN(aFilter.minValue) && !isNaN(aFilter.maxValue);
       }
-      return fields.indexOf('value') >= 0 && aFilter.value != undefined && aFilter.value != '__no_selection__';
+      return fields.indexOf('value') >= 0 && aFilter.value !== undefined && aFilter.value !== '__no_selection__';
     }
   }
 
@@ -1730,9 +1744,9 @@ export class Dashboard extends ViewModel {
     const fields = Object.keys(filter);
     if (fields.indexOf('column') >= 0) {
       if (fields.indexOf('values') >= 0) {
-        if (filter.values.length == 0) {
+        if (filter.values.length === 0) {
           return null;
-        } else if (filter.values.length == 1) {
+        } else if (filter.values.length === 1) {
           return `${filter.column} = ${filter.values[0]}`;
         } else {
           return `${filter.column} in ${filter.values}`;
@@ -1789,7 +1803,7 @@ export class Dashboard extends ViewModel {
     * @param { object } chart - The chart to make the title for.
     */
   _makeTitle (chart) {
-    if (chart.chartType == 'Table') {
+    if (chart.chartType === 'Table') {
       return;
     }
     let title; const name = chart.viewOrTable;
@@ -2371,6 +2385,5 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };
