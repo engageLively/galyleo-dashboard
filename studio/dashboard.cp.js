@@ -251,7 +251,9 @@ export class Dashboard extends ViewModel {
             'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
             'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
             'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
-            'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter'
+            'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter',
+            'relayout'
+
           ];
         }
       },
@@ -548,6 +550,7 @@ export class Dashboard extends ViewModel {
       'filter-test',
       'morphsample',
       'mtbf_mttr_dashboard',
+      'drilldown-test',
       'simple_test_table',
       'test_one',
       'test_views',
@@ -563,7 +566,7 @@ export class Dashboard extends ViewModel {
    * Convenience method to load a test dashboard easily by name
    * @param { string } dashboardName - The name of the test dashboard.
    */
-  // this.loadTestDashboard('mtbf_mttr_dashboard')
+  // this.loadTestDashboard('drilldown-test')
   loadTestDashboard (dashboardName) {
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
@@ -2190,14 +2193,15 @@ export class Dashboard extends ViewModel {
    * @param { string } chartName - The name of the chart.
    */
   _updateChartFilter (e, wrapper, chartName) {
+    this._lastEvent = e;
     const chart = wrapper.getChart();
     const table = wrapper.getDataTable();
     const selection = chart.getSelection();
-    const row = selection[0].row === null ? null : selection[0].row;
-    const col = selection[0].col === null ? 0 : selection[0].col;
+    const row = selection[0].row == null ? null : selection[0].row;
+    const col = selection[0].col == null ? 0 : selection[0].col;
     const value = table.getValue(row, col);
-    if (this.charts[chartName].filter) {
-      this.charts[chartName].filter.value = value;
+    if (this.charts[chartName].dataManagerFilter) {
+      this.charts[chartName].dataManagerFilter.values = [value];
       this.drawAllCharts();
     }
 
@@ -2396,5 +2400,6 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 export { LoadDialog, SaveDialog };

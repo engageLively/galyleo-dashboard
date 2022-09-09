@@ -185,7 +185,7 @@ export default class Galyleo extends ViewModel {
       },
       expose: {
         get () {
-          return ['halos', 'withTopBarDo'];
+          return ['halos', 'withTopBarDo', 'relayout'];
         }
       },
       bindings: {
@@ -426,6 +426,7 @@ export default class Galyleo extends ViewModel {
     await cb(this.ui.topBar);
   }
 }
+
 
 // part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({
