@@ -253,16 +253,16 @@ export class DateFilterMorph extends Morph {
     return { columnName: this.columnName, value: this.datePicker.selectedDate };
   }
 
-   /**
+  /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a value field.  It also
    * has a columnName field, which processing in the Dashboard (see
    * _prepareFilters) turns into a columnIndex given the identity of the table
    * being used for the filter.
    */
-    get dataManagerFilter () {
-      return { column: this.columnName, operator: 'IN_LIST', values: [this.datePicker.selectedDate] };
-    }
+  get dataManagerFilter () {
+    return { column: this.columnName, operator: 'IN_LIST', values: [this.datePicker.selectedDate] };
+  }
 
   /**
    * Return a short string describing the filter.  This is used to show the
@@ -383,7 +383,7 @@ export class DoubleSliderFilterMorph extends Morph {
    */
   init (columnName, tableName, minVal, maxVal, increment) {
     this.signalEnabled = false;
-    const { doubleSlider } = this;
+    const doubleSlider = this.getSubmorphNamed('double slider');
     doubleSlider.minValue = minVal;
     doubleSlider.maxValue = maxVal;
     doubleSlider.increment = increment;
@@ -583,7 +583,7 @@ export class ListFilterMorph extends Morph {
 
   /**
    * Return the filter as a JavaScript object for use with the data manager.
-   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * Per the requirement in galyleo-data.InListFilter, returns an
    * object with operator 'IN_LIST', column: this.columnName, values: [this.valueField]
    */
 
@@ -911,7 +911,7 @@ export class RangeFilterMorph extends Morph {
 
   /**
    * Return the filter as a JavaScript object for use with the dataManager.
-   * Per the requirement in galyleo-data.RangeFilter, returns an 
+   * Per the requirement in galyleo-data.RangeFilter, returns an
    * object with operator 'IN_RANGE', column: this.columnName,
    * max_val, min_val.
    */
@@ -1117,7 +1117,7 @@ export class SelectFilterMorph extends Morph {
 
   /**
    * Return the filter as a JavaScript object for use with the dataManager.
-   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * Per the requirement in galyleo-data.InListFilter, returns an
    * object with operator 'IN_LIST', column: this.columnName,
    * values = [this.valueList.selection]
    */
@@ -1281,7 +1281,7 @@ export class SliderFilterMorph extends Morph {
 
   /**
    * Return the filter as a JavaScript object for use with the dataManager.
-   * Per the requirement in galyleo-data.InListFilter, returns an 
+   * Per the requirement in galyleo-data.InListFilter, returns an
    * object with operator 'IN_LIST', column: this.columnName,
    * values = [slider.value]
    */
@@ -1337,6 +1337,7 @@ export class SliderFilterMorph extends Morph {
 // SliderFilter.openInWorld()
 const SliderFilter = component(VisualFilter, {
   name: 'slider filter',
+  type: SliderFilterMorph,
   submorphs: [
     add(part(SliderWithValue, { name: 'slider' }))
   ]
