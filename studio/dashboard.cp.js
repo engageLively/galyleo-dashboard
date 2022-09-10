@@ -538,12 +538,27 @@ export class Dashboard extends ViewModel {
   /* -- Code which clears, stores, and loads dashboards from file -- */
 
   /**
+   * Load all the test dashboards.  This is done at most once per session,
+   * just before we load the first test dashboard
+   */
+  async _loadAllTestDashboards() {
+    if (this._testDashboards) {
+      // already loaded, do nothing...
+    }
+    const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
+    const url = `${prefix/manifest.json}`
+    const jsonForm = await resource(url).readJson();
+    this._testDashboards = jsonForm.dashboards;
+  }
+
+  /**
    * The current set of test dashboards.  To load a test,
    * this.loadDashboardFromURL(this.testDashboards.name)
    * It's an object, and needs to be maintained as the test
    */
   get testDashboards () {
-    const dashboards = ['bad-fill',
+    // _loadAllTestDashboards() should be called before this is accessed
+    /* const dashboards = ['bad-fill',
       'bad-text-padding-and-attributes',
       'bad-text-parameters',
       'elections-remote',
@@ -555,11 +570,15 @@ export class Dashboard extends ViewModel {
       'test_one',
       'test_views',
       'testempty',
-      'testsolid'];
-    const result = {};
-    const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
-    dashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
-    return result;
+      'testsolid']; */
+    if (this._testDashboards) {
+      const result = {};
+      const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
+      this._testDashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
+      return result;
+    } else {
+      return {}
+    }
   }
 
   /**
@@ -567,7 +586,8 @@ export class Dashboard extends ViewModel {
    * @param { string } dashboardName - The name of the test dashboard.
    */
   // this.loadTestDashboard('drilldown-test')
-  loadTestDashboard (dashboardName) {
+  async loadTestDashboard (dashboardName) {
+    await this._loadAllTestDashboards();
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
   }
