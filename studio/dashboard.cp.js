@@ -537,14 +537,11 @@ export class Dashboard extends ViewModel {
 
   /* -- Code which clears, stores, and loads dashboards from file -- */
 
+  
   /**
-   * Load all the test dashboards.  This is done at most once per session,
-   * just before we load the first test dashboard
+   * Load all the test dashboards.  
    */
   async _loadAllTestDashboards() {
-    if (this._testDashboards) {
-      // already loaded, do nothing...
-    }
     const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
     const url = `${prefix/manifest.json}`
     const jsonForm = await resource(url).readJson();
@@ -587,7 +584,10 @@ export class Dashboard extends ViewModel {
    */
   // this.loadTestDashboard('drilldown-test')
   async loadTestDashboard (dashboardName) {
-    await this._loadAllTestDashboards();
+    if (!this._testDashboards) {
+      await this._loadAllTestDashboards();
+    }
+    
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
   }
