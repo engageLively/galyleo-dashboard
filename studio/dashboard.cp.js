@@ -537,13 +537,12 @@ export class Dashboard extends ViewModel {
 
   /* -- Code which clears, stores, and loads dashboards from file -- */
 
-  
   /**
-   * Load all the test dashboards.  
+   * Load all the test dashboards.
    */
-  async _loadAllTestDashboards() {
+  async _loadAllTestDashboards () {
     const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
-    const url = `${prefix/manifest.json}`
+    const url = `${prefix}/manifest.json`;
     const jsonForm = await resource(url).readJson();
     this._testDashboards = jsonForm.dashboards;
   }
@@ -574,7 +573,7 @@ export class Dashboard extends ViewModel {
       this._testDashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
       return result;
     } else {
-      return {}
+      return {};
     }
   }
 
@@ -587,7 +586,7 @@ export class Dashboard extends ViewModel {
     if (!this._testDashboards) {
       await this._loadAllTestDashboards();
     }
-    
+
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
   }
@@ -2420,6 +2419,7 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 
 export { LoadDialog, SaveDialog };
