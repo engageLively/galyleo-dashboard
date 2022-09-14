@@ -1,9 +1,8 @@
 
 import { LivelyWorld } from 'lively.ide/world.js';
-
-
+import { component } from 'lively.morphic/components/core.js';
 import { PublishedDashboard } from './dashboard.js';
-
+import { pt, Color } from 'lively.graphics';
 
 export class GalyleoDashboardWorld extends LivelyWorld {
   static get properties () {
@@ -22,13 +21,9 @@ export class GalyleoDashboardWorld extends LivelyWorld {
     `;
   }
 
-
-
   get serverURL () {
     return 'https://matt.engagelively.com';
   }
-
- 
 
   get __head_html__ () {
     return `
@@ -42,21 +37,16 @@ export class GalyleoDashboardWorld extends LivelyWorld {
     super.onLoad();
     // document.getElementById('loading-screen').remove();
   }
-
-
 }
 
-// part(GalyleoDashboardStudio).openInWorld()
-const GalyleoDashboardWorld = component({
-    name: 'galyleo dashboard',
-    defaultViewModel: PublishedDashboard,
-    extent: pt(800, 800),
-    fill: Color.darkGray,
-    clipMode: 'hidden',
-    submorphs: []
-  });
-  
-  export { GalyleoDashboardWorld };
+// part(GalyleoDashboardPublication).openInWorld()
+const GalyleoDashboardPublication = component({
+  name: 'galyleo dashboard',
+  defaultViewModel: PublishedDashboard,
+  extent: pt(800, 800),
+  fill: Color.darkGray,
+  clipMode: 'hidden',
+  submorphs: []
+});
 
-
-export { GalyleoDashboardWorld };
+export { GalyleoDashboardPublication };

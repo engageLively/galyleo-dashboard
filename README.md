@@ -1,3 +1,3 @@
 # el-Dashboard
 
-The Galyleo Dashboard Studio Project.  Since most code is (ATM) in lively pages, this is primarily for issue-tracking until the lively/git merge is done.
+The Galyleo Dashboard Studio Project.  Since the new lively, we actually have all the code here!

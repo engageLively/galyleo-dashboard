@@ -1,1 +1,1 @@
-export { GalyleoDashboardWorld } from '../../ui.cp.js';
+export { GalyleoDashboardPublication } from '../../ui.cp.js';

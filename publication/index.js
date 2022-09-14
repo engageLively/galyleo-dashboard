@@ -1,11 +1,11 @@
 import { part } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
 
-// part(GalyleoDashboardWorld).openInWindow()
+// part(GalyleoDashboardPublication).openInWindow()
 
 export async function main () {
-  const { GalyleoDashboardWorld } = await System.import('galyleo-dashboard/publication/int/en');
-  const dashboard = part(GalyleoDashboardWorld);
+  const { GalyleoDashboardPublication } = await System.import('galyleo-dashboard/publication/int/en');
+  const dashboard = part(GalyleoDashboardPublication);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
   dashboard.relayout();
@@ -24,4 +24,3 @@ export const EXCLUDED_MODULES = [
   'lively.storage',
   'lively.user'
 ];
-

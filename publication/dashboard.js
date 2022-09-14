@@ -1,15 +1,13 @@
 /* global URLSearchParams */
-import googleCharts from 'users/robin/uploads/chart-loader.js';
-import { Morph } from 'lively.morphic/morph.js';
 import { resource } from 'lively.resources/index.js';
 import { Color, pt, Rectangle, Point } from 'lively.graphics/index.js';
-import { ShadowObject, morph } from 'lively.morphic/index.js';
+import { ShadowObject, ViewModel, morph } from 'lively.morphic/index.js';
 import { connect } from 'lively.bindings/index.js';
 import { promise, obj } from 'lively.lang/index.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
-import { GalyleoDataManager, GalyleoView } from 'galyleo-data/galyleo-data.js';
+import { GalyleoDataManager, GalyleoView } from 'galyleo-dashboard/galyleo-data/galyleo-data.js';
 
-export default class PublishedDashboard extends Morph {
+export default class PublishedDashboard extends ViewModel {
   static get properties () {
     return {
       gViz: { // wrapper for google.visualization
@@ -22,6 +20,11 @@ export default class PublishedDashboard extends Morph {
         derived: true,
         get () {
           return window.google.charts;
+        }
+      },
+      expose: {
+        get () {
+          return ['relayout'];
         }
       }
     };
@@ -937,7 +940,7 @@ export default class PublishedDashboard extends Morph {
   // whether it's a Google Table or a Galyleo Table
   // parameters:
   //    table: a table which is either aGoogle Table or a Galyleo Table
-  // returns: 
+  // returns:
   //    an ordered list of the column names
   _getColumnNames_ (table) {
     if (table.hasOwnProperty('cols')) {
@@ -973,8 +976,6 @@ export default class PublishedDashboard extends Morph {
   //             return the string for
   // returns:
   //      an explanatory string
-
- 
 
   __filterString__ (filter) {
     const fields = Object.keys(filter);
@@ -1606,5 +1607,3 @@ export default class PublishedDashboard extends Morph {
     return result.sort();
   }
 }
-
-
