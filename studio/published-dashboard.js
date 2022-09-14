@@ -11,10 +11,16 @@ import { ExpressionSerializer } from 'lively.serializer2/index.js';
 import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from './filters.cp.js';
 import { GalyleoDataManager, GalyleoView } from 'galyleo-data/galyleo-data.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
+import { LoadDialog } from './dashboard.cp.js';
 
 export default class PublishedDashboard extends ViewModel {
   static get properties () {
     return {
+      canvas: { // improve the naming to prevent confusion with views
+        get () {
+          return this.view;
+        }
+      },
       gViz: { // wrapper for google.visualization
         derived: true,
         get () {
@@ -26,6 +32,9 @@ export default class PublishedDashboard extends ViewModel {
         get () {
           return window.google.charts;
         }
+      },
+      expose: {
+        get() { return ["relayout", "init", "commands"]}
       }
     };
   }
@@ -34,23 +43,15 @@ export default class PublishedDashboard extends ViewModel {
     return [{
       name: 'resize on client',
       exec: () => {
-        this.extent = pt(window.innerWidth, window.innerHeight);
-        this.position = pt(0, 0);
+        this.view.extent = pt(window.innerWidth, window.innerHeight);
+        this.view.position = pt(0, 0);
       }
     }];
   }
 
   relayout () {
-    this.getSubmorphNamed('galyleoLogo').bottomRight = this.innerBounds().insetBy(25).bottomRight();
-    this.getSubmorphNamed('galyleoLogo').bringToFront();
-  }
-
-  // The filterTypes.  To ensure proper freezing, please make sure this list is
-  // complete
-  // I believe with the new architecture this is a non-issue
-
-  get filterTypes () {
-    return ['part://Dashboard Studio Development/galyleo/select filter', 'part://Dashboard Studio Development/galyleo/list filter', 'part://Dashboard Studio Development/galyleo/range filter', 'part://Dashboard Studio Development/galyleo/doubleSliderFilter', 'part://Dashboard Studio Development/galyleo/SliderFilter', 'part://Dashboard Studio Development/galyleo/booleanFilter'];
+    this.ui.galyleoLogo.bottomRight = this.view.innerBounds().insetBy(25).bottomRight();
+    this.ui.galyleoLogo.bringToFront();
   }
 
   /* -- Code which clears, stores, and loads dashboards from url -- */
@@ -59,28 +60,28 @@ export default class PublishedDashboard extends ViewModel {
   // is used in new, and also internally by restoreFromJSONForm.
   clear () {
     this.filters = {};
-    this.fill = Color.rgb(255, 255, 255);
+    this.view.fill = Color.rgb(255, 255, 255);
     this.chartNames.forEach(chartName => {
       this.charts[chartName].chartMorph.remove();
     });
     this.charts = {};
-    const logo = this.getSubmorphNamed('galyleoLogo');
+    const logo = this.ui.galyleoLogo;
     this.removeAllMorphs();
     if (logo) {
-      this.addMorph(logo);
+      this.view.addMorph(logo);
     }
     this._ensureDataManager_();
     this.dataManager.clear();
   }
 
   // We need dashboardInputForm as a part
-  async _initURLPrompt_ (url, message) {
+  _initURLPrompt_ (url, message) {
     if (message) {
       window.alert(message);
     }
-    const loadDialog = await resource('part://$world/dashboardInputForm').read();
-    loadDialog.init(this, url);
-    loadDialog.openInWorld();
+    const loadDialog = part(LoadDialog);
+    // loadDialog.init(this, url);
+    // loadDialog.openInWorld();
   }
 
   /**
@@ -290,7 +291,7 @@ export default class PublishedDashboard extends ViewModel {
     });
     // add all the submorphs back, in the right order
     nonNulls.forEach(m => {
-      this.addMorph(m);
+      this.view.addMorph(m);
     });
   }
 
@@ -439,7 +440,7 @@ export default class PublishedDashboard extends ViewModel {
       // The non-morph structures are easy....
       // this.tables = storedForm.tables;
       if (storedForm.fill) {
-        this.fill = this._color_(storedForm.fill, Color.white);
+        this.view.fill = this._color_(storedForm.fill, Color.white);
       }
       $world.fill = this.fill;
 
@@ -495,7 +496,7 @@ export default class PublishedDashboard extends ViewModel {
   // No parameters or return, just adjusts the size
 
   _repositionAfterRestore_ () {
-    this.logo = this.getSubmorphNamed('galyleoLogo');
+    this.logo = this.ui.galyleoLogo;
     // take the logo out of size requirements, remembering that we need enough
     // room to position it (unlike other morphs, the logo can be repositioned, so
     // we don't need to take its position into account when resizing)
@@ -569,7 +570,7 @@ export default class PublishedDashboard extends ViewModel {
     externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     // externalFilterMorph.opacity = 0; // avoid flicker
     this._restoreMorphicProperties_(savedFilter, externalFilterMorph);
-    await externalFilterMorph.whenRendered();//
+    await externalFilterMorph.whenRendered();
     return externalFilterMorph;
   }
 
@@ -629,7 +630,7 @@ export default class PublishedDashboard extends ViewModel {
     if (morphDescriptor.imageUrl) {
       restoredMorph.imageUrl = morphDescriptor.imageUrl;
     }
-    this.addMorph(restoredMorph);
+    this.view.addMorph(restoredMorph);
     if (morphDescriptor.textProperties) {
       this._setFields_(restoredMorph, morphDescriptor.textProperties, this._textFields_);
       const complexTextFieldsSource = morphDescriptor.hasOwnProperty('complexTextProperties') ? morphDescriptor.complexTextProperties : morphDescriptor.textProperties;
@@ -701,7 +702,7 @@ export default class PublishedDashboard extends ViewModel {
     namedFilterMorphProto.position = pt(0, 0);
     connect(namedFilterMorphProto, 'filterChanged', this, 'drawAllCharts');
     this.addFilter(filterName, { morph: namedFilterMorphProto });
-    this.addMorph(namedFilterMorphProto);
+    this.view.addMorph(namedFilterMorphProto);
     return namedFilterMorphProto;
   }
 
@@ -1015,7 +1016,7 @@ export default class PublishedDashboard extends ViewModel {
     chart.options.title = title;
   }
 
-  // ensure a data manager.  This is called from onLoad(), and
+  // ensure a data manager.  This is called from init(), and
   // loadDashboardFromURL.  Just makes sure that there is a DataManager available
 
   _ensureDataManager_ () {
@@ -1024,7 +1025,7 @@ export default class PublishedDashboard extends ViewModel {
     }
   }
 
-  // onLoad.  First, reset the error log to empty, wait for rendering, load
+  // init.  First, reset the error log to empty, wait for rendering, load
   // the google chart packages and make sure that the dictionaries are
   // initialized
 
@@ -1256,7 +1257,7 @@ export default class PublishedDashboard extends ViewModel {
     }
     const chartMorph = part(GoogleChartHolder);
     chartMorph.init(chartName);
-    this.addMorph(chartMorph);
+    this.view.addMorph(chartMorph);
     chartMorph.position = pt(0, 0);
     return chartMorph;
   }

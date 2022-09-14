@@ -1,17 +1,17 @@
 import { part } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
 
-// part(GalyleoDashboardStudio).openInWindow()
+// part(GalyleoDashboardWorld).openInWindow()
 
 export async function main () {
-  const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en');
-  const dashboard = part(GalyleoDashboardStudio);
+  const { GalyleoDashboardWorld } = await System.import('galyleo-dashboard/publication/int/en');
+  const dashboard = part(GalyleoDashboardWorld);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
   dashboard.relayout();
 }
 
-export const TITLE = 'Galyleo Dashboard Studio';
+export const TITLE = 'Galyleo Dashboard';
 
 export const WORLD_CLASS = LivelyWorld;
 
