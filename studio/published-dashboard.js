@@ -1,15 +1,18 @@
 /* global URLSearchParams */
 import googleCharts from 'users/robin/uploads/chart-loader.js';
 import { Morph } from 'lively.morphic/morph.js';
+import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/index.js';
 import { Color, pt, Rectangle, Point } from 'lively.graphics/index.js';
 import { ShadowObject, morph } from 'lively.morphic/index.js';
 import { connect } from 'lively.bindings/index.js';
 import { promise, obj } from 'lively.lang/index.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
+import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from './filters.cp.js';
 import { GalyleoDataManager, GalyleoView } from 'galyleo-data/galyleo-data.js';
+import { GoogleChartHolder } from './chart-creator.cp.js';
 
-export default class PublishedDashboard extends Morph {
+export default class PublishedDashboard extends ViewModel {
   static get properties () {
     return {
       gViz: { // wrapper for google.visualization
@@ -44,6 +47,7 @@ export default class PublishedDashboard extends Morph {
 
   // The filterTypes.  To ensure proper freezing, please make sure this list is
   // complete
+  // I believe with the new architecture this is a non-issue
 
   get filterTypes () {
     return ['part://Dashboard Studio Development/galyleo/select filter', 'part://Dashboard Studio Development/galyleo/list filter', 'part://Dashboard Studio Development/galyleo/range filter', 'part://Dashboard Studio Development/galyleo/doubleSliderFilter', 'part://Dashboard Studio Development/galyleo/SliderFilter', 'part://Dashboard Studio Development/galyleo/booleanFilter'];
@@ -69,6 +73,7 @@ export default class PublishedDashboard extends Morph {
     this.dataManager.clear();
   }
 
+  // We need dashboardInputForm as a part
   async _initURLPrompt_ (url, message) {
     if (message) {
       window.alert(message);
@@ -560,13 +565,37 @@ export default class PublishedDashboard extends Morph {
     // savedFilter = savedFilter
     let storedFilter = savedFilter.savedForm;
     if (storedFilter.toJS) storedFilter = storedFilter.toJS();
-    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, storedFilter.part, storedFilter.tableName);
+    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
     externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     // externalFilterMorph.opacity = 0; // avoid flicker
     this._restoreMorphicProperties_(savedFilter, externalFilterMorph);
     await externalFilterMorph.whenRendered();//
     return externalFilterMorph;
   }
+
+  /**
+   * We ensure compatibility with older dashboard by translating
+   * component URLs to actual component objects.
+   * @param { string|Morph } componentOrString - The component or (now invalid) component URL
+   * @return { Morph } The original or resolved component.
+   */
+   _ensurePart (componentOrString) {
+    if (componentOrString.isComponent) return componentOrString;
+    const parts = {
+      'select filter': SelectFilter,
+      DateFilter: DateFilter,
+      'list filter': ListFilter,
+      'range filter': RangeFilter,
+      SliderFilter: SliderFilter,
+      booleanFilter: BooleanFilter,
+      doubleSliderFilter: DoubleSliderFilter
+    };
+    if (componentOrString.startsWith('part://')) {
+      const pathParts = componentOrString.split('/');
+      const partName = pathParts[pathParts.length - 1];
+      return parts[partName];
+    }
+   }
 
   // restore a chart from a saved form.
   // parameters:
@@ -667,7 +696,7 @@ export default class PublishedDashboard extends Morph {
   //   tableName: if non-null, only look for columns in this specfic table
   async createExternalFilter (filterName, columnName, filterType, filterPart, tableName) {
     const filterMorph = await this.makeFilterMorph(columnName, filterType, filterPart);
-    const namedFilterMorphProto = await resource('part://Dashboard Studio Development/galyleo/named filter').read();
+    const namedFilterMorphProto = part(NamedFilter)
     namedFilterMorphProto.init(filterMorph, filterName);
     namedFilterMorphProto.position = pt(0, 0);
     connect(namedFilterMorphProto, 'filterChanged', this, 'drawAllCharts');
@@ -690,7 +719,7 @@ export default class PublishedDashboard extends Morph {
   // look at columns in every table.
 
   async makeFilterMorph (columnName, filterType, filterPart, tableName = null) {
-    const morph = await resource(filterPart).read();
+    const morph = part(filterPart);
     if (filterType === 'Range') {
       const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
       morph.init(columnName, tableName, parameters.min_val, parameters.max_val, parameters.increment);
@@ -999,8 +1028,9 @@ export default class PublishedDashboard extends Morph {
   // the google chart packages and make sure that the dictionaries are
   // initialized
 
-  async onLoad () {
-    await this.whenRendered();
+  async init () {
+    // is whenRendered Needed anymore?
+    // await this.whenRendered();
     await this.__loadGoogleChartPackages__();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
@@ -1224,7 +1254,7 @@ export default class PublishedDashboard extends Morph {
     if (currentMorphsForChart && currentMorphsForChart.length > 0) {
       return currentMorphsForChart[0];
     }
-    const chartMorph = await resource('part://Dashboard Studio Development/googleChartMorph').read();
+    const chartMorph = part(GoogleChartHolder);
     chartMorph.init(chartName);
     this.addMorph(chartMorph);
     chartMorph.position = pt(0, 0);
