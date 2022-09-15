@@ -39,7 +39,7 @@ export class GalyleoDashboardWorld extends LivelyWorld {
   }
 }
 
-// part(GalyleoDashboardPublication).openInWorld()
+// part(GalyleoDashboardPublication).openInWorld();
 const GalyleoDashboardPublication = component({
   name: 'galyleo dashboard',
   defaultViewModel: PublishedDashboard,
