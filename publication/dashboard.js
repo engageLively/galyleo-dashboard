@@ -490,6 +490,7 @@ export default class PublishedDashboard extends ViewModel {
       console.log(`Error in _restoreFromSaved_: ${e}`);
     }
     this._repositionAfterRestore_();
+    await this.drawAllCharts();
   }
 
   // After restore is done, adjust the size to accomodate all morphs, ensuring
@@ -511,7 +512,7 @@ export default class PublishedDashboard extends ViewModel {
     const morphsHeight = morphs.reduce((acc, morph) => Math.max(acc, morph.bounds().bottom()), 0);
     const morphsRequirement = pt(morphsWidth, morphsHeight).addPt(pt(0, logoRequirement));
     // Set the extent to be the max of window size and requirement, in each dimension
-    this.extent = pt(Math.max(morphsRequirement.x, window.innerWidth), Math.max(morphsRequirement.y, window.innerHeight));
+    this.view.extent = pt(Math.max(morphsRequirement.x, window.innerWidth), Math.max(morphsRequirement.y, window.innerHeight));
     // it seems other code repositions the  logo already...
     // this.logo.position = this.extent.subPt(this.logo.extent.addPt(pt(5, 5))); pt(1451.4, 779.6);
   }
