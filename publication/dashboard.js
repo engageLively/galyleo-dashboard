@@ -65,7 +65,7 @@ export default class PublishedDashboard extends ViewModel {
     });
     this.charts = {};
     const logo = this.ui.galyleoLogo;
-    this.removeAllMorphs();
+    this.view.removeAllMorphs();
     if (logo) {
       this.view.addMorph(logo);
     }
@@ -87,7 +87,7 @@ export default class PublishedDashboard extends ViewModel {
    * Load all the test dashboards.
    */
   async _loadAllTestDashboards () {
-    const url = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
+    const url = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/manifest.json';
     const jsonForm = await resource(url).readJson();
     this._testDashboards = jsonForm.dashboards;
   }
@@ -137,7 +137,6 @@ export default class PublishedDashboard extends ViewModel {
     if (!this._testDashboards) {
       await this._loadAllTestDashboards();
     }
-
     const dashboardUrl = this.testDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromUrl(dashboardUrl); }
   }
@@ -429,7 +428,7 @@ export default class PublishedDashboard extends ViewModel {
   // parameter:
   //   storedForm: an object created by _perpareSerialization
 
-  async _restoreFromSaved_ (storedForm /* Now as an object, not a JSON string */) {
+  async _restoreFromSaved_ (storedForm = this.storedForm/* Now as an object, not a JSON string */) {
     this.storedForm = storedForm;
     this._ensureDataManager_();
 
@@ -441,7 +440,7 @@ export default class PublishedDashboard extends ViewModel {
       if (storedForm.fill) {
         this.view.fill = this._color_(storedForm.fill, Color.white);
       }
-      $world.fill = this.fill;
+      $world.fill = this.view.fill;
 
       Object.keys(storedForm.tables).forEach(tableName => {
         this.dataManager.addTable(tableName, storedForm.tables[tableName]);
@@ -496,6 +495,9 @@ export default class PublishedDashboard extends ViewModel {
 
   _repositionAfterRestore_ () {
     this.logo = this.ui.galyleoLogo;
+    if (!this.logo) {
+      return;
+    }
     // take the logo out of size requirements, remembering that we need enough
     // room to position it (unlike other morphs, the logo can be repositioned, so
     // we don't need to take its position into account when resizing)
@@ -1024,6 +1026,9 @@ export default class PublishedDashboard extends ViewModel {
     }
   }
 
+  viewDidLoad () {
+    this.init();
+  }
   // init.  First, reset the error log to empty, wait for rendering, load
   // the google chart packages and make sure that the dictionaries are
   // initialized
@@ -1250,7 +1255,7 @@ export default class PublishedDashboard extends ViewModel {
   //    the new morph.
 
   async __getChartMorph__ (chartName) {
-    const currentMorphsForChart = this.submorphs.filter(morph => morph.isChart && morph.name == chartName);
+    const currentMorphsForChart = this.view.submorphs.filter(morph => morph.isChart && morph.name == chartName);
     if (currentMorphsForChart && currentMorphsForChart.length > 0) {
       return currentMorphsForChart[0];
     }
@@ -1261,3 +1266,4 @@ export default class PublishedDashboard extends ViewModel {
     return chartMorph;
   }
 }
+

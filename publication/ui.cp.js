@@ -2,6 +2,7 @@ import { LivelyWorld } from 'lively.ide/world.js';
 import { component } from 'lively.morphic/components/core.js';
 import PublishedDashboard from './dashboard.js';
 import { pt, Color } from 'lively.graphics';
+import { part } from 'lively.morphic';
 
 export class GalyleoDashboardWorld extends LivelyWorld {
   static get properties () {
