@@ -49,6 +49,9 @@ export default class PublishedDashboard extends ViewModel {
   }
 
   relayout () {
+    const topLeft = pt(0, 50);
+    this.view.position = topLeft;
+    this.view.extent = $world.extent.subPt(topLeft);
     this.ui.galyleoLogo.bottomRight = this.view.innerBounds().insetBy(25).bottomRight();
     this.ui.galyleoLogo.bringToFront();
   }
@@ -360,7 +363,7 @@ export default class PublishedDashboard extends ViewModel {
   //   aMorph: morph to restore
   //   fieldDescriptor: descriptor containing the value of the morphic properties
   _setComplexFields_ (aMorph, fieldDescriptor) {
-    aMorph.position = this._returnValidPoint_(fieldDescriptor.position, this.extent.scaleBy(0.5));
+    aMorph.position = this._returnValidPoint_(fieldDescriptor.position, this.view.extent.scaleBy(0.5));
     // anyone have a better idea than 50x50?
     aMorph.extent = this._returnValidPoint_(fieldDescriptor.extent, pt(50, 50));
     aMorph.origin = this._returnValidPoint_(fieldDescriptor.origin, pt(0, 0));
