@@ -46,7 +46,7 @@ const GalyleoDashboardPublication = component({
   extent: pt(800, 800),
   fill: Color.darkGray,
   clipMode: 'hidden',
-  submorphs: []
+  submorphs: [{ type: 'image', imageUrl: 'galyleo-dashboard/assets/logo.png', extent: pt(700, 320), name: 'galyleo-logo', position: pt(60, 60) }]
 });
 
 export { GalyleoDashboardPublication };
