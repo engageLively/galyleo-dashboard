@@ -1,5 +1,4 @@
 /* global URLSearchParams */
-import googleCharts from 'users/robin/uploads/chart-loader.js';
 import { Morph } from 'lively.morphic/morph.js';
 import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/index.js';
@@ -8,10 +7,10 @@ import { ShadowObject, morph } from 'lively.morphic/index.js';
 import { connect } from 'lively.bindings/index.js';
 import { promise, obj } from 'lively.lang/index.js';
 import { ExpressionSerializer } from 'lively.serializer2/index.js';
-import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from './filters.cp.js';
-import { GalyleoDataManager, GalyleoView } from 'galyleo-data/galyleo-data.js';
-import { GoogleChartHolder } from './chart-creator.cp.js';
-import { LoadDialog } from './dashboard.cp.js';
+import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from 'galyleo-dashboard/studio/filters.cp.js';
+import { GalyleoDataManager, GalyleoView } from 'galyleo-dashboard/galyleo-data/galyleo-data.js';
+import { GoogleChartHolder } from 'galyleo-dashboard/studio/chart-creator.cp.js';
+import { LoadDialog } from 'galyleo-dashboard/studio/dashboard.cp.js';
 
 export default class PublishedDashboard extends ViewModel {
   static get properties () {
@@ -34,7 +33,7 @@ export default class PublishedDashboard extends ViewModel {
         }
       },
       expose: {
-        get() { return ["relayout", "init", "commands"]}
+        get () { return ['relayout', 'init', 'commands']; }
       }
     };
   }
@@ -85,7 +84,7 @@ export default class PublishedDashboard extends ViewModel {
   }
 
   /**
-   * Load all the test dashboards.  
+   * Load all the test dashboards.
    */
   async _loadAllTestDashboards () {
     const url = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main';
@@ -94,7 +93,7 @@ export default class PublishedDashboard extends ViewModel {
   }
 
   /**
-   * Load all the demo dashboards.  
+   * Load all the demo dashboards.
    */
   async _loadAllDemoDashboards () {
     const url = 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/manifest.json';
@@ -580,7 +579,7 @@ export default class PublishedDashboard extends ViewModel {
    * @param { string|Morph } componentOrString - The component or (now invalid) component URL
    * @return { Morph } The original or resolved component.
    */
-   _ensurePart (componentOrString) {
+  _ensurePart (componentOrString) {
     if (componentOrString.isComponent) return componentOrString;
     const parts = {
       'select filter': SelectFilter,
@@ -596,7 +595,7 @@ export default class PublishedDashboard extends ViewModel {
       const partName = pathParts[pathParts.length - 1];
       return parts[partName];
     }
-   }
+  }
 
   // restore a chart from a saved form.
   // parameters:
@@ -697,7 +696,7 @@ export default class PublishedDashboard extends ViewModel {
   //   tableName: if non-null, only look for columns in this specfic table
   async createExternalFilter (filterName, columnName, filterType, filterPart, tableName) {
     const filterMorph = await this.makeFilterMorph(columnName, filterType, filterPart);
-    const namedFilterMorphProto = part(NamedFilter)
+    const namedFilterMorphProto = part(NamedFilter);
     namedFilterMorphProto.init(filterMorph, filterName);
     namedFilterMorphProto.position = pt(0, 0);
     connect(namedFilterMorphProto, 'filterChanged', this, 'drawAllCharts');
@@ -897,7 +896,7 @@ export default class PublishedDashboard extends ViewModel {
   // whether it's a Google Table or a Galyleo Table
   // parameters:
   //    table: a table which is either aGoogle Table or a Galyleo Table
-  // returns: 
+  // returns:
   //    an ordered list of the column names
   _getColumnNames_ (table) {
     if (table.hasOwnProperty('cols')) {
