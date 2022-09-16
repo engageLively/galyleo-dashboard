@@ -364,7 +364,6 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     this.name = chartName;
     this.html = this.defaultHTML;
     delete this.wrapper; // make sure this is clean;
-    this.requestRedraw();
     this.getSubmorphNamed('resizer').bottomRight = this.innerBounds().bottomRight();
     connect(this, 'extent', this, 'requestRedraw');
   }
@@ -408,6 +407,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     this.requestRedraw();
   }
 }
+
 
 const GoogleChartHolder = component({
   name: 'google chart holder',

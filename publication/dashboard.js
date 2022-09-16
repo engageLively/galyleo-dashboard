@@ -32,6 +32,15 @@ export default class PublishedDashboard extends ViewModel {
           return window.google.charts;
         }
       },
+      bindings: {
+        get () {
+          return [
+            {
+              signal: 'extent', handler: 'relayout'
+            }
+          ];
+        }
+      },
       expose: {
         get () { return ['relayout', 'init', 'commands']; }
       }
@@ -49,9 +58,6 @@ export default class PublishedDashboard extends ViewModel {
   }
 
   relayout () {
-    const topLeft = pt(0, 50);
-    this.view.position = topLeft;
-    this.view.extent = $world.extent.subPt(topLeft);
     this.ui.galyleoLogo.bottomRight = this.view.innerBounds().insetBy(25).bottomRight();
     this.ui.galyleoLogo.bringToFront();
   }
@@ -133,6 +139,8 @@ export default class PublishedDashboard extends ViewModel {
       return {};
     }
   }
+
+  // this.loadTestDashboard('drilldown-test')
 
   // Convenience method to load a test dashboard easily by name
 
@@ -367,7 +375,7 @@ export default class PublishedDashboard extends ViewModel {
     // anyone have a better idea than 50x50?
     aMorph.extent = this._returnValidPoint_(fieldDescriptor.extent, pt(50, 50));
     aMorph.origin = this._returnValidPoint_(fieldDescriptor.origin, pt(0, 0));
-    aMorph.fill = this._color_(fieldDescriptor.fill, Color.rgba(0, 0, 0, 0));
+    // aMorph.fill = this._color_(fieldDescriptor.fill, Color.rgba(0, 0, 0, 0));
     const borderStyles = ['none', 'hidden', 'dashed', 'dotted', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'];
 
     const newBorder = {
@@ -443,7 +451,6 @@ export default class PublishedDashboard extends ViewModel {
       if (storedForm.fill) {
         this.view.fill = this._color_(storedForm.fill, Color.white);
       }
-      $world.fill = this.view.fill;
 
       Object.keys(storedForm.tables).forEach(tableName => {
         this.dataManager.addTable(tableName, storedForm.tables[tableName]);
@@ -543,7 +550,7 @@ export default class PublishedDashboard extends ViewModel {
     }));
     morphs.forEach(morph => {
       if (morph) {
-        morph.grabbable = morph.draggable = morph.acceptsDrops = morph.halosEnabled = false;
+        morph.grabbable = morph.draggable = morph.acceptsDrops = false;
       }
     });
     return morphs;
@@ -620,6 +627,7 @@ export default class PublishedDashboard extends ViewModel {
     // chartMorph.opacity = 0; // avoids flicker
     this._restoreMorphicProperties_(storedChart, chartMorph);
     await chartMorph.whenRendered();
+    await this.drawChart(chartName);
     return chartMorph;
   }
 
@@ -1076,6 +1084,8 @@ export default class PublishedDashboard extends ViewModel {
     await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
   }
 
+  // this.loadTestDashboard('drilldown-test')
+
   // load a table from the URL given.  This should do a little more error-checking
   // than it does.  In particular, it should check to make sure that tableSpec
   // is valid.
@@ -1210,7 +1220,6 @@ export default class PublishedDashboard extends ViewModel {
       this.dashboardController.update();
     }
     chartSpecification.dataManagerFilter = this._prepareChartFilter(chartSpecification.viewOrTable);
-    this.drawChart(chartName);
     if (editChartStyle) {
       this.editChartStyle(chartName);
     }
@@ -1264,7 +1273,7 @@ export default class PublishedDashboard extends ViewModel {
       return currentMorphsForChart[0];
     }
     const chartMorph = part(GoogleChartHolder);
-    chartMorph.init(chartName);
+    await chartMorph.init(chartName);
     this.view.addMorph(chartMorph);
     chartMorph.position = pt(0, 0);
     return chartMorph;
