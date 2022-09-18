@@ -45,6 +45,11 @@ export class SliderModel extends ViewModel {
           }
         }
       },
+      expose: {
+        get () {
+          return ['value', 'maxValue', 'minValue', 'increment'];
+        }
+      },
       bindings: {
         get () {
           return [

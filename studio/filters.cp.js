@@ -1226,7 +1226,7 @@ export class SliderFilterMorph extends Morph {
     };
   }
 
-  get slider () { return this.getSubmorphNamed('slider').viewModel; }
+  get slider () { return this.getSubmorphNamed('slider'); }
 
   /**
    * Called as soon as the filter is created.  The
@@ -1251,10 +1251,12 @@ export class SliderFilterMorph extends Morph {
     slider.maxValue = this.maxValue = maxVal;
     slider.increment = increment;
     slider.value = (maxVal - minVal) / 2 + minVal;
+    console.log(slider.maxValue);
     this.columnName = columnName;
     this.tableName = tableName;
     this.signalEnabled = true;
     connect(slider, 'valueChanged', this, 'valueChanged');
+    console.log(slider.maxValue);
   }
 
   /**
