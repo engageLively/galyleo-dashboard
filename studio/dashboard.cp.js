@@ -395,6 +395,7 @@ export class Dashboard extends ViewModel {
       this.charts[chartName].chartMorph.remove();
     });
     this.charts = {};
+    this.defaultFilters = {};
     this.view.removeAllMorphs();
     this.dirty = false;
     if (this.dashboardController) {
@@ -1232,20 +1233,32 @@ export class Dashboard extends ViewModel {
       // the information we need to instantiate them later
 
       await Promise.all(Object.keys(storedForm.filters).forEach(async filterName => {
-        const savedFilter = storedForm.filters[filterName];
-        let storedFilter = savedFilter.savedForm;
-        if (storedFilter.toJS) storedFilter = storedFilter.toJS();
-        const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
-        externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
+        const savedFilter = storedForm.filters[filterName]
+        this.defaultFilters[filterName] = this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName)
         unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter, morph: externalFilterMorph});
 
         // const filterMorph = await this._restoreFilterFromSaved(filterName, savedFilter);
       }));
 
-      Object.keys(storedForm.charts).forEach(chartName => {
+      await Promise.all(Object.keys(storedForm.charts).forEach(async chartName => {
         const storedChart = storedForm.charts[chartName];
+        const getColumnNameTableAndType =  viewOrTableName => {
+          if (this.dataManager.tables[viewOrTableName]) {
+            const table = this.dataManager.tables[viewOrTableName]
+            return {columnName: table.columns[0].name, type:table.columns[0].type, tableName: viewOrTableName}
+          } else {
+            const view = this.dataManager.views[viewOrTableName]
+            const table = this.dataManager.tables[view.tableName]
+            return {columnName: view.columns[0], type: table.getColumnType(columnName), tableName: view.tableName}
+          }
+        
+        }
+        const descriptor = getColumnNameTableAndType(storedChart.viewOrTable)
+        const filterType = descriptor.type == 'number'?'Numeric Select':'Select'
+        const filter = this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName)
+        this.defaultFilters[chartName] = filter
         unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
-      });
+      }));
 
       // We used to store morphs as a dictionary, which we no longer do.  So check
       // the type, and if it's an object, convert to an array.  Fortunately, since
@@ -1292,7 +1305,7 @@ export class Dashboard extends ViewModel {
       if (descriptor.type === 'chart') {
         return await this._restoreChartFromSaved(descriptor.chartName, descriptor.descriptor);
       } else if (descriptor.type === 'filter') {
-        return await this._restoreFilterFromSaved(descriptor.morph, descriptor.descriptor);
+        return await this._restoreFilterFromSaved(descriptor.filterName, descriptor.descriptor);
       } else {
         return this._restoreMorphFromSaved(descriptor.descriptor);
       }
@@ -1303,9 +1316,15 @@ export class Dashboard extends ViewModel {
 
   /**
    * Restore an internal filter from a saved form
-   * @param { object } savedFilter
+   * @param { string } filterName: name of the filter to restore
+   * @param { object } storedForm: intermediate form of the filter
    */
-  async _restoreInternalFilterFromSaved (savedFilter) {
+  async _restoreInternalFilterFromSaved (filterName, storedForm) {
+    const savedFilter = storedForm.filters[filterName];
+    let storedFilter = savedFilter.savedForm;
+    if (storedFilter.toJS) storedFilter = storedFilter.toJS();
+    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
+    externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     return await this.makeFilterMorph(savedFilter.columnName, savedFilter.filterType, savedFilter.part, savedFilter.tableName);
   }
 
@@ -1448,6 +1467,28 @@ export class Dashboard extends ViewModel {
    */
   nameOK (aName) {
     return this._allNames.indexOf(aName) < 0;
+  }
+
+  /**
+   * Create a default filter.  This is the filter that will be used if the morph 
+   * hasn't been instantiated yet.
+   * @param { string } columnName - Name of the column to filter over
+   * @param { string } filterType - Type of the filter (Select or Range)
+   * @param { string } [tableName] - If non-null, only look for columns in this specfic table.
+   * returns: a dataManagerFilter
+   */
+
+  async _makeDefaultFilter(columnName, filterType, tableName) {
+    if (filterType == 'Range') {
+      const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
+      return{ operator: 'IN_RANGE', column: columnName, max_val: parameters.max, min_val: parameters.min}
+    } else if (filterType === 'NumericSelect') {
+      const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
+      return { operator: 'IN_LIST', values: [parameters.min]}
+    } else {
+      const values = await this.dataManager.getAllValues(columnName, tableName);
+      return { operator: 'IN_LIST', values: [values[0]]}
+    }
   }
 
   /**
@@ -1642,8 +1683,8 @@ export class Dashboard extends ViewModel {
       return this.filters[widgetOrChartName].morph.dataManagerFilter;
     } else if (this.charts[widgetOrChartName]) {
       return this.charts[widgetOrChartName].dataManagerFilter;
-    } else {
-      return null;
+    } else if (this.defaultFilters[widgetOrChartName]) {
+      return this.defaultFilters[widgetOrChartName];
     }
   }
 
