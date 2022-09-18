@@ -1231,12 +1231,16 @@ export class Dashboard extends ViewModel {
       // the descriptors of each type in unorderedDescriptors, keeping the
       // the information we need to instantiate them later
 
-      Object.keys(storedForm.filters).forEach(filterName => {
+      await Promise.all(Object.keys(storedForm.filters).forEach(async filterName => {
         const savedFilter = storedForm.filters[filterName];
-        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter });
+        let storedFilter = savedFilter.savedForm;
+        if (storedFilter.toJS) storedFilter = storedFilter.toJS();
+        const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
+        externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
+        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter, morph: externalFilterMorph});
 
         // const filterMorph = await this._restoreFilterFromSaved(filterName, savedFilter);
-      });
+      }));
 
       Object.keys(storedForm.charts).forEach(chartName => {
         const storedChart = storedForm.charts[chartName];
@@ -1288,7 +1292,7 @@ export class Dashboard extends ViewModel {
       if (descriptor.type === 'chart') {
         return await this._restoreChartFromSaved(descriptor.chartName, descriptor.descriptor);
       } else if (descriptor.type === 'filter') {
-        return await this._restoreFilterFromSaved(descriptor.filterName, descriptor.descriptor);
+        return await this._restoreFilterFromSaved(descriptor.morph, descriptor.descriptor);
       } else {
         return this._restoreMorphFromSaved(descriptor.descriptor);
       }
@@ -1320,14 +1324,11 @@ export class Dashboard extends ViewModel {
 
   /**
    * Restore an external filter from a saved form.
-   * @param { string } filterName - Name of the filter to be restored
+   * @param { NamedFilter } externalFilterMorph - The filter morph to be restored
    * @param { object } savedFilter - The saved filter from the stored form
    */
-  async _restoreFilterFromSaved (filterName, savedFilter) {
-    let storedFilter = savedFilter.savedForm;
-    if (storedFilter.toJS) storedFilter = storedFilter.toJS();
-    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
-    externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
+  async _restoreFilterFromSaved (externalFilterMorph, savedFilter) {
+    
     this._restoreMorphicProperties(savedFilter, externalFilterMorph);
     await externalFilterMorph.whenRendered();//
     return externalFilterMorph;
