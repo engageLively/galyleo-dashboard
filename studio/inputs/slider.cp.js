@@ -527,7 +527,8 @@ class SliderWithValueModel extends ViewModel {
           return [
             ['value', { model: 'slider' }],
             ['minValue', { model: 'slider' }],
-            ['maxValue', { model: 'slider' }]
+            ['maxValue', { model: 'slider' }],
+            ['increment', { model: 'slider' }]
           ];
         }
       },

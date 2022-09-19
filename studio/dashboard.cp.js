@@ -536,6 +536,15 @@ export class Dashboard extends ViewModel {
     }
   }
 
+  /**
+   * Load all the demo dashboards.
+   */
+  async _loadAllDemoDashboards () {
+    const url = 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos/manifest.json';
+    const jsonForm = await resource(url).readJson();
+    this._demoDashboards = jsonForm.dashboards;
+  }
+
   /* -- Code which clears, stores, and loads dashboards from file -- */
 
   /**
@@ -578,6 +587,20 @@ export class Dashboard extends ViewModel {
     }
   }
 
+  // The current set of demo dashboards.  To load a demo,
+  // this.loadDashboardFromURL(this.demoDashboards.name)
+
+  get demoDashboards () {
+    if (this._demoDashboards) {
+      const result = {};
+      const prefix = 'https://raw.githubusercontent.com/engageLively/galyleo-examples/main/demos';
+      this._demoDashboards.forEach(name => result[name] = `${prefix}/${name}.gd.json`);
+      return result;
+    } else {
+      return {};
+    }
+  }
+
   /**
    * Convenience method to load a test dashboard easily by name
    * @param { string } dashboardName - The name of the test dashboard.
@@ -589,6 +612,17 @@ export class Dashboard extends ViewModel {
     }
 
     const dashboardUrl = this.testDashboards[dashboardName];
+    if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
+  }
+
+  // Convenience method to load a demo dashboard easily by name
+
+  async loadDemoDashboard (dashboardName) {
+    if (!this._demoDashboards) {
+      await this._loadAllDemoDashboards();
+    }
+
+    const dashboardUrl = this.demoDashboards[dashboardName];
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
   }
 
@@ -1231,35 +1265,66 @@ export class Dashboard extends ViewModel {
       // to preserve front-to-back ordering.  So the first step is just to collect
       // the descriptors of each type in unorderedDescriptors, keeping the
       // the information we need to instantiate them later
+      //
+      const storedFilterNames = Object.keys(storedForm.filters);
 
-      await Promise.all(Object.keys(storedForm.filters).forEach(async filterName => {
-        const savedFilter = storedForm.filters[filterName]
-        this.defaultFilters[filterName] = this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName)
-        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter, morph: externalFilterMorph});
+      for (let i = 0; i < storedFilterNames.length; i++) {
+        const filterName = storedFilterNames[i];
+        const savedFilter = storedForm.filters[filterName].savedForm;
+        this.defaultFilters[filterName] = await this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName);
+        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: storedForm.filters[filterName] });
+      }
+
+      const getColumnNameTableAndType = viewOrTableName => {
+        if (this.dataManager.tables[viewOrTableName]) {
+          const table = this.dataManager.tables[viewOrTableName];
+          return { columnName: table.columns[0].name, type: table.columns[0].type, tableName: viewOrTableName };
+        } else {
+          const view = this.dataManager.views[viewOrTableName];
+          const table = this.dataManager.tables[view.tableName];
+          return { columnName: view.columns[0], type: table.getColumnType(view.columns[0]), tableName: view.tableName };
+        }
+      };
+
+      const storedChartNames = Object.keys(storedForm.charts);
+      for (let i = 0; i < storedChartNames.length; i++) {
+        const chartName = storedChartNames[i];
+        const storedChart = storedForm.charts[chartName];
+
+        const descriptor = getColumnNameTableAndType(storedChart.viewOrTable);
+        const filterType = descriptor.type == 'number' ? 'NumericSelect' : 'Select';
+        const filter = await this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName);
+        this.defaultFilters[chartName] = filter;
+        unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
+      }
+
+      /* await Promise.all(Object.keys(storedForm.filters).forEach(async filterName => {
+        const savedFilter = storedForm.filters[filterName];
+        this.defaultFilters[filterName] = await this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName);
+        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter });
 
         // const filterMorph = await this._restoreFilterFromSaved(filterName, savedFilter);
       }));
 
       await Promise.all(Object.keys(storedForm.charts).forEach(async chartName => {
         const storedChart = storedForm.charts[chartName];
-        const getColumnNameTableAndType =  viewOrTableName => {
+        const getColumnNameTableAndType = viewOrTableName => {
           if (this.dataManager.tables[viewOrTableName]) {
-            const table = this.dataManager.tables[viewOrTableName]
-            return {columnName: table.columns[0].name, type:table.columns[0].type, tableName: viewOrTableName}
+            const table = this.dataManager.tables[viewOrTableName];
+            return { columnName: table.columns[0].name, type: table.columns[0].type, tableName: viewOrTableName };
           } else {
-            const view = this.dataManager.views[viewOrTableName]
-            const table = this.dataManager.tables[view.tableName]
-            return {columnName: view.columns[0], type: table.getColumnType(columnName), tableName: view.tableName}
+            const view = this.dataManager.views[viewOrTableName];
+            const table = this.dataManager.tables[view.tableName];
+            return { columnName: view.columns[0], type: table.getColumnType(view.columns[0]), tableName: view.tableName };
           }
-        
-        }
-        const descriptor = getColumnNameTableAndType(storedChart.viewOrTable)
-        const filterType = descriptor.type == 'number'?'Numeric Select':'Select'
-        const filter = this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName)
-        this.defaultFilters[chartName] = filter
+        };
+        const descriptor = getColumnNameTableAndType(storedChart.viewOrTable);
+        const filterType = descriptor.type == 'number' ? 'Numeric Select' : 'Select';
+        const filter = await this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName);
+        this.defaultFilters[chartName] = filter;
         unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
       }));
-
+*/
       // We used to store morphs as a dictionary, which we no longer do.  So check
       // the type, and if it's an object, convert to an array.  Fortunately, since
       // Object.keys() of an array returns [0, 1, 2...] the "conversion" here
@@ -1343,13 +1408,16 @@ export class Dashboard extends ViewModel {
 
   /**
    * Restore an external filter from a saved form.
-   * @param { NamedFilter } externalFilterMorph - The filter morph to be restored
+   * @param { string } filterName - Name of the filter to be restored
    * @param { object } savedFilter - The saved filter from the stored form
    */
-  async _restoreFilterFromSaved (externalFilterMorph, savedFilter) {
-    
+  async _restoreFilterFromSaved (filterName, savedFilter) {
+    let storedFilter = savedFilter.savedForm;
+    if (storedFilter.toJS) storedFilter = storedFilter.toJS();
+    const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
+    externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     this._restoreMorphicProperties(savedFilter, externalFilterMorph);
-    await externalFilterMorph.whenRendered();//
+    await externalFilterMorph.whenRendered();
     return externalFilterMorph;
   }
 
@@ -1470,7 +1538,7 @@ export class Dashboard extends ViewModel {
   }
 
   /**
-   * Create a default filter.  This is the filter that will be used if the morph 
+   * Create a default filter.  This is the filter that will be used if the morph
    * hasn't been instantiated yet.
    * @param { string } columnName - Name of the column to filter over
    * @param { string } filterType - Type of the filter (Select or Range)
@@ -1478,16 +1546,16 @@ export class Dashboard extends ViewModel {
    * returns: a dataManagerFilter
    */
 
-  async _makeDefaultFilter(columnName, filterType, tableName) {
+  async _makeDefaultFilter (columnName, filterType, tableName) {
     if (filterType == 'Range') {
       const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
-      return{ operator: 'IN_RANGE', column: columnName, max_val: parameters.max, min_val: parameters.min}
+      return { operator: 'IN_RANGE', column: columnName, max_val: parameters.max, min_val: parameters.min };
     } else if (filterType === 'NumericSelect') {
       const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
-      return { operator: 'IN_LIST', values: [parameters.min]}
+      return { operator: 'IN_LIST', values: [parameters.min_val] };
     } else {
       const values = await this.dataManager.getAllValues(columnName, tableName);
-      return { operator: 'IN_LIST', values: [values[0]]}
+      return { operator: 'IN_LIST', values: [values[0]] };
     }
   }
 
@@ -2254,13 +2322,19 @@ export class Dashboard extends ViewModel {
    * @param { string } chartName - The name of the chart.
    */
   _updateChartFilter (e, wrapper, chartName) {
-    this._lastEvent = e;
+    this._lastEvent = { evt: e, wrapper: wrapper, chartName: chartName };
+    // I've added a ton of instrumenting code, which needs to come out once we've debugged
     const chart = wrapper.getChart();
+    this._lastEvent.chart = chart;
     const table = wrapper.getDataTable();
+    this._lastEvent.table = table;
     const selection = chart.getSelection();
+    this._lastEvent.selection = selection;
     const row = selection[0].row == null ? null : selection[0].row;
     const col = selection[0].col == null ? 0 : selection[0].col;
+    this._lastEvent.coords = { row: row, col: col };
     const value = table.getValue(row, col);
+    this._lastEvent.value = value;
     if (this.charts[chartName].dataManagerFilter) {
       this.charts[chartName].dataManagerFilter.values = [value];
       this.drawAllCharts();
@@ -2289,7 +2363,7 @@ export class Dashboard extends ViewModel {
     if (wrapper) {
       this.lastWrapper = wrapper;
       chart.chartMorph.drawChart(wrapper);
-    }
+    } this.charts.Margin;
   }
 
   /**
@@ -2461,7 +2535,6 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 
 export { LoadDialog, SaveDialog };

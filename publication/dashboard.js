@@ -78,6 +78,7 @@ export default class PublishedDashboard extends ViewModel {
     if (logo) {
       this.view.addMorph(logo);
     }
+    this.defaultFilters = {};
     this._ensureDataManager_();
     this.dataManager.clear();
   }
@@ -125,9 +126,8 @@ export default class PublishedDashboard extends ViewModel {
     }
   }
 
-  // The current set of test dashboards.  To load a test,
-  // this.loadDashboardFromURL(this.testDashboards.name)
-  // It's an object, and needs to be maintained as the test
+  // The current set of demo dashboards.  To load a demo,
+  // this.loadDashboardFromURL(this.demoDashboards.name)
 
   get demoDashboards () {
     if (this._demoDashboards) {
@@ -152,7 +152,7 @@ export default class PublishedDashboard extends ViewModel {
     if (dashboardUrl) { this.loadDashboardFromUrl(dashboardUrl); }
   }
 
-  // Convenience method to load a test dashboard easily by name
+  // Convenience method to load a demo dashboard easily by name
 
   async loadDemoDashboard (dashboardName) {
     if (!this._demoDashboards) {
@@ -467,15 +467,42 @@ export default class PublishedDashboard extends ViewModel {
       // the descriptors of each type in unorderedDescriptors, keeping the
       // the information we need to instantiate them later
 
-      Object.keys(storedForm.filters).forEach(filterName => {
-        const savedFilter = storedForm.filters[filterName];
-        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter });
-      });
+      // Now we need to add morphs, including filters and charts, in order in order
+      // to preserve front-to-back ordering.  So the first step is just to collect
+      // the descriptors of each type in unorderedDescriptors, keeping the
+      // the information we need to instantiate them later
+      //
+      const storedFilterNames = Object.keys(storedForm.filters);
 
-      Object.keys(storedForm.charts).forEach(chartName => {
+      for (let i = 0; i < storedFilterNames.length; i++) {
+        const filterName = storedFilterNames[i];
+        const savedFilter = storedForm.filters[filterName];
+        this.defaultFilters[filterName] = await this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName);
+        unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: savedFilter });
+      }
+
+      const getColumnNameTableAndType = viewOrTableName => {
+        if (this.dataManager.tables[viewOrTableName]) {
+          const table = this.dataManager.tables[viewOrTableName];
+          return { columnName: table.columns[0].name, type: table.columns[0].type, tableName: viewOrTableName };
+        } else {
+          const view = this.dataManager.views[viewOrTableName];
+          const table = this.dataManager.tables[view.tableName];
+          return { columnName: view.columns[0], type: table.getColumnType(view.columns[0]), tableName: view.tableName };
+        }
+      };
+
+      const storedChartNames = Object.keys(storedForm.charts);
+      for (let i = 0; i < storedChartNames.length; i++) {
+        const chartName = storedChartNames[i];
         const storedChart = storedForm.charts[chartName];
+
+        const descriptor = getColumnNameTableAndType(storedChart.viewOrTable);
+        const filterType = descriptor.type == 'number' ? 'Numeric Select' : 'Select';
+        const filter = await this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName);
+        this.defaultFilters[chartName] = filter;
         unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
-      });
+      }
 
       // We used to store morphs as a dictionary, which we no longer do.  So check
       // the type, and if it's an object, convert to an array.  Fortunately, since
@@ -691,6 +718,28 @@ export default class PublishedDashboard extends ViewModel {
 
   nameOK (aName) {
     return this.__allNames__.indexOf(aName) < 0;
+  }
+
+  /**
+   * Create a default filter.  This is the filter that will be used if the morph
+   * hasn't been instantiated yet.
+   * @param { string } columnName - Name of the column to filter over
+   * @param { string } filterType - Type of the filter (Select or Range)
+   * @param { string } [tableName] - If non-null, only look for columns in this specfic table.
+   * returns: a dataManagerFilter
+   */
+
+  async _makeDefaultFilter (columnName, filterType, tableName) {
+    if (filterType == 'Range') {
+      const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
+      return { operator: 'IN_RANGE', column: columnName, max_val: parameters.max, min_val: parameters.min };
+    } else if (filterType === 'NumericSelect') {
+      const parameters = await this.dataManager.getNumericSpec(columnName, tableName);
+      return { operator: 'IN_LIST', values: [parameters.min] };
+    } else {
+      const values = await this.dataManager.getAllValues(columnName, tableName);
+      return { operator: 'IN_LIST', values: [values[0]] };
+    }
   }
 
   // create an externalFilter.  The code for this was moved from
@@ -1049,7 +1098,7 @@ export default class PublishedDashboard extends ViewModel {
     // is whenRendered Needed anymore?
     // await this.whenRendered();
     await this.__loadGoogleChartPackages__();
-    ['charts', 'filters'].forEach(prop => {
+    ['charts', 'filters', 'defaultFilters'].forEach(prop => {
       if (!this[prop]) {
         this[prop] = {};
       }
@@ -1279,4 +1328,3 @@ export default class PublishedDashboard extends ViewModel {
     return chartMorph;
   }
 }
-
