@@ -19,7 +19,12 @@ export class SliderModel extends ViewModel {
       valueChanged: { derived: true, readOnly: true, isSignal: true },
       minValue: { defaultValue: 0 },
       maxValue: { defaultValue: 100 },
-      increment: { defaultValue: 1 },
+      increment: {
+        defaultValue: 1,
+        set (aVal) {
+          this.setProperty('increment', aVal || 1);
+        }
+      },
       value: {
         after: ['submorphs', 'minValue', 'maxValue', 'increment'],
         // set the value to the input value.  Make sure the value is OK,

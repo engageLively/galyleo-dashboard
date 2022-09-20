@@ -194,7 +194,7 @@ const LoadDialog = component(GalyleoWindow, {
 });
 
 export class Dashboard extends ViewModel {
-  /**
+  /** //this.loadTestDashboard('filter-test')
    * Properties.
    * 1. Tables: a dictionary of the tables for this dashboard.  Each table
    *    is a Google Data Table.  See:
@@ -1388,6 +1388,7 @@ export class Dashboard extends ViewModel {
     const savedFilter = storedForm.filters[filterName];
     let storedFilter = savedFilter.savedForm;
     if (storedFilter.toJS) storedFilter = storedFilter.toJS();
+    debugger;
     const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
     externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     return await this.makeFilterMorph(savedFilter.columnName, savedFilter.filterType, savedFilter.part, savedFilter.tableName);
@@ -1415,7 +1416,7 @@ export class Dashboard extends ViewModel {
     let storedFilter = savedFilter.savedForm;
     if (storedFilter.toJS) storedFilter = storedFilter.toJS();
     const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
-    externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
+    // externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     this._restoreMorphicProperties(savedFilter, externalFilterMorph);
     await externalFilterMorph.whenRendered();
     return externalFilterMorph;
@@ -2535,6 +2536,5 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };
