@@ -1388,7 +1388,6 @@ export class Dashboard extends ViewModel {
     const savedFilter = storedForm.filters[filterName];
     let storedFilter = savedFilter.savedForm;
     if (storedFilter.toJS) storedFilter = storedFilter.toJS();
-    debugger;
     const externalFilterMorph = await this.createExternalFilter(filterName, storedFilter.columnName, storedFilter.filterType, this._ensurePart(storedFilter.part), storedFilter.tableName);
     externalFilterMorph.filterMorph.restoreFromSavedForm(storedFilter);
     return await this.makeFilterMorph(savedFilter.columnName, savedFilter.filterType, savedFilter.part, savedFilter.tableName);
@@ -2364,7 +2363,7 @@ export class Dashboard extends ViewModel {
     if (wrapper) {
       this.lastWrapper = wrapper;
       chart.chartMorph.drawChart(wrapper);
-    } this.charts.Margin;
+    }
   }
 
   /**

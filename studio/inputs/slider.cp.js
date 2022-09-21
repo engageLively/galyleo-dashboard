@@ -84,6 +84,7 @@ export class SliderModel extends ViewModel {
   // position, so the knob position is tied to this.
   signalValueChanged () {
     signal(this, 'valueChanged');
+    signal(this.view, 'valueChanged');
   }
 
   // The maximum position of the  knob.  The value of the knob
@@ -576,6 +577,7 @@ class SliderWithValueModel extends ViewModel {
   // called by the connection to the contained valueChanged signal
   signalValueChanged () {
     signal(this, 'valueChanged');
+    signal(this.view, 'valueChanged');
   }
 
   // A wrapper around Slider to update and read the value from the
@@ -861,13 +863,7 @@ const SliderWithValue = component({
         name: 'knob',
         position: pt(84.4, 0)
       }]
-    }), part(SliderInputLabel, { name: 'value input' }), {
-      name: 'indicator',
-      borderColor: Color.rgb(23, 160, 251),
-      borderRadius: 31,
-      extent: pt(49.5, 47.8),
-      fill: Color.rgba(255, 76, 76, 0.54)
-    }
+    }), part(SliderInputLabel, { name: 'value input' })
   ]
 });
 

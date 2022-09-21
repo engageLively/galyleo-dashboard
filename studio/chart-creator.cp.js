@@ -222,7 +222,7 @@ export class ChartBuilderModel extends ViewModel {
     // delete check when we rebind the Create button.
     if (this._checkInputs()) {
       this.dashboard.addChart(this.ui.chartNameInput.textString, this.chartSpecification);
-      this.view.remove();
+      // this.view.remove();
     }
   }
 }
@@ -363,6 +363,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
   init (chartName) {
     this.name = chartName;
     this.html = this.defaultHTML;
+    // debugger;
     delete this.wrapper; // make sure this is clean;
     this.getSubmorphNamed('resizer').bottomRight = this.innerBounds().bottomRight();
     connect(this, 'extent', this, 'requestRedraw');
@@ -380,6 +381,7 @@ export class GoogleChartHolderMorph extends HTMLMorph {
   async requestRedraw () {
     if (this.wrapper) {
       await this.whenRendered(); // ensure width is propagated
+      // debugger;
       this.drawChart(this.wrapper);
     }
   }
@@ -407,7 +409,6 @@ export class GoogleChartHolderMorph extends HTMLMorph {
     this.requestRedraw();
   }
 }
-
 
 const GoogleChartHolder = component({
   name: 'google chart holder',

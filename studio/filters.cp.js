@@ -1251,12 +1251,11 @@ export class SliderFilterMorph extends Morph {
     slider.maxValue = this.maxValue = maxVal;
     slider.increment = increment;
     slider.value = (maxVal - minVal) / 2 + minVal;
-    console.log(slider.maxValue);
     this.columnName = columnName;
     this.tableName = tableName;
     this.signalEnabled = true;
-    debugger;
     connect(slider, 'valueChanged', this, 'valueChanged');
+    // connect(slider.model, 'valueChanged', this, 'valueChanged');
     console.log(slider.maxValue);
   }
 
