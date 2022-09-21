@@ -194,7 +194,7 @@ const LoadDialog = component(GalyleoWindow, {
 });
 
 export class Dashboard extends ViewModel {
-  /** //this.loadTestDashboard('filter-test')
+  /** //this.loadDemoDashboard('presidential-elections/elections')
    * Properties.
    * 1. Tables: a dictionary of the tables for this dashboard.  Each table
    *    is a Google Data Table.  See:
@@ -2312,7 +2312,31 @@ export class Dashboard extends ViewModel {
     this.lastChartType = [chart.chartType, wrapper.getType()];
     wrapper.setDataTable(dataTable);
     this.gViz.events.addListener(wrapper, 'select', e => { this._updateChartFilter(e, wrapper, chartName); });
+    this.gViz.events.addListener(wrapper, 'ready', e => { this._setChartForChartMorph(e, wrapper, chartName); });
+    this.gViz.events.addListener(wrapper, 'error', e => { this._setErrorForChart(e, wrapper, chartName); });
     return wrapper;
+  }
+
+  /**
+   * When a wrapper has a ready event, the getChart() method returns non-null.  So use it to grab a handle to the chart
+   * and add it to the morph
+   * @param {Event} e - the ready event
+   * @param {object} wrapper -- the chart wrapper
+   * @param {string} chartName -- tha name of the chart
+   */
+  _setChartForChartMorph (e, wrapper, chartName) {
+    const morph = this.charts[chartName].actualChart = wrapper.getChart();
+  }
+
+  /**
+   * When a wrapper has a ready event, the getChart() method returns non-null.  So use it to grab a handle to the chart
+   * and add it to the morph
+   * @param {Event} e - the ready event
+   * @param {object} wrapper -- the chart wrapper
+   * @param {string} chartName -- tha name of the chart
+   */
+  _setChartForChartMorph (e, wrapper, chartName) {
+    const morph = this.charts[chartName].actualChart = wrapper.getChart();
   }
 
   /**
