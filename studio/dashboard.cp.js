@@ -2313,7 +2313,7 @@ export class Dashboard extends ViewModel {
     wrapper.setDataTable(dataTable);
     this.gViz.events.addListener(wrapper, 'select', e => { this._updateChartFilter(e, wrapper, chartName); });
     this.gViz.events.addListener(wrapper, 'ready', e => { this._setChartForChartMorph(e, wrapper, chartName); });
-    this.gViz.events.addListener(wrapper, 'error', e => { this._setErrorForChart(e, wrapper, chartName); });
+    this.gViz.events.addListener(wrapper, 'error', e => { this._setErrorForChart(e, chartName); });
     return wrapper;
   }
 
@@ -2335,8 +2335,8 @@ export class Dashboard extends ViewModel {
    * @param {object} wrapper -- the chart wrapper
    * @param {string} chartName -- tha name of the chart
    */
-  _setChartForChartMorph (e, wrapper, chartName) {
-    const morph = this.charts[chartName].actualChart = wrapper.getChart();
+  _setErrorForChartMorph (e, chartName) {
+    const morph = this.charts[chartName].error = { id: e.id, message: e.message };
   }
 
   /**
