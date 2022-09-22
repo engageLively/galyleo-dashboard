@@ -1463,7 +1463,7 @@ export class Dashboard extends ViewModel {
     await this.addChart(chartName, chartSpecification, false);
     const chartMorph = this.charts[chartName].chartMorph;
     this._restoreMorphicProperties(storedChart, chartMorph);
-    await chartMorph.whenRendered();
+    // await chartMorph.whenRendered();
     return chartMorph;
   }
 
@@ -2325,6 +2325,7 @@ export class Dashboard extends ViewModel {
    * @param {string} chartName -- tha name of the chart
    */
   _setChartForChartMorph (e, wrapper, chartName) {
+    console.log(`Chart ready event for ${chartName}: ${wrapper.getChart()}`);
     const morph = this.charts[chartName].actualChart = wrapper.getChart();
   }
 
@@ -2336,6 +2337,7 @@ export class Dashboard extends ViewModel {
    * @param {string} chartName -- tha name of the chart
    */
   _setErrorForChartMorph (e, chartName) {
+    console.log(`Error in drawing chart ${chartName}: ${e.message}`);
     const morph = this.charts[chartName].error = { id: e.id, message: e.message };
   }
 

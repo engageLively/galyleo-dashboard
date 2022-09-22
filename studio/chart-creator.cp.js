@@ -395,8 +395,10 @@ export class GoogleChartHolderMorph extends HTMLMorph {
   drawChart (wrapper) {
     wrapper.setOption('width', '100%');
     wrapper.setOption('height', '100%');
-    wrapper.draw(this.chartDiv);
-    this.wrapper = wrapper;
+    this.whenRendered().then(_ => {
+      wrapper.draw(this.chartDiv);
+      this.wrapper = wrapper;
+    });
   }
 
   /**

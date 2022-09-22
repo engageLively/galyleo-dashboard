@@ -117,7 +117,7 @@ export class BooleanFilterMorph extends Morph {
    */
 
   get dataManagerFilter () {
-    return { column: this.columnName, operator: 'IN_LIST', values: [this.getSubmorphNamed('aToggle').state] };
+    return { column: this.columnName, operator: 'IN_LIST', values: [this.getSubmorphNamed('toggle').state] };
   }
 
   /**
