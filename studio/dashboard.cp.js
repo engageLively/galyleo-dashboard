@@ -252,7 +252,7 @@ export class Dashboard extends ViewModel {
             'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
             'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
             'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter',
-            'relayout'
+            'relayout', 'dataManager'
 
           ];
         }
@@ -2076,6 +2076,10 @@ export class Dashboard extends ViewModel {
       delete this.dataManager.tables[tableName];
       this.dashboardController.update();
     }
+  }
+
+  addView (viewName, spec) {
+    this.dataManager.addView(viewName, spec);
   }
 
   // /**

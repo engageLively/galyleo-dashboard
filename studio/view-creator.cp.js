@@ -54,7 +54,7 @@ export class ViewBuilderModel extends ViewModel {
    */
   init (viewName, dashboard) {
     const aView = dashboard.views[viewName];
-    this.table = aView.table;
+    this.table = aView.tableName;
     this.dashboard = dashboard;
     this.viewName = viewName;
     // udpate the lable with the view's name
@@ -62,7 +62,7 @@ export class ViewBuilderModel extends ViewModel {
     // initialize the column chooser with all columns from the table.
     // the second parameter to columnChooser.init is the currently selected
     // columns, if any; this is in aView.columns
-    const allColumns = this.dashboard.getColumnsOfType([], this.table);
+    const allColumns = this.dashboard.dataManager.getColumnsOfTypes([], this.table);
     this.initColumnChooser(allColumns, aView.columns);
     // initialize the widget chooser with all widgets from the dashboard whose
     // column is one of the columns in the table (a widget over a column not
@@ -77,7 +77,7 @@ export class ViewBuilderModel extends ViewModel {
     // and pick up the filters that are embedded in the charts
     let chartNames = this.dashboard.chartNames;
     chartNames = chartNames.filter(chartName => {
-      const chartColumn = this.dashboard.charts[chartName].filter.columnName;
+      const chartColumn = this.dashboard.charts[chartName].filter.column;
       return allColumns.indexOf(chartColumn) >= 0;
     });
     filterNames = filterNames.concat(chartNames);
@@ -186,7 +186,6 @@ export class ViewBuilderModel extends ViewModel {
     this.ui.columnList.toggleOrderMode();
   }
 }
-
 
 // ViewBuilder.openInWorld();
 const ViewBuilder = component(GalyleoWindow, {

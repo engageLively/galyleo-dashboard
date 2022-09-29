@@ -90,7 +90,8 @@ export class FilterBuilderModel extends ViewModel {
         get () {
           return [
             { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'confirm button', signal: 'fire', handler: 'createFilter' }
+            { model: 'confirm button', signal: 'fire', handler: 'createFilter' },
+            { model: 'filter selector', signal: 'selection', handler: 'updateColumns' }
           ];
         }
       }
@@ -126,15 +127,15 @@ export class FilterBuilderModel extends ViewModel {
    * @returns { string[] } A list of column names which match the types the filter can accept.
    */
   getColumns (filterType) {
-    return this.dashboard ? this.dashboard.dataManager.getColumnsOfType([]) : [];
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes([]) : [];
   }
 
   getColumnsOfType (typeArray) {
-    return this.dashboard ? this.dashboard.dataManager.getColumnsOfType(typeArray) : [];
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes(typeArray) : [];
   }
 
   viewDidLoad () {
-    this._initDropDowns();
+    // this.init();
   }
 
   /**
@@ -280,7 +281,7 @@ export class FilterBuilderModel extends ViewModel {
     const columnSelector = this.ui.columnSelector;
     const selectedFilter = this.filterTypes[this.ui.filterSelector.selection];
     if (!selectedFilter) return;
-    const columns = this.filterCreator.getColumns(selectedFilter.columnTypes);
+    const columns = this.getColumnsOfType(selectedFilter.columnTypes);
     if (columns && columns.length > 0) {
       columnSelector.items = columns;
       if (this._editedFilter) {
@@ -317,7 +318,8 @@ export class FilterEditorModel extends FilterBuilderModel {
         get () {
           return [
             { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'confirm button', signal: 'fire', handler: 'applyChanges' }
+            { model: 'confirm button', signal: 'fire', handler: 'applyChanges' },
+            { model: 'filter selector', signal: 'selection', handler: 'updateColumns' }
           ];
         }
       }

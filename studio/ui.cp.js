@@ -427,7 +427,6 @@ export default class Galyleo extends ViewModel {
   }
 }
 
-
 // part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({
   name: 'galyleo dashboard studio',
@@ -447,7 +446,10 @@ const GalyleoDashboardStudio = component({
     part(GalyleoSideBar, {
       name: 'side bar',
       position: pt(651.9, 0),
-      height: 800
+      height: 800,
+      viewModel: {
+        isHaloItem: false
+      }
     })
   ]
 });
