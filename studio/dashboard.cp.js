@@ -1723,7 +1723,7 @@ export class Dashboard extends ViewModel {
    * @param { string } viewOrTable - The name of the view or table to show the data for.
    */
   async displayPreview (viewOrTable) {
-    const dataTable = this.prepareData(viewOrTable);
+    const dataTable = await this.prepareData(viewOrTable);
     if (dataTable === null) {
       return;
     }
@@ -1959,7 +1959,7 @@ export class Dashboard extends ViewModel {
     if (tableNames.indexOf(name) >= 0) {
       title = this._makeTitleForTable(tableDict[name], name);
     } else if (viewNames.indexOf(chart.viewOrTable) >= 0) {
-      title = this._makeTitleForView(viewDict[name], name, useDataManager);
+      title = this._makeTitleForView(viewDict[name], name);
     } else {
       return null;
     }
