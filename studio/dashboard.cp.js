@@ -2061,7 +2061,7 @@ export class Dashboard extends ViewModel {
     let msg = `${viewName} is used by charts ${usedBy.join(', ')}.  Proceed?`;
     let goAhead = usedBy.length > 0 ? await this.confirm(msg) : true;
     if (goAhead) {
-      delete this.views[viewName];
+      this.dataManager.removeView(viewName)
       this.dashboardController.update();
     }
   }
@@ -2082,7 +2082,7 @@ export class Dashboard extends ViewModel {
     let msg = `${tableName} is used by ${usedBy.join(', ')}.  Proceed?`;
     let goAhead = usedBy.length > 0 ? await this.confirm(msg) : true;
     if (goAhead) {
-      delete this.dataManager.tables[tableName];
+      this.dataManager.removeTable(tableName)
       this.dashboardController.update();
     }
   }
@@ -2247,7 +2247,7 @@ export class Dashboard extends ViewModel {
         return;
       }
       // A convenience to get the column names from a table
-      const tableColumns = tableName => this.tables[tableName].cols.map(column => column.id);
+      const tableColumns = tableName => this.tables[tableName].columns.mpa(column => column.name);
       // make sure the columns all exist
       const availableColumns = tableColumns(tableName);
 

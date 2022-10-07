@@ -1111,6 +1111,14 @@ export class GalyleoDataManager {
   }
 
   /**
+   * Remove a view
+   * @param {string} name name of the view
+   */
+   removeView (name) {
+    delete this.views[name];
+  }
+
+  /**
    * Get all the tables which contain a column, narrowing it to the specific set of requested types
    * if specified.  Internal routine used by getAllValues and getNumericSpec
    * @param {string} columnName: column to get all the values for
