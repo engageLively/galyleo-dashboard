@@ -1662,11 +1662,11 @@ export class Dashboard extends ViewModel {
     // create a new one.
     let editor;
     if (this.viewBuilders[viewName]) {
-      this._initViewEditor(this.viewBuilders[viewName], viewName);
+      editor = this.viewBuilders[viewName];
     } else {
       editor = part(ViewBuilder);
-      this._initViewEditor(editor, viewName);
     }
+    this._initViewEditor(editor, viewName);
     editor.center = $world.innerBounds().center();
   }
 
@@ -1815,7 +1815,7 @@ export class Dashboard extends ViewModel {
       return;
     }
     const filterSpecs = {};
-    aView.filters.forEach(filterName => {
+    aView.filterNames.forEach(filterName => {
       filterSpecs[filterName] = this._getFilterForName(filterName);
     });
     const columns = aView.fullColumns(this.dataManager.tables).map(column => this._createGVizColumn(column));
@@ -2080,6 +2080,7 @@ export class Dashboard extends ViewModel {
 
   addView (viewName, spec) {
     this.dataManager.addView(viewName, spec);
+    this.dashboardController.update();
   }
 
   // /**

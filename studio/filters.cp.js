@@ -391,6 +391,7 @@ export class DoubleSliderFilterMorph extends Morph {
     this.columnName = columnName;
     this.tableName = tableName;
     this.signalEnabled = true;
+    connect(doubleSlider, 'rangeChanged', this, 'rangeChanged');
   }
 
   /**
@@ -433,7 +434,7 @@ export class DoubleSliderFilterMorph extends Morph {
    */
 
   get dataManagerFilter () {
-    const range = this.getSubmorphNamed('doubleSlider').range;
+    const range = this.doubleSlider.range;
     return { operator: 'IN_RANGE', column: this.columnName, max_val: range.max, min_val: range.min };
   }
 

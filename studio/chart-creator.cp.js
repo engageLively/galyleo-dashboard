@@ -222,7 +222,7 @@ export class ChartBuilderModel extends ViewModel {
     // delete check when we rebind the Create button.
     if (this._checkInputs()) {
       this.dashboard.addChart(this.ui.chartNameInput.textString, this.chartSpecification);
-      // this.view.remove();
+      this.view.remove();
     }
   }
 }

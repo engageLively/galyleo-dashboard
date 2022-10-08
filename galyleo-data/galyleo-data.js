@@ -1,6 +1,6 @@
 import { resource } from 'lively.resources';
 import { signal } from 'lively.bindings';
-import Inspector, { inspect } from 'lively.ide/js/inspector.js';
+// import Inspector, { inspect } from 'lively.ide/js/inspector.js';
 
 /*
 BSD 3-Clause License

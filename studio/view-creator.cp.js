@@ -173,7 +173,8 @@ export class ViewBuilderModel extends ViewModel {
    * when the Update View button is fired.
    */
   updateView () {
-    this.dashboard.views[this.viewName] = this.viewSpec;
+    this.dashboard.addView(this.viewName, this.viewSpec);
+    // this.dashboard.views[this.viewName] = this.viewSpec;
     this.dashboard.dirty = true;
     this.view.remove();
   }
