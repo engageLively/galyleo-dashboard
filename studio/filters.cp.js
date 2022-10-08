@@ -334,6 +334,7 @@ const DateFilter = component(VisualFilter, {
 export class DoubleSliderFilterMorph extends Morph {
   static get properties () {
     return {
+      filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
       minVal: { defaultValue: null },
@@ -383,7 +384,7 @@ export class DoubleSliderFilterMorph extends Morph {
    */
   init (columnName, tableName, minVal, maxVal, increment) {
     this.signalEnabled = false;
-    const doubleSlider = this.getSubmorphNamed('double slider');
+    const { doubleSlider } = this;
     doubleSlider.minValue = minVal;
     doubleSlider.maxValue = maxVal;
     doubleSlider.increment = increment;
@@ -391,7 +392,7 @@ export class DoubleSliderFilterMorph extends Morph {
     this.columnName = columnName;
     this.tableName = tableName;
     this.signalEnabled = true;
-    connect(doubleSlider, 'rangeChanged', this, 'rangeChanged');
+    connect(doubleSlider, 'rangeChanged', this, 'signalRangeChanged');
   }
 
   /**
@@ -403,7 +404,7 @@ export class DoubleSliderFilterMorph extends Morph {
    * timeout of a few ms, and at the end of that change signalEnabled to true and
    * fire the signal.
    */
-  rangeChanged () {
+  signalRangeChanged () {
     if (this.signalEnabled) {
       this.signalEnabled = false;
       setTimeout(_ => {
@@ -566,6 +567,7 @@ export class ListFilterMorph extends Morph {
    * the pulldown selection changes.
    */
   signalFilterChanged () {
+    console.log('List changed');
     signal(this, 'filterChanged');
   }
 
@@ -628,6 +630,7 @@ export class ListFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
+
 
 // ListFilter.openInWorld()
 const ListFilter = component(VisualFilter, {
@@ -1168,6 +1171,7 @@ export class SelectFilterMorph extends Morph {
   }
 }
 
+
 // part(SelectFilter).openInWorld()
 const SelectFilter = component(VisualFilter, {
   name: 'select filter',
@@ -1257,7 +1261,6 @@ export class SliderFilterMorph extends Morph {
     this.signalEnabled = true;
     connect(slider, 'valueChanged', this, 'valueChanged');
     // connect(slider.model, 'valueChanged', this, 'valueChanged');
-    console.log(slider.maxValue);
   }
 
   /**

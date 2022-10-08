@@ -376,7 +376,9 @@ class DoubleSliderModel extends ViewModel {
   // the rangeChanged signal
 
   signalRangeChanged () {
+    console.log('Double Slider With Values Range Changed');
     signal(this, 'rangeChanged');
+    signal(this.view, 'rangeChanged');
   }
 
   // The maximum position of the right-hand knob.  The value of the knob
@@ -666,6 +668,7 @@ class DoubleSliderWithValuesModel extends ViewModel {
   // called by the connection to the contained rangeChanged signal
   signalRangeChanged () {
     signal(this, 'rangeChanged');
+    signal(this.view, 'rangeChanged');
   }
 
   viewDidLoad () {
