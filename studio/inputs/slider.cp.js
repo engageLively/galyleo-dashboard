@@ -376,7 +376,6 @@ class DoubleSliderModel extends ViewModel {
   // the rangeChanged signal
 
   signalRangeChanged () {
-    console.log('Double Slider With Values Range Changed');
     signal(this, 'rangeChanged');
     signal(this.view, 'rangeChanged');
   }

@@ -410,6 +410,9 @@ export default class Galyleo extends ViewModel {
 
   relayout () {
     const { ui: { sideBar, topBar }, view } = this;
+    if (view.respondsToVisibleWindow) {
+      view.extent = this.world().visibleBounds().extent();
+    }
     sideBar.height = view.height;
     topBar.width = view.width;
   }

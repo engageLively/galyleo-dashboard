@@ -559,7 +559,7 @@ export class ListFilterMorph extends Morph {
     this.valueList.items = choices;
     this.isString = isString;
     this.valueList.selection = choices[0];
-    connect(this.valueList, 'selection', this, 'filterChanged');
+    connect(this.valueList, 'selection', this, 'signalFilterChanged');
   }
 
   /**
@@ -567,7 +567,6 @@ export class ListFilterMorph extends Morph {
    * the pulldown selection changes.
    */
   signalFilterChanged () {
-    console.log('List changed');
     signal(this, 'filterChanged');
   }
 
@@ -630,7 +629,6 @@ export class ListFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
-
 
 // ListFilter.openInWorld()
 const ListFilter = component(VisualFilter, {
@@ -1170,7 +1168,6 @@ export class SelectFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
-
 
 // part(SelectFilter).openInWorld()
 const SelectFilter = component(VisualFilter, {

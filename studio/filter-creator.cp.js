@@ -108,7 +108,7 @@ export class FilterBuilderModel extends ViewModel {
   get filterTypes () {
     return {
       dropdown: { columnTypes: [], filterType: 'Select', part: SelectFilter },
-      // list: { columnTypes: [], filterType: 'Select', part: ListFilter },
+      list: { columnTypes: [], filterType: 'Select', part: ListFilter },
       // minMax: { columnTypes: ['number'], filterType: 'Range', part: RangeFilter },
       doubleSlider: { columnTypes: ['number'], filterType: 'Range', part: DoubleSliderFilter },
       slider: { columnTypes: ['number'], filterType: 'NumericSelect', part: SliderFilter },

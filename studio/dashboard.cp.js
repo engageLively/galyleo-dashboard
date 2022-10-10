@@ -771,7 +771,7 @@ export class Dashboard extends ViewModel {
           savedForm: externalMorph.filterMorph.persistentForm,
           morphIndex: canvas.submorphs.indexOf(externalMorph),
           morphicProperties: this._getFields(externalMorph, this._morphicFields),
-          complexMorphicProperties: this._complexMorphicFields(morph)
+          complexMorphicProperties: this._complexMorphicFields(externalMorph)
         }));
       }, filters)
     ).updateIn(['morphs'], morphs =>
@@ -1027,11 +1027,11 @@ export class Dashboard extends ViewModel {
   _getObjectsFromSnapshot (snapObject) {
     const descriptors = [];
 
-    const savedFilters = snapObject.filters.toObject();
+    const savedFilters = snapObject.filters.toJS();
     Object.keys(savedFilters).forEach(name => {
       descriptors.push({ type: 'filter', name: name, descriptor: savedFilters[name] });
     });
-    const savedCharts = snapObject.charts.toObject();
+    const savedCharts = snapObject.charts.toJS();
     Object.keys(savedCharts).forEach(name => {
       descriptors.push({ type: 'chart', name: name, descriptor: savedCharts[name] });
     });
@@ -1056,18 +1056,15 @@ export class Dashboard extends ViewModel {
       return;
     }
     this._restore = true;
-    try {
-      this.clear();
-      const snapObject = snapshot.toObject();
 
-      this.dataManager.tables = snapObject.tables.toObject();
-      this.dataManager.views = snapObject.views.toObject();
-      const descriptors = this._getObjectsFromSnapshot_(snapObject);
-      await this._restoreMorphsFromDescriptors(descriptors);
-      this.dashboardController.update();
-    } catch (e) {
-      console.log(`Error in _restoreFromSnapshot_ :${e}`);
-    }
+    this.clear();
+    const snapObject = snapshot.toObject();
+
+    this.dataManager.tables = snapObject.tables.toObject();
+    this.dataManager.views = snapObject.views.toObject();
+    const descriptors = this._getObjectsFromSnapshot(snapObject);
+    await this._restoreMorphsFromDescriptors(descriptors);
+    this.dashboardController.update();
     this._restore = false;
   }
 
@@ -1428,21 +1425,33 @@ export class Dashboard extends ViewModel {
    * @return { Morph } The original or resolved component.
    */
   _ensurePart (componentOrString) {
-    if (componentOrString.isComponent) return componentOrString;
+    let partName;
+    if (componentOrString.exportedName) {
+      // there has to be a better way to do this
+      partName = componentOrString.exportedName;
+    } else if (componentOrString.startsWith('part://')) {
+      const pathParts = componentOrString.split('/');
+      partName = pathParts[pathParts.length - 1];
+    } else {
+      partName = componentOrString;
+    }
+
     const parts = {
       'select filter': SelectFilter,
+      SelectFilter: SelectFilter,
       DateFilter: DateFilter,
       'list filter': ListFilter,
+      ListFilter: ListFilter,
       'range filter': RangeFilter,
+      RangeFilter: RangeFilter,
       SliderFilter: SliderFilter,
       booleanFilter: BooleanFilter,
-      doubleSliderFilter: DoubleSliderFilter
+      BooleanFilter: BooleanFilter,
+      doubleSliderFilter: DoubleSliderFilter,
+      DoubleSliderFilter: DoubleSliderFilter
     };
-    if (componentOrString.startsWith('part://')) {
-      const pathParts = componentOrString.split('/');
-      const partName = pathParts[pathParts.length - 1];
-      return parts[partName];
-    }
+    return parts[partName];
+
     /* return ({
       'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
     })[componentOrString]; */
