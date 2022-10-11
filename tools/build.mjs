@@ -12,7 +12,7 @@ const build = await rollup({
   plugins: [
     lively({
       autoRun: { title: 'Galyleo Dashboard' },
-      minify: true,
+      minify: false,
       asBrowserModule: true,
       excludedModules: [
 	'lively.collab',
