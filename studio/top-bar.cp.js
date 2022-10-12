@@ -6,7 +6,7 @@ import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user/morphic/user-ui.js';
-import { signal } from "lively.bindings/index.js";
+import { signal } from 'lively.bindings/index.js';
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -58,9 +58,6 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 }
 
-
-
-
 // GalyleoTopBar.openInWorld()
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',
@@ -87,6 +84,10 @@ const GalyleoTopBar = component(TopBar, {
         without('undo button'),
         without('redo button'),
         without('save button'),
+        {
+          name: 'text mode button',
+          visible: false
+        },
         add({
           type: Label,
           name: 'help button',
@@ -105,7 +106,7 @@ const GalyleoTopBar = component(TopBar, {
           name: 'shape mode button',
           extent: pt(47.9, 24.7)
         }
-      ] 
+      ]
     },
     without('user flap')]
 });
