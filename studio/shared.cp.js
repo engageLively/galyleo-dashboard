@@ -6,7 +6,7 @@ import { MorphList, DropDownListModel } from 'lively.components';
 import { connect, noUpdate } from 'lively.bindings';
 import { SystemList } from 'lively.ide/styling/shared.cp.js';
 import { DropDownList } from 'lively.components/list.cp.js';
-import { NumberInput, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
+import { NumberInputDark, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
 import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
@@ -404,9 +404,9 @@ const GalyleoTextInput = component(TextInput, {
   fontColor: Color.black
 });
 
-// m = part(NumberInput).openInWorld()
+// m = part(GalyleoNumberInput).openInWorld()
 // m.master = GalyleoNumberInput
-const GalyleoNumberInput = component(NumberInput, {
+const GalyleoNumberInput = component(NumberInputDark, {
   name: 'galyleo/number input',
   borderColor: Color.rgbHex('8E9B9B'),
   borderWidth: 1,
