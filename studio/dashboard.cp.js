@@ -1056,15 +1056,18 @@ export class Dashboard extends ViewModel {
       return;
     }
     this._restore = true;
+    try {
+      this.clear();
+      const snapObject = snapshot.toObject();
 
-    this.clear();
-    const snapObject = snapshot.toObject();
-
-    this.dataManager.tables = snapObject.tables.toObject();
-    this.dataManager.views = snapObject.views.toObject();
-    const descriptors = this._getObjectsFromSnapshot(snapObject);
-    await this._restoreMorphsFromDescriptors(descriptors);
-    this.dashboardController.update();
+      this.dataManager.tables = snapObject.tables.toObject();
+      this.dataManager.views = snapObject.views.toObject();
+      const descriptors = this._getObjectsFromSnapshot_(snapObject);
+      await this._restoreMorphsFromDescriptors(descriptors);
+      this.dashboardController.update();
+    } catch (e) {
+      console.log(`Error in _restoreFromSnapshot_ :${e}`);
+    }
     this._restore = false;
   }
 
@@ -1450,7 +1453,7 @@ export class Dashboard extends ViewModel {
       doubleSliderFilter: DoubleSliderFilter,
       DoubleSliderFilter: DoubleSliderFilter
     };
-    return parts[partName];
+      return parts[partName];
 
     /* return ({
       'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
@@ -1675,7 +1678,7 @@ export class Dashboard extends ViewModel {
     } else {
       editor = part(ViewBuilder);
     }
-    this._initViewEditor(editor, viewName);
+      this._initViewEditor(editor, viewName);
     editor.center = $world.innerBounds().center();
   }
 
@@ -2247,7 +2250,7 @@ export class Dashboard extends ViewModel {
         return;
       }
       // A convenience to get the column names from a table
-      const tableColumns = tableName => this.tables[tableName].columns.mpa(column => column.name);
+      const tableColumns = tableName => this.tables[tableName].columns.map(column => column.name);
       // make sure the columns all exist
       const availableColumns = tableColumns(tableName);
 
