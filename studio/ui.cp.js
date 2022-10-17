@@ -229,7 +229,7 @@ export default class Galyleo extends ViewModel {
   viewDidLoad () {
     if (this.inJupyterLab) {
       this._initMessageListeners();
-      // this.ui.addKeyBindings([{ command: 'save', keys: { mac: 'Meta-S', win: 'Ctrl-S' } }]);
+      this.view.addKeyBindings([{ command: 'save', keys: { mac: 'Meta-S', win: 'Ctrl-S' } }]);
     }
     this.relayout();
     this._messages = [];
@@ -336,7 +336,7 @@ export default class Galyleo extends ViewModel {
       'galyleo:load': async (data) => {
         this.lastData = data;
         await this.ui.dashboard.restoreFromJSONForm(data.jsonString);
-        // await this.whenRendered();
+        await this.view.whenRendered();
         const loadScreen = document.getElementById('loading-screen');
         if (loadScreen) {
           loadScreen.remove();
