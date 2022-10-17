@@ -237,6 +237,10 @@ export default class Galyleo extends ViewModel {
     this.ui.topBar.attachToTarget(this.ui.dashboard);
     this.models.sideBar.init(this.ui.dashboard);
     this.models.dashboard.init(this.ui.sideBar);
+    this.focusStealer = this.view.addMorph({
+      opacity: 0
+    });
+    this.focusStealer.stealFocus = true;
   }
 
   resizeDashboard () {
