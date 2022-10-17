@@ -238,7 +238,8 @@ export default class Galyleo extends ViewModel {
     this.models.sideBar.init(this.ui.dashboard);
     this.models.dashboard.init(this.ui.sideBar);
     this.focusStealer = this.view.addMorph({
-      opacity: 0
+      opacity: 0,
+      type: 'text'
     });
     this.focusStealer.stealFocus = true;
   }
