@@ -229,7 +229,7 @@ export default class Galyleo extends ViewModel {
   viewDidLoad () {
     if (this.inJupyterLab) {
       this._initMessageListeners();
-      this.addKeyBindings([{ command: 'save', keys: { mac: 'Meta-S', win: 'Ctrl-S' } }]);
+      // this.ui.addKeyBindings([{ command: 'save', keys: { mac: 'Meta-S', win: 'Ctrl-S' } }]);
     }
     this.relayout();
     this._messages = [];
@@ -336,12 +336,11 @@ export default class Galyleo extends ViewModel {
       'galyleo:load': async (data) => {
         this.lastData = data;
         await this.ui.dashboard.restoreFromJSONForm(data.jsonString);
-        await this.whenRendered();
+        // await this.whenRendered();
         const loadScreen = document.getElementById('loading-screen');
         if (loadScreen) {
           loadScreen.remove();
         }
-        this._changel2lRoom_();
 
         this.relayout();
       },
@@ -349,7 +348,7 @@ export default class Galyleo extends ViewModel {
         const { dashboard } = this.ui;
         if (data.path) {
           this.dashboardFilePath = data.path;
-          this._changel2lRoom_();
+          // this._changel2lRoom_();
         }
         const { dashboardFilePath } = this;
         const jsonString = dashboard.prepareJSONForm();
@@ -360,7 +359,7 @@ export default class Galyleo extends ViewModel {
       'galyleo:rename': (data) => {
         if (data.path) {
           this.dashboardFilePath = data.path;
-          this._changel2lRoom_();
+          // this._changel2lRoom_();
         }
       },
       'galyleo:undo': (data) => {

@@ -247,7 +247,7 @@ export class Dashboard extends ViewModel {
             'clear', 'checkAndLoad', 'checkPossibleRenameFromBrowser',
             'checkPossibleRename', 'dependencyGraph', 'testDashboards',
             'loadTestDashboard', 'loadDashboardFromFile', 'checkAndSave',
-            'saveDashboardToFile', 'prepareJSONForm', 'getColumnsOfType',
+            'saveDashboardToFile', 'prepareJSONForm', 'restoreFromJSONForm', 'getColumnsOfType',
             'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
             'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
             'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
