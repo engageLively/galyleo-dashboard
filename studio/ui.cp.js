@@ -112,17 +112,17 @@ export class GalyleoStudioWorld extends LivelyWorld {
   keepHalo (evt) {
     const pos = evt.positionIn(this);
     const insideDashboard = this.getSubmorphNamed('dashboard').fullContainsWorldPoint(pos);
-    const insideSideBar = this.getSubmorphNamed('dashboard side bar').fullContainsWorldPoint(pos);
+    const insideSideBar = this.getSubmorphNamed('side bar').fullContainsWorldPoint(pos);
     const inColorPicker = this.getSubmorphsByStyleClassName('ColorPicker').find(cp => cp.fullContainsWorldPoint(pos));
     return !insideDashboard || insideSideBar || inColorPicker;
   }
 
   getHaloMask () {
     const dashboard = this.getSubmorphNamed('dashboard');
-    const sideBar = this.getSubmorphNamed('dashboard side bar');
+    const sideBar = this.getSubmorphNamed('side bar');
     return dashboard
       .globalBounds()
-      .withWidth(this.width - (sideBar.isToggled ? sideBar.width : 0));
+      .withWidth(this.width - (sideBar.viewModel.isToggled ? sideBar.width : 0));
   }
 
   showHaloFor (target, pointerId = this.firstHand && this.firstHand.pointerId, focus = true) {
