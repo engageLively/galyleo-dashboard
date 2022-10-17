@@ -1,7 +1,8 @@
 import { part } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
+import { GalyleoStudioWorld } from './ui.cp.js';
 
-// part(GalyleoDashboardStudio).openInWindow()
+// part(GalyleoDashboardStudio).openInWorld()
 
 export async function main () {
   const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en');
@@ -13,7 +14,7 @@ export async function main () {
 
 export const TITLE = 'Galyleo Dashboard Studio';
 
-export const WORLD_CLASS = LivelyWorld;
+export const WORLD_CLASS = GalyleoStudioWorld;
 
 export const EXCLUDED_MODULES = [
   'pouchdb',
@@ -24,4 +25,3 @@ export const EXCLUDED_MODULES = [
   'lively.storage',
   'lively.user'
 ];
-
