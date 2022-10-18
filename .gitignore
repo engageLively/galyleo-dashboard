@@ -34,3 +34,6 @@ jupyterlab-universal-extension/.devcontainer/Dockerfile
 jupyterlab-universal-extension/.ipynb_checkpoints/untitled.gd-checkpoint.json
 jupyterlab-universal-extension/@engageLively/galyleo/package.json
 studio/dashboard1.js
+*.gd.json
+.ipynb_checkpoints/*
+jupyterlab-universal-extension/.ipynb_checkpoints/*
