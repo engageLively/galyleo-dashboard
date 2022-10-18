@@ -73,7 +73,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   }
 
   requestSave () {
-    this.getSubmorphNamed('galyleo').requestSave();
+    this.getSubmorphNamed('galyleo dashboard studio').requestSave();
     return true; // must return something to stop the event
   }
 
@@ -185,7 +185,7 @@ export default class Galyleo extends ViewModel {
       },
       expose: {
         get () {
-          return ['halos', 'withTopBarDo', 'relayout'];
+          return ['halos', 'withTopBarDo', 'relayout', 'requestSave', 'clearFocus'];
         }
       },
       bindings: {
