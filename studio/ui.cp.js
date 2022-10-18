@@ -28,7 +28,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   }
 
   withTopBarDo (cb) {
-    const topBar = this.getSubmorphNamed('dashboard').get('tool bar');
+    const topBar = this.getSubmorphNamed('dashboard').get('top bar');
     cb(topBar);
   }
 

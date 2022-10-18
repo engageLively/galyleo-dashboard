@@ -87,7 +87,7 @@ export class DashboardControl extends ViewModel {
       },
       expose: {
         get () {
-          return ['isHaloItem', 'init', 'update'];
+          return ['isHaloItem', 'init', 'update', 'clearFocus'];
         }
       },
       bindings: {
@@ -168,6 +168,11 @@ export class DashboardControl extends ViewModel {
     this.ui.controls.visible = false;
     this.adjustIndicator();
   }
+  
+  clearFocus() {
+    this.models.styleControl.clearFocus();
+  }
+
 
   toggleSlide () {
     if (this.isToggled) {
