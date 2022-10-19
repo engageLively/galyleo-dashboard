@@ -1453,7 +1453,7 @@ export class Dashboard extends ViewModel {
       doubleSliderFilter: DoubleSliderFilter,
       DoubleSliderFilter: DoubleSliderFilter
     };
-      return parts[partName];
+    return parts[partName];
 
     /* return ({
       'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
@@ -1505,28 +1505,28 @@ export class Dashboard extends ViewModel {
    * The keys of the tables property
    */
   get tableNames () {
-    return this.dataManager.tableNames;
+    return this.dataManager ? this.dataManager.tableNames : {};
   }
 
   /**
    * The keys of the filters property
    */
   get filterNames () {
-    return Object.keys(this.filters);
+    return this.filters ? Object.keys(this.filters) : {};
   }
 
   /**
    * The keys of the views property
    */
   get viewNames () {
-    return this.dataManager.viewNames;
+    return this.dataManager ? this.dataManager.viewNames : {};
   }
 
   /**
    * The keys of the charts property
    */
   get chartNames () {
-    return Object.keys(this.charts);
+    return this.charts ? Object.keys(this.charts) : {};
   }
 
   /* -- Code which deals with the creation and use of filters -- */
@@ -1678,7 +1678,7 @@ export class Dashboard extends ViewModel {
     } else {
       editor = part(ViewBuilder);
     }
-      this._initViewEditor(editor, viewName);
+    this._initViewEditor(editor, viewName);
     editor.center = $world.innerBounds().center();
   }
 
@@ -2064,7 +2064,7 @@ export class Dashboard extends ViewModel {
     let msg = `${viewName} is used by charts ${usedBy.join(', ')}.  Proceed?`;
     let goAhead = usedBy.length > 0 ? await this.confirm(msg) : true;
     if (goAhead) {
-      this.dataManager.removeView(viewName)
+      this.dataManager.removeView(viewName);
       this.dashboardController.update();
     }
   }
@@ -2085,7 +2085,7 @@ export class Dashboard extends ViewModel {
     let msg = `${tableName} is used by ${usedBy.join(', ')}.  Proceed?`;
     let goAhead = usedBy.length > 0 ? await this.confirm(msg) : true;
     if (goAhead) {
-      this.dataManager.removeTable(tableName)
+      this.dataManager.removeTable(tableName);
       this.dashboardController.update();
     }
   }
