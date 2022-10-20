@@ -1505,28 +1505,28 @@ export class Dashboard extends ViewModel {
    * The keys of the tables property
    */
   get tableNames () {
-    return this.dataManager ? this.dataManager.tableNames : {};
+    return this.dataManager ? this.dataManager.tableNames : [];
   }
 
   /**
    * The keys of the filters property
    */
   get filterNames () {
-    return this.filters ? Object.keys(this.filters) : {};
+    return this.filters ? Object.keys(this.filters) : [];
   }
 
   /**
    * The keys of the views property
    */
   get viewNames () {
-    return this.dataManager ? this.dataManager.viewNames : {};
+    return this.dataManager ? this.dataManager.viewNames : [];
   }
 
   /**
    * The keys of the charts property
    */
   get chartNames () {
-    return this.charts ? Object.keys(this.charts) : {};
+    return this.charts ? Object.keys(this.charts) : [];
   }
 
   /* -- Code which deals with the creation and use of filters -- */
