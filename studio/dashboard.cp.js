@@ -384,7 +384,7 @@ export class Dashboard extends ViewModel {
     if (this.dataManager) {
       this.dataManager.clear();
     } else {
-      this.dataManager = new GalyleoDataManager();
+      this.dataManager = new GalyleoDataManager(this);
     }
     this.filterNames.forEach(filterName => {
       this.filters[filterName].morph.remove();
@@ -1247,7 +1247,7 @@ export class Dashboard extends ViewModel {
       }
       // We're going to completely clear the data manager, so just blow it away
       // and get a new one.
-      this.dataManager = new GalyleoDataManager();
+      this.dataManager = new GalyleoDataManager(this);
       // The non-morph structures are easy....
       // this.tables = storedForm.tables;
       Object.keys(storedForm.tables).forEach(tableName => {
@@ -2095,34 +2095,7 @@ export class Dashboard extends ViewModel {
     this.dashboardController.update();
   }
 
-  // /**
-  //  * First, reset the error log to empty, wait for rendering, load
-  //  * the google chart packages and make sure that the dictionaries are
-  //  * initialized.
-  //  */
-  // async viewDidLoad () {
-  //   this._enableLink(false);
-  //   this.__log__ = [];
-  //   await this.view.whenRendered();
-  //   this.dataManager = new GalyleoDataManager();
-  //   const filePath = this.ui.galyleo.dashboardFilePath;
-  //   await this._loadGoogleChartPackages();
-  //   ['charts', 'filters'].forEach(prop => {
-  //     if (!this[prop]) {
-  //       this[prop] = {};
-  //     }
-  //   });
-  //   if (window.EXTENSION_INFO && window.EXTENSION_INFO.currentFilePath && window.EXTENSION_INFO.currentFilePath.length > 0) {
-  //     this.checkAndLoad(window.EXTENSION_INFO.currentFilePath);
-  //   }
-  //
-  //   this.gCharts.setOnLoadCallback(() => { });
-  //   this._initializeJupyterLabCallbacks();
-  //   this.dirty = false;
-  //   this.viewBuilders = {}; // list of open view builders, can have only 1 per view
-  //   this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
-  //   window.parent.postMessage({ method: 'galyleo:ready', dashboardFilePath: filePath }, '*');
-  // }
+
 
   async init (controller) {
     this.dashboardController = controller;
@@ -2136,7 +2109,7 @@ export class Dashboard extends ViewModel {
     this._initializeJupyterLabCallbacks();
     this.dirty = false;
     if (!this.dataManager) {
-      this.dataManager = new GalyleoDataManager();
+      this.dataManager = new GalyleoDataManager(this);
     }
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
@@ -2166,7 +2139,7 @@ export class Dashboard extends ViewModel {
     // should add some error-checking
     this.lastTable = tableSpec;
     if (!this.dataManager) {
-      this.dataManager = new GalyleoDataManager();
+      this.dataManager = new GalyleoDataManager(this);
     }
     this.dataManager.addTable(tableSpec.name, tableSpec.table);
     // this.tables[tableSpec.name] = tableSpec.table;
@@ -2285,6 +2258,25 @@ export class Dashboard extends ViewModel {
     });
     // will do filters later
     return result;
+  }
+
+  /**
+   * Implement the GalyleoUpdateListener protocol.  This just listens for a 
+   * tableUpdated method and takes appropriate action (redrawing all the charts)
+   * @param {GalyleoTable} table: the updated table
+   */
+  tableUpdated(table) {
+    // should do intelligent search and only update the charts dependent on the updated 
+    // table.  For the moment, just drawAllCharts
+    // The pseudo-code for the intelligent method is this:
+    // const updatedTablesAndViews = this.viewNames.filter(viewName => {
+    //      const view = this.views[viewName]
+    //      return view.tableName == table.tableName;
+    // })
+    // updatedTablesAndViews.push(tableName)
+    // this.drawUpdatedCharts(updatedTablesAndViews)
+    // we will implement this, but also have a corresponding method to filter for charts
+    this.drawAllCharts();
   }
 
   /**

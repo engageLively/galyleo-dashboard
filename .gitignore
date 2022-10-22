@@ -37,3 +37,7 @@ studio/dashboard1.js
 *.gd.json
 .ipynb_checkpoints/*
 jupyterlab-universal-extension/.ipynb_checkpoints/*
+Untitled.ipynb
+*.txt
+galyleo-client/
+galyleo-data/galyleo-data-diff.js

@@ -1031,17 +1031,21 @@ export class GalyleoView {
  * Class for a DashboardDataManager.  There will only be one of these per Dashboard, and it's arguable whether this
  * code should live in the Dashboard class.  It's here for ease of testing and to maintain all the data manipulation
  * code in a single module.
+ * @property {GalyleoUpdateListener} updateListener
+ * @property {Object <string, GalyleoTable>} tables
+ * @property {Object <string, GalyleoView>} views
  */
 export class GalyleoDataManager {
   /**
-   * Construct a new DataManager.  Just initializes tables and views
-   * @property {Object <string, GalyleoTable>} tables
-   * @property {Object <string, GalyleoView>} views
+   * Construct a new DataManager.  Just initializes tables and views and sets the updateListener if there is one
+   * @param {GalyleoViewSpec} viewSpec: specification of the view
    */
-  constructor () {
+  constructor (updateListener = null) {
+    this.updateListener = updateListener
     this.tables = {};
     this.views = {};
   }
+
 
   /**
    * Clear the state of the DataManager.  Identical to new()
@@ -1099,6 +1103,9 @@ export class GalyleoDataManager {
    */
   addTable (name, spec) {
     this.tables[name] = constructGalyleoTable(name, spec);
+    if (this.updateListener) {
+      this.tables[name].registerUpdateListener(this.updateListener)
+    }
   }
 
   /**
