@@ -97,7 +97,6 @@ const remoteSchema = [{ name: 'Year', type: 'number' }, { name: 'Democratic', ty
 const runRemoteTests = true; // set to true if we want to really run the remote tests
 const remoteTable = constructGalyleoTable('electoral_college', { columns: remoteSchema, connector: connector });
 
-
 describe('Remote Table', () => {
   it('should create  and populate a remote table', () => {
     expect(remoteTable.tableType).to.eql('RemoteGalyleoTable');
@@ -365,7 +364,7 @@ describe('Creation of valid views', () => {
 describe('Data Manager Tests', () => {
   const dataManager = new GalyleoDataManager();
   const firstNames = ['Liam', 'Olivia', 'Noah', 'Emma', 'Oliver',	'Ava', 'Elijah', 'Charlotte', 'William', 'Sophia', 'James', 'Amelia', 'Benjamin',	'Isabella', 'Lucas',	'Mia', 'Henry',	'Evelyn', 'Alexander',	'Harper', 'Tom', 'Dick', 'Harry', 'Bob', 'Jane', 'Jill', 'Sujata'];
-  const lastNames = [ 'SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA', 'MILLER', 'DAVIS', 'RODRIGUEZ', 'MARTINEZ', 'HERNANDEZ', 'LOPEZ', 'GONZALEZ', 'WILSON', 'ANDERSON', 'THOMAS', 'TAYLOR', 'MOORE', 'JACKSON', 'MARTIN', 'LEE', 'PEREZ', 'THOMPSON', 'WHITE', 'HARRIS', 'SANCHEZ', 'CLARK'];
+  const lastNames = ['SMITH', 'JOHNSON', 'WILLIAMS', 'BROWN', 'JONES', 'GARCIA', 'MILLER', 'DAVIS', 'RODRIGUEZ', 'MARTINEZ', 'HERNANDEZ', 'LOPEZ', 'GONZALEZ', 'WILSON', 'ANDERSON', 'THOMAS', 'TAYLOR', 'MOORE', 'JACKSON', 'MARTIN', 'LEE', 'PEREZ', 'THOMPSON', 'WHITE', 'HARRIS', 'SANCHEZ', 'CLARK'];
   const fnames1 = firstNames.slice(0, 10);
   const fnames2 = firstNames.slice(10);
   fnames2.push(firstNames[0]);
@@ -391,14 +390,14 @@ describe('Data Manager Tests', () => {
     expect(dataManager.tableNames).to.eql(['test1', 'test2']);
   });
   it('Should find the right column types 1', () => {
-    expect(dataManager.getColumnTypes('first_name')).to.eql(['string']);
+    expect(dataManager.getTypes('first_name')).to.eql(['string']);
   });
   it('Should find the right column types 2', () => {
-    log.push(dataManager.getColumnTypes('age'));
-    expect(dataManager.getColumnTypes('age')).to.eql(['number', 'string']);
+    log.push(dataManager.getTypes('age'));
+    expect(dataManager.getTypes('age')).to.eql(['number', 'string']);
   });
   it('Should find the right column types 3', () => {
-    // expect(dataManager.getColumnTypes('foo').to.eql([]));
+    expect(dataManager.getTypes('foo')).to.eql([]);
   });
   const viewSpec = {
     table: 'test1', columns: ['first_name', 'last_name'], filterNames: ['foo']
@@ -490,20 +489,28 @@ describe('Data Manager Tests', () => {
     expect(result).to.eql(expectedResult);
     done();
   });
-  
+
   if (runRemoteTests) {
     const pollCatcher = new PollCatcher();
     const pollingConnector = { url: 'https://engagelively.wl.r.appspot.com/', dashboardName: 'foo', interval: 1 };
-    const dataManager2 = new GalyleoDataManager(pollCatcher)
+    const dataManager2 = new GalyleoDataManager(pollCatcher);
     const dataManager3 = new GalyleoDataManager();
-    const remoteSpec = {name: "electoral_college", columns: remoteSchema, connector: pollingConnector};
-    dataManager2.addTable('electoral_college', remoteSpec)
-    dataManager3.addTable('electoral_college', remoteSpec)
-    it('should poll once per second', () => {
-      assert(dataManager3.updateListener == null)
-      expect(dataManager2.updateListener.to.eql(pollCatcher));
-      expect(dataManager2.tables.electoral_college.updateListener.to.eql(dataManager2));
-      expect(dataManager3.tables.electoral_college.updateListener.to.eql(dataManager3));;
+    it('should initialize update listener on the data manager  properly', () => {
+      assert(dataManager3.updateListener == null);
+      expect(dataManager2.updateListener).to.eql(pollCatcher);
+    });
+    const remoteSpec = { name: 'electoral_college', columns: remoteSchema, connector: pollingConnector };
+
+    dataManager2.addTable('electoral_college', remoteSpec);
+    dataManager3.addTable('electoral_college', remoteSpec);
+    it('should initialize update listener on the tables properly', () => {
+      let listenerArray = Array.from(dataManager2.tables.electoral_college.updateListeners);
+      expect(listenerArray.length).to.eql(1);
+      expect(listenerArray[0]).to.eql(pollCatcher);
+      listenerArray = Array.from(dataManager3.tables.electoral_college.updateListeners);
+      expect(listenerArray.length).to.eql(0);
+    });
+    it('Should poll 5 times from dataManager2 and not at all from dataManager3', () => {
       expect(pollCatcher.updates.length).to.eql(0);
       const pollDone = () => {
         assert(pollCatcher.updates.length <= 6 && pollCatcher.updates.length >= 4);

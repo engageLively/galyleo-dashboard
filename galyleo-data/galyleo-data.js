@@ -326,7 +326,7 @@ class InRangeFilter extends PrimitiveFilter {
 
   /**
    * Equals for an in_range filter: the other filter must be an instance of in_range filter, the super must be true,
-   * and the maxVal, minVal, and increment must be identical.  
+   * and the maxVal, minVal, and increment must be identical.
    * @param {Filter} otherFilter: the filter to be checked for equality
    */
 
@@ -427,14 +427,14 @@ export function constructFilter (table, filterSpec) {
  */
 
 /**
-  * A function with takes in an error message and processes it; typically the error callback to 
+  * A function with takes in an error message and processes it; typically the error callback to
   * getRows(), getFilteredRows(), getNumericSpec(), getAllValues()
   * @typedef {({string}) => void} GalyleoErrorCallback
   */
 
 /**
  * A function which gets the rows of a table, and then either calls the callback or error callback provided.
- * @typedef {({GalyleoCallBack}, {GalyleoErrorCallback}) => void} TableFunction 
+ * @typedef {({GalyleoCallBack}, {GalyleoErrorCallback}) => void} TableFunction
  *
  * A function which listens for updates to a GalyleoTable
  * @typedef {(GalyleoTable) => void} GalyleoUpdateListener
@@ -442,7 +442,7 @@ export function constructFilter (table, filterSpec) {
  * An objectwhich listens for updates to a GalyleoTable.  This is any object which contains an UpdateListener
  * function
  * @typedef {Object} GalyleoUpdateListenerObject
- * @property {GalyleoUpdateListener} tableUpdated 
+ * @property {GalyleoUpdateListener} tableUpdated
  */
 
 /**
@@ -492,7 +492,7 @@ export class GalyleoTable {
   }
 
   /**
-   * This method should be called when the table is updated; either when new data is loaded or when a poll is 
+   * This method should be called when the table is updated; either when new data is loaded or when a poll is
    * signalled.  Call all the listeners waiting for an update
    */
   dataUpdated () {
@@ -569,7 +569,7 @@ export class GalyleoTable {
       } else {
         callback(rows);
       }
-    }, errorFunction); 
+    }, errorFunction);
   } */
 
   /**
@@ -640,7 +640,7 @@ export class ExplicitGalyleoTable extends GalyleoTable {
   }
 
   /**
-   * Generate the intermediate form 
+   * Generate the intermediate form
    */
   toDictionary () {
     return {
@@ -797,7 +797,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
   }
 
   /**
-   * Generate the intermediate form 
+   * Generate the intermediate form
    */
   toDictionary () {
     const connector = {
@@ -816,7 +816,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
   }
 
   /**
-     * A thin overlay on getFilteredRows, for internal use only.  It provides the getRows() function for 
+     * A thin overlay on getFilteredRows, for internal use only.  It provides the getRows() function for
      * the super.  For this class, getRows(callback, errorFunction) is just getFilteredRows(null)
      * @param {GalyleoCallback} callback Callback to use when the rows are found
      * @param {GalyleoErrorCallback} errorFunction Callback to use when the rows are found
@@ -927,7 +927,7 @@ export function constructGalyleoTable (name, galyleoTableSpec) {
  */
 
 /**
- * Class for a GalyleoView.  A View is a restricted subset of a table, and it returns the 
+ * Class for a GalyleoView.  A View is a restricted subset of a table, and it returns the
  * subset of the columns that have been selected and the rows selected by the filters which are passed
  * @property {string} table -- name of the table that this view subsets
  * @property {[string]} columns -- The names of the columns of the table represented in this view
@@ -960,7 +960,7 @@ export class GalyleoView {
   /**
    * get the names of the filters of this view. Just an alias for filters,
    * for backwards compatibility
-   * @returns [String]   
+   * @returns [String]
    */
   get filterNames () {
     return this.filters;
@@ -1041,11 +1041,10 @@ export class GalyleoDataManager {
    * @param {GalyleoViewSpec} viewSpec: specification of the view
    */
   constructor (updateListener = null) {
-    this.updateListener = updateListener
+    this.updateListener = updateListener;
     this.tables = {};
     this.views = {};
   }
-
 
   /**
    * Clear the state of the DataManager.  Identical to new()
@@ -1104,7 +1103,7 @@ export class GalyleoDataManager {
   addTable (name, spec) {
     this.tables[name] = constructGalyleoTable(name, spec);
     if (this.updateListener) {
-      this.tables[name].registerUpdateListener(this.updateListener)
+      this.tables[name].registerUpdateListener(this.updateListener);
     }
   }
 
@@ -1121,7 +1120,7 @@ export class GalyleoDataManager {
    * Remove a view
    * @param {string} name name of the view
    */
-   removeView (name) {
+  removeView (name) {
     delete this.views[name];
   }
 
@@ -1187,7 +1186,7 @@ export class GalyleoDataManager {
    * is not specified
    * @param {string} columnName: column to get all the values for
    * @param {string?} tableName: if specified, look only at this table
-   * @returns {GalyleoNumericSpec} the numeric 
+   * @returns {GalyleoNumericSpec} the numeric
    */
   async getNumericSpec (columnName, tableName = null) {
     const tables = this._getMatchingTables_(columnName, new Set(['number']), tableName);
@@ -1226,7 +1225,7 @@ export class GalyleoDataManager {
   }
 
   /**
-   * Get all the types for a column name, optionally restricted to 
+   * Get all the types for a column name, optionally restricted to
    * a single table
    * @param {string} columnName
    * @param {string?} tableName
@@ -1242,7 +1241,7 @@ export class GalyleoDataManager {
         return [];
       }
       const tablesWithColumn = tableNamesWithColumn.map(name => this.tables[name]);
-      const result = [tablesWithColumn[0].getColumnType()];
+      const result = [tablesWithColumn[0].getColumnType(columnName)];
       tablesWithColumn.slice(1).forEach(table => {
         const colType = table.getColumnType(columnName);
         if (result.indexOf(colType) < 0) {
