@@ -168,11 +168,10 @@ export class DashboardControl extends ViewModel {
     this.ui.controls.visible = false;
     this.adjustIndicator();
   }
-  
-  clearFocus() {
+
+  clearFocus () {
     this.models.styleControl.clearFocus();
   }
-
 
   toggleSlide () {
     if (this.isToggled) {
@@ -343,7 +342,7 @@ export class EntityControlModel extends ViewModel {
 export class TableControlModel extends EntityControlModel {
   async build () {
     const tableBuilder = await this.controller.openDialog(DataLoader);
-    tableBuilder.init(this.dashboard);
+    tableBuilder.viewModel.init(this.dashboard.viewModel);
   }
 
   removeTable (tableName) {

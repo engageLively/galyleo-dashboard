@@ -1,11 +1,12 @@
 
 import { resource } from 'lively.resources/src/helpers.js';
-import { MenuBarButton, GalyleoWindow, PromptButton } from './shared.cp.js';
+import { MenuBarButton, GalyleoNumberInput, GalyleoWindow, PromptButton } from './shared.cp.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { Color, pt } from 'lively.graphics';
-import { VerticalLayout, TilingLayout, Text, Label } from 'lively.morphic';
+import { VerticalLayout, Icon, HorizontalLayout, TilingLayout, Text, Label } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
+import { Toggle } from './inputs/toggle.cp.js';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -262,21 +263,44 @@ export class TableLoaderModel extends ViewModel {
   }
 
   /**
+   * Just set the values of the UI elements on load
+   */
+  viewDidLoad () {
+    this.ui.updateToggle.state = false;
+    this.ui.updateInterval.number = 300;
+  }
+
+  /**
    * Tell the dashboard to load the table from this URL.  The URL should be
    * checked here first, to ensure it's at least a valid URL.  Once done,
    * just close the dialog.  This is called from the Load URL button via a
    * hardcoded connection.
    */
-  loadURL () {
+  async loadURL () {
     const url = this.ui.url;
     if (url.input.length === 0) {
-      url.indicateError('Please enter url to JSON file');
+      url.indicateError('Please enter url to Galyleo Data Server');
       return;
     }
-    this.dashboard.loadDataFromUrl(url.textString);
-    this.remove();
+    const table = this.ui.table;
+    if (table.input.length == 0) {
+      table.indicateError('Please enter the table name');
+      return;
+    }
+    const doUpdate = this.ui.updateToggle.state;
+    const updateInterval = this.ui.updateInterval.number;
+    const result = await this.dashboard.loadDataFromUrl(url.textString, table.textString, doUpdate, updateInterval);
+    if (result.result) {
+      this.view.remove();
+    } else {
+      const getMessage = await this.dashboard.confirm(result.msg);
+      if (getMessage) {
+        this.view.remove();
+      }
+    }
   }
 }
+
 
 const CloseButton = component(MenuBarButton, {
   name: 'close button',
@@ -294,7 +318,7 @@ const CloseButton = component(MenuBarButton, {
 const DataLoader = component(GalyleoWindow, {
   defaultViewModel: TableLoaderModel,
   name: 'data loader',
-  extent: pt(340.5, 175.6),
+  extent: pt(340.5, 250.6),
   submorphs: [{
     name: 'window title',
     textString: 'Load Data'
@@ -331,6 +355,63 @@ const DataLoader = component(GalyleoWindow, {
         }]
       }),
       part(GalyleoSearch, { name: 'url', placeholder: 'Enter URL to datasource' }),
+      part(GalyleoSearch, { name: 'table', placeholder: 'Enter name of table' }),
+      {
+        name: 'update_panel',
+        borderColor: Color.rgb(127, 140, 141),
+        borderRadius: 10,
+        extent: pt(311, 50),
+        fill: Color.rgba(215, 219, 221, 0),
+        layout: new HorizontalLayout({
+          align: 'top',
+          autoResize: true,
+          direction: 'leftToRight',
+          orderByIndex: true,
+          resizeSubmorphs: false,
+          spacing: 10
+        }),
+        submorphs: [{
+          type: Label,
+          name: 'label',
+          fontColor: Color.rgb(0, 0, 0),
+          fontFamily: 'IBM Plex Sans',
+          fontSize: 14,
+          fontWeight: 'bold',
+          position: pt(13.5, 11.5),
+          reactsToPointer: false,
+          textAndAttributes: ['Update', null]
+        },
+        add(part(Toggle, { name: 'updateToggle' })),
+        {
+          type: Label,
+          name: 'every',
+          fontColor: Color.rgb(0, 0, 0),
+          fontFamily: 'IBM Plex Sans',
+          fontSize: 14,
+          fontWeight: 'bold',
+          position: pt(13.5, 11.5),
+          reactsToPointer: false,
+          textAndAttributes: [' every ', null],
+          state: false
+        },
+        add(part(GalyleoNumberInput, {
+          name: 'updateInterval',
+          min: 10,
+          max: 3600
+        })),
+        {
+          type: Label,
+          name: 'seconds',
+          fontColor: Color.rgb(0, 0, 0),
+          fontFamily: 'IBM Plex Sans',
+          fontSize: 14,
+          fontWeight: 'bold',
+          position: pt(13.5, 11.5),
+          reactsToPointer: false,
+          textAndAttributes: [' seconds', null]
+        }
+        ]
+      },
       part(PromptButton, {
         name: 'load button',
         extent: pt(106.5, 30.9),

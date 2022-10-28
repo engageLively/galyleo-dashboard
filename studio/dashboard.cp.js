@@ -2095,8 +2095,6 @@ export class Dashboard extends ViewModel {
     this.dashboardController.update();
   }
 
-
-
   async init (controller) {
     this.dashboardController = controller;
     await this._loadGoogleChartPackages();
@@ -2150,21 +2148,39 @@ export class Dashboard extends ViewModel {
   }
 
   /**
-   * Load a table from the URL given.  This should do a little more error-checking
-   * than it does.  In particular, it should check to make sure that tableSpec
-   * is valid.
-   * Data must be in the JSON form {"name": name, "table": Google Data Table in JSON form}
-   * Now uses abstracted view (see addTable) table must be in the form
-   * {columns: rows: } where a column is a pair (name, type) and a row
+   * Load a table from the URL given. This queries a GalyleoTableServer for the table.  Given a URL
+   * it issues the query <url>/get_tables and searches the list of tables for the matching table name.
+   * If it finds it, it loads it.  If not, returns an error.
    * is a list of values
    * @param { string } url - a URL.
+   * @param { string } tableName - name of the table to search for
+   * @param { boolean } checkUpdates -- if true, sets the data manager to check updates every updateInterval seconds
+   * @para { int } updateInterval -- interval (in seconds) to check for updates
    */
-  async loadDataFromUrl (url) {
+  async loadDataFromUrl (url, tableName, checkUpdates, updateInterval) {
     try {
-      const tableSpec = await resource(url).readJson();
-      this.addTable(tableSpec);
+      const table_spec_url = `${url}/get_tables`;
+      const schemaText = await resource(table_spec_url).read();
+      const schemaDict = JSON.parse(schemaText);
+      const connector = {
+        url: url
+      };
+      if (checkUpdates) {
+        connector.interval = updateInterval;
+      }
+      if (schemaDict) {
+        if (schemaDict[tableName]) {
+          this.addTable({ name: tableName, table: { columns: schemaDict[tableName], connector: connector } });
+          return { result: true };
+        } else {
+          return { result: false, msg: `No table matching ${tableName} found at ${url}` };
+        }
+      } else {
+        return { result: false, msg: 'No tables found at {url}' };
+      }
     } catch (err) {
       console.log({ activity: `loading url ${url}`, error: err });
+      return { result: false, msg: `Error return ${err} from ${url}` };
     }
   }
 
@@ -2261,12 +2277,12 @@ export class Dashboard extends ViewModel {
   }
 
   /**
-   * Implement the GalyleoUpdateListener protocol.  This just listens for a 
+   * Implement the GalyleoUpdateListener protocol.  This just listens for a
    * tableUpdated method and takes appropriate action (redrawing all the charts)
    * @param {GalyleoTable} table: the updated table
    */
-  tableUpdated(table) {
-    // should do intelligent search and only update the charts dependent on the updated 
+  tableUpdated (table) {
+    // should do intelligent search and only update the charts dependent on the updated
     // table.  For the moment, just drawAllCharts
     // The pseudo-code for the intelligent method is this:
     // const updatedTablesAndViews = this.viewNames.filter(viewName => {
