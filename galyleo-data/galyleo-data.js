@@ -144,12 +144,12 @@ class BooleanFilter extends Filter {
   }
 }
 /**
- * A Filter which implements AND
+ * A Filter which implements ALL
  *
  * @param {GalyleoDataTable} rows
  * @returns [{number}] {indices of matching rows}
  */
-class AndFilter extends BooleanFilter {
+class AllFilter extends BooleanFilter {
   /**
      * Supply the _getRows_function
      * @param {GalyleoDataTable} rows
@@ -164,20 +164,20 @@ class AndFilter extends BooleanFilter {
   }
 
   /**
-   * Equals for an AND operator: otherFilter must be an instance of AND and the super equality check must hold
+   * Equals for an ALL operator: otherFilter must be an instance of ALL and the super equality check must hold
    * @param {Filter} otherFilter: the filter to be checked for equality
    */
   equals (otherFilter) {
-    return (otherFilter instanceof AndFilter && super.equals(otherFilter));
+    return (otherFilter instanceof AllFilter && super.equals(otherFilter));
   }
 }
 /**
- * A Filter which implements OR
+ * A Filter which implements ANY
  *
  * @param {GalyleoDataTable} rows
  * @returns [{number}] {indices of matching rows}
  */
-class OrFilter extends BooleanFilter {
+class AnyFilter extends BooleanFilter {
   /**
      * Supply the _getRows_function
      * @param {GalyleoDataTable} rows
@@ -192,11 +192,11 @@ class OrFilter extends BooleanFilter {
   }
 
   /**
-   * Equals for an OR operator: otherFilter must be an instance of OR and the super equality check must hold
+   * Equals for an ANY operator: otherFilter must be an instance of ANY and the super equality check must hold
    * @param {Filter} otherFilter: the filter to be checked for equality
    */
   equals (otherFilter) {
-    return (otherFilter instanceof OrFilter && super.equals(otherFilter));
+    return (otherFilter instanceof AnyFilter && super.equals(otherFilter));
   }
 }
 /**
@@ -205,7 +205,7 @@ class OrFilter extends BooleanFilter {
  * @param {GalyleoDataTable} rows
  * @returns [{number}] {indices of matching rows}
  */
-class NotFilter extends BooleanFilter {
+class NoneFilter extends BooleanFilter {
   /**
      * Supply the _getRows_function
      * @param {GalyleoDataTable} rows
@@ -217,11 +217,11 @@ class NotFilter extends BooleanFilter {
   }
 
   /**
-   * Equals for a Not operator: otherFilter must be an instance of NOT and the super equality check must hold
+   * Equals for a Not operator: otherFilter must be an instance of NONE and the super equality check must hold
    * @param {Filter} otherFilter: the filter to be checked for equality
    */
   equals (otherFilter) {
-    return (otherFilter instanceof NotFilter && super.equals(otherFilter));
+    return (otherFilter instanceof NoneFilter && super.equals(otherFilter));
   }
 }
 /**
@@ -349,15 +349,11 @@ class InRangeFilter extends PrimitiveFilter {
 }
 
 /**
- * @typedef {"AND" | "OR" } booleanOperator
+ * @typedef {"ALL" | "ANY" | "NONE" } booleanOperator
  *
  * @typedef (Object) booleanFilterSpec
  * @property {booleanOperator} operator
  * @property {filterSpec[]} arguments
- *
- * @typedef (Object) notFilterSpec
- * @property {string} operator
- * @property {filterSpec} arguments
  *
  * @typedef (Object) inListFilterSpec
  * @property {string} operator
@@ -370,7 +366,7 @@ class InRangeFilter extends PrimitiveFilter {
  * @property {number} max_val
  * @property {number} min_val
  *
- * @typedef {booleanFilterSpec | notFilterSpec | inListFilterSpec | inRangeFilterSpec} FilterSpec
+ * @typedef {booleanFilterSpec | inListFilterSpec | inRangeFilterSpec} FilterSpec
  */
 
 /**
@@ -411,13 +407,13 @@ export function constructFilter (table, filterSpec) {
     return new InListFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.values);
   }
   const args = filterSpec.arguments.map(subFilterSpec => constructFilter(table, subFilterSpec));
-  if (filterSpec.operator == 'NOT') {
-    return new NotFilter(table, args);
+  if (filterSpec.operator == 'NONE') {
+    return new NoneFilter(table, args);
   }
-  if (filterSpec.operator == 'AND') {
-    return new AndFilter(table, args);
+  if (filterSpec.operator == 'ALL') {
+    return new AllFilter(table, args);
   }
-  return new OrFilter(table, args);
+  return new AnyFilter(table, args);
 }
 
 /**
@@ -976,7 +972,7 @@ export class GalyleoView {
   _getFilter_ (filterSpecs, table) {
     const matchingSpecs = this.filters.map(filterName => filterSpecs[filterName]);
     const validSpecs = matchingSpecs.filter(spec => checkSpecValid(table, spec));
-    return validSpecs.length == 0 ? null : validSpecs.length == 1 ? validSpecs[0] : { operator: 'AND', arguments: validSpecs };
+    return validSpecs.length == 0 ? null : validSpecs.length == 1 ? validSpecs[0] : { operator: 'ALL', arguments: validSpecs };
   }
 
   _getColumnIndexes_ (table) {
