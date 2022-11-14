@@ -41,3 +41,12 @@ Untitled.ipynb
 *.txt
 galyleo-client/
 galyleo-data/galyleo-data-diff.js
+jupyterlab-universal-extension/*
+jupyterlab-universal-extension/.*
+node_modules/*
+node_modules
+jupyterlab_universal_extension/
+jupyterlab-universal-extension/lively_universal_extension.egg-info/PKG-INFO
+jupyterlab-universal-extension/lively_universal_extension.egg-info/SOURCES.txt
+jupyterlab-universal-extension/package-deploy.json
+package-lock.json
