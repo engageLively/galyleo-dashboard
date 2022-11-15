@@ -195,36 +195,36 @@ describe('Filter Creation and Test', () => {
     assert(inRangeExplicit2.equals(inRangeExplicit));
     assert(!inRangeExplicit.equals(inListExplicit));
   });
-  const notFilter = constructFilter(table, { operator: 'NOT', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
+  const notFilter = constructFilter(table, { operator: 'NONE', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
   it('Should create a not filter and populate its fields correctly', () => {
     expect(notFilter.table).to.eql(table);
     expect(notFilter.args.length).to.eql(1);
   });
-  it('Should populate the  arguments of a NOT filter correctly', () => {
+  it('Should populate the  arguments of a NONE filter correctly', () => {
     assert(notFilter.args[0].equals(inRangeExplicit2));
     assert(notFilter.args[0].equals(inRangeExplicit));
   });
-  const notFilter2 = constructFilter(table, { operator: 'NOT', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
-  it('Should test equality of NOT filters correctly', () => {
+  const notFilter2 = constructFilter(table, { operator: 'NONE', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
+  it('Should test equality of NONE filters correctly', () => {
     assert(notFilter2.equals(notFilter));
     assert(!notFilter2.equals(inRangeExplicit));
   });
-  const andFilter = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
-  it('Should create and populate AND filters correctly', () => {
+  const andFilter = constructFilter(table, { operator: 'ALL', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
+  it('Should create and populate ALL filters correctly', () => {
     expect(andFilter.table).to.eql(table);
     expect(andFilter.args.length).to.eql(2);
   });
-  it('Should populate the  arguments of an AND filter correctly', () => {
+  it('Should populate the  arguments of an ALL filter correctly', () => {
     assert(andFilter.args[0].equals(inRangeExplicit));
     assert(andFilter.args[1].equals(inListExplicit));
   });
 
-  const andFilter2 = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
-  const andFilter3 = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['a'] }] });
-  const andFilter4 = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
-  const andFilter5 = constructFilter(table, { operator: 'AND', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
+  const andFilter2 = constructFilter(table, { operator: 'ALL', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
+  const andFilter3 = constructFilter(table, { operator: 'ALL', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['a'] }] });
+  const andFilter4 = constructFilter(table, { operator: 'ALL', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }] });
+  const andFilter5 = constructFilter(table, { operator: 'ALL', arguments: [{ operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_RANGE', column: 'age', min_val: 1, max_val: 2 }, { operator: 'IN_LIST', column: 'name', values: ['b'] }] });
 
-  it('Should test equality of AND filters correctly', () => {
+  it('Should test equality of ALL filters correctly', () => {
     assert(andFilter.equals(andFilter2));
     assert(!andFilter.equals(andFilter3));
     expect(andFilter4.args.length).to.eql(1);
@@ -259,26 +259,26 @@ describe('Filter Interaction with Explicit Tables', () => {
   });
   const notInRangeFilterList = rows.filter(row => row[1] < rangeFilterSpec.min_val || row[1] > rangeFilterSpec.max_val);
   it('Should execute a not in-range filter', async (done) => {
-    const filteredRows = await table.getFilteredRows({ operator: 'NOT', arguments: [rangeFilterSpec] });
+    const filteredRows = await table.getFilteredRows({ operator: 'NONE', arguments: [rangeFilterSpec] });
     expect(filteredRows).to.eql(notInRangeFilterList);
     done();
   });
   const notInListFilterList = rows.filter(row => nameList.indexOf(row[0]) < 0);
   it('Should execute a not in-list filter', async (done) => {
-    const filteredRows = await table.getFilteredRows({ operator: 'NOT', arguments: [inListFilterSpec] });
+    const filteredRows = await table.getFilteredRows({ operator: 'NONE', arguments: [inListFilterSpec] });
     expect(filteredRows).to.eql(notInListFilterList);
     done();
   });
   const andFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) && row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val);
 
   it('Should execute an and filter', async (done) => {
-    const filteredRows = await table.getFilteredRows({ operator: 'AND', arguments: [inListFilterSpec, rangeFilterSpec] });
+    const filteredRows = await table.getFilteredRows({ operator: 'ALL', arguments: [inListFilterSpec, rangeFilterSpec] });
     expect(filteredRows).to.eql(andFilterList);
     done();
   });
   const orFilterList = rows.filter(row => (nameList.indexOf(row[0]) >= 0) || (row[1] <= rangeFilterSpec.max_val && row[1] >= rangeFilterSpec.min_val));
   it('Should execute an or  filter', async (done) => {
-    const filteredRows = await table.getFilteredRows({ operator: 'OR', arguments: [inListFilterSpec, rangeFilterSpec] });
+    const filteredRows = await table.getFilteredRows({ operator: 'ANY', arguments: [inListFilterSpec, rangeFilterSpec] });
     expect(filteredRows).to.eql(orFilterList);
     done();
   });
@@ -322,7 +322,7 @@ describe('Creation of valid views', () => {
     expect(view2._getFilter_(filterDictionary, testTable)).to.eql(rangeFilter);
   });
   it('Should form the right filters3', () => {
-    expect(view3._getFilter_(filterDictionary, testTable)).to.eql({ operator: 'AND', arguments: [listFilter, rangeFilter] });
+    expect(view3._getFilter_(filterDictionary, testTable)).to.eql({ operator: 'ALL', arguments: [listFilter, rangeFilter] });
   });
   const tableDict = { test1: testTable };
 
