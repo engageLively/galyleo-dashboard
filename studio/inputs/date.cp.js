@@ -1,6 +1,6 @@
 import { signal } from 'lively.bindings/index.js';
 import { component, ViewModel, part, ensureFont } from 'lively.morphic/components/core.js';
-import { InputLine, Morph, TilingLayout, VerticalLayout, Icon, ShadowObject, Label } from 'lively.morphic';
+import { InputLine, Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
 import { Color, rect, pt } from 'lively.graphics/index.js';
 
 import { arr, date } from 'lively.lang/index.js';

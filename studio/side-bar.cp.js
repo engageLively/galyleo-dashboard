@@ -2,8 +2,7 @@ import { PropertiesPanel } from 'lively.ide/studio/properties-panel.cp.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
 import {
-  Polygon, ShadowObject, TilingLayout,
-  HorizontalLayout, easings, Image, Label
+  Polygon, ShadowObject, TilingLayout, easings, Image, Label
 } from 'lively.morphic';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
@@ -35,8 +34,9 @@ const SideBarTab = component({
   borderWidth: { top: 1, left: 0, right: 1, bottom: 1 },
   extent: pt(69.3, 32.7),
   fill: Color.rgba(0, 0, 0, 0),
-  layout: new HorizontalLayout({
+  layout: new TilingLayout({
     align: 'center',
+    axis: 'row',
     autoResize: false,
     direction: 'centered',
     orderByIndex: true,
@@ -753,8 +753,9 @@ const GalyleoSideBarControls = component({
     clipMode: 'hidden',
     extent: pt(322.8, 32.7),
     fill: Color.rgba(0, 0, 0, 0),
-    layout: new HorizontalLayout({
+    layout: new TilingLayout({
       align: 'top',
+      axis: 'row',
       autoResize: false,
       direction: 'leftToRight',
       orderByIndex: true,

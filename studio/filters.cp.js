@@ -1,4 +1,4 @@
-import { Morph, Icon, TilingLayout, Label, VerticalLayout } from 'lively.morphic';
+import { Morph, Icon, TilingLayout, Label } from 'lively.morphic';
 import { signal, noUpdate, connect } from 'lively.bindings/index.js';
 import { arr, fun } from 'lively.lang';
 import { component, part, add } from 'lively.morphic/components/core.js';
@@ -23,10 +23,13 @@ const VisualFilter = component({
   fill: Color.rgba(0, 0, 0, 0.05),
   position: pt(64.9, 294.1),
   reactsToPointer: false,
-  layout: new VerticalLayout({
+  layout: new TilingLayout({
     autoResize: true,
-    direction: 'topToBottom',
+    // direction: 'topToBottom',
+    axis: 'column',
+    hugContentsVertically: true,
     orderByIndex: true,
+    padding: rect(0, 13, 0, 0),
     resizeSubmorphs: false,
     spacing: 13
   })

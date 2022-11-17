@@ -4,7 +4,7 @@ import { MenuBarButton, GalyleoNumberInput, GalyleoWindow, PromptButton } from '
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { Color, pt } from 'lively.graphics';
-import { VerticalLayout, Icon, HorizontalLayout, TilingLayout, Text, Label } from 'lively.morphic';
+import { TilingLayout, Text, Label } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
 
@@ -328,8 +328,10 @@ const DataLoader = component(GalyleoWindow, {
     borderRadius: 10,
     extent: pt(311, 135),
     fill: Color.rgba(215, 219, 221, 0),
-    layout: new VerticalLayout({
+    layout: new TilingLayout({
       align: 'right',
+      axis:'column',
+      hugContentsVertically: true,
       autoResize: true,
       direction: 'topToBottom',
       orderByIndex: true,
@@ -362,8 +364,9 @@ const DataLoader = component(GalyleoWindow, {
         borderRadius: 10,
         extent: pt(311, 50),
         fill: Color.rgba(215, 219, 221, 0),
-        layout: new HorizontalLayout({
+        layout: new TilingLayout ({
           align: 'top',
+          axis: 'row',
           autoResize: true,
           direction: 'leftToRight',
           orderByIndex: true,

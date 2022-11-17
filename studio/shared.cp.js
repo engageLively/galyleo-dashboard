@@ -1,6 +1,6 @@
 import { component, without, add, ViewModel, part } from 'lively.morphic/components/core.js';
 import { pt, LinearGradient, Color, rect } from 'lively.graphics';
-import { TilingLayout, Icon, VerticalLayout, ShadowObject, Image, Label, HorizontalLayout, Morph, Text } from 'lively.morphic';
+import { TilingLayout, Icon, ShadowObject, Image, Label, Morph, Text } from 'lively.morphic';
 import { arr, obj, num } from 'lively.lang';
 import { MorphList, DropDownListModel } from 'lively.components';
 import { connect, noUpdate } from 'lively.bindings';
@@ -731,8 +731,9 @@ const MenuBarButtonDefault = component({
   borderRadius: 5,
   extent: pt(127.8, 38.2),
   fill: Color.rgba(0, 0, 0, 0),
-  layout: new HorizontalLayout({
+  layout: new TilingLayout({
     align: 'center',
+    axis: 'row',
     autoResize: false,
     direction: 'centered',
     orderByIndex: true,
@@ -825,10 +826,20 @@ const CheckboxChecked = component({
   borderWidth: 1,
   extent: pt(17, 17),
   fill: Color.rgba(0, 0, 0, 0),
-  layout: new VerticalLayout({
+  layout: new TilingLayout({
     autoResize: true,
-    direction: 'topToBottom',
+    axis: 'column',
+    hugsContentsVertically: true,
+    // direction: 'topToBottom',
     orderByIndex: true,
+    padding: rect(0, 2, 0, 0),
+    resizePolicies: [['h floater', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['background fill input', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
     resizeSubmorphs: false,
     spacing: 2
   }),
@@ -850,10 +861,20 @@ const CheckboxUnchecked = component({
   borderWidth: 1,
   extent: pt(17, 17),
   fill: Color.rgba(0, 0, 0, 0),
-  layout: new VerticalLayout({
+  layout: new TilingLayout({
     autoResize: true,
-    direction: 'topToBottom',
+    axis: 'column',
+    hugsContentsVertically: true,
+    // direction: 'topToBottom',
     orderByIndex: true,
+    padding: rect(0, 2, 0, 0),
+    resizePolicies: [['h floater', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['background fill input', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
     resizeSubmorphs: false,
     spacing: 2
   }),
@@ -878,8 +899,9 @@ const SelectableEntry = component({
   extent: pt(163.9, 32.5),
   fill: Color.rgba(0, 0, 0, 0),
   isSelected: false,
-  layout: new HorizontalLayout({
+  layout: new TilingLayout({
     align: 'center',
+    axis:'row',
     autoResize: false,
     direction: 'leftToRight',
     orderByIndex: true,
