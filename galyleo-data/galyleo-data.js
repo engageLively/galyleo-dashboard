@@ -1,4 +1,4 @@
-// import { resource } from 'lively.resources';
+import { resource } from 'lively.resources';
 // import { signal } from 'lively.bindings';
 // import Inspector, { inspect } from 'lively.ide/js/inspector.js';
 
@@ -715,7 +715,7 @@ export class URLFetcher {
    * @returns the web resource to be used
    */
 
-  /* makeResource () {
+  makeResource () {
     this.webResource = resource(this.url);
     if (this.body) {
       this.webResource.body = this.body;
@@ -724,33 +724,33 @@ export class URLFetcher {
     this.webResource.useProxy = false;
     Object.keys(this.headers).forEach(key => this.webResource.headers[key] = this.headers[key]);
     return this.webResource;
-  } */
+  }
 
   /**
    * Post the request,
    */
-  /* post () {
+  post () {
     if (!this.webResource) {
       this.makeResource();
     }
     return this.webResource.post();
-  } */
+  }
 
   /**
    * Get the request, parsing the json response, then do the appropriate callback, or error if there is one
    */
   async readJson () {
-    /* if (!this.webResource) {
+    if (!this.webResource) {
       this.makeResource();
     }
-    return this.webResource.readJson(); */
-    const response = await fetch(url,  {
+    return this.webResource.readJson();
+    /* const response = await fetch(this.url,  {
       method: 'GET',
       mode: 'cors',
       cache: 'no-cache',
       headers: this.headers
     })
-    return response.json()
+    return response.json() */
   }
 
   /**

@@ -37,6 +37,7 @@ const SideBarTab = component({
   layout: new TilingLayout({
     align: 'center',
     axis: 'row',
+    axisAlign: 'center',
     autoResize: false,
     direction: 'centered',
     orderByIndex: true,
@@ -954,7 +955,7 @@ const GalyleoSideBar = component({
   name: 'galyleo/side bar',
   layout: new TilingLayout({
     axis: 'column',
-    axisAlign: 'right',
+    axisAlign: 'center',
     orderByIndex: true,
     resizePolicies: [['button wrapper', {
       height: 'fixed',

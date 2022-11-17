@@ -32,13 +32,13 @@ BSD 3-Clause License
 /* global declare, it, describe, beforeEach, afterEach */
 // import pkg from 'mocha';
 // const { expect, done } = pkg;
-import { expect, done } from 'mocha';
+import { expect, done } from 'mocha-es6';
 import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView, GalyleoDataManager } from './galyleo-data.js';
 // import { resource } from 'lively.resources';
-// import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
+import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
 // import { connect } from 'lively.bindings';
 // const assert = require('assert')
-import { strict as assert } from 'assert';
+// import { strict as assert } from 'assert';
 
 const explicitSchema = [{ name: 'name', type: 'string' }, { name: 'age', type: 'number' }];
 const explicitRows = [['a', 2], ['b', 1]];
@@ -76,7 +76,7 @@ describe('Explicit Table', () => {
     expect(table.getColumnIndex('name')).to.eql(0);
     const result = await table.getRows();
     expect(result).to.eql(explicitRows);
-    console.log('hello')
+    console.log('hello');
     done();
   });
   it('should correctly execute the API for an explicit table', async (done) => {
