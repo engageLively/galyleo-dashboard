@@ -1,5 +1,5 @@
-import { resource } from 'lively.resources';
-import { signal } from 'lively.bindings';
+// import { resource } from 'lively.resources';
+// import { signal } from 'lively.bindings';
 // import Inspector, { inspect } from 'lively.ide/js/inspector.js';
 
 /*
@@ -630,8 +630,9 @@ export class ExplicitGalyleoTable extends GalyleoTable {
    * @param {GalyleoDataTable} rows - the rows of the table
    */
   constructor (columns, tableName, rows) {
-    this.rows = rows;
     super(columns, tableName, async () => this.rows);
+    this.getRows = async () => this.rows;
+    this.rows = rows;
     this.tableType = 'ExplicitGalyleoTable';
   }
 
@@ -714,7 +715,7 @@ export class URLFetcher {
    * @returns the web resource to be used
    */
 
-  makeResource () {
+  /* makeResource () {
     this.webResource = resource(this.url);
     if (this.body) {
       this.webResource.body = this.body;
@@ -723,26 +724,33 @@ export class URLFetcher {
     this.webResource.useProxy = false;
     Object.keys(this.headers).forEach(key => this.webResource.headers[key] = this.headers[key]);
     return this.webResource;
-  }
+  } */
 
   /**
    * Post the request,
    */
-  post () {
+  /* post () {
     if (!this.webResource) {
       this.makeResource();
     }
-    return this.webResouce.post();
-  }
+    return this.webResource.post();
+  } */
 
   /**
    * Get the request, parsing the json response, then do the appropriate callback, or error if there is one
    */
-  readJson () {
-    if (!this.webResource) {
+  async readJson () {
+    /* if (!this.webResource) {
       this.makeResource();
     }
-    return this.webResource.readJson();
+    return this.webResource.readJson(); */
+    const response = await fetch(url,  {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache',
+      headers: this.headers
+    })
+    return response.json()
   }
 
   /**
@@ -775,9 +783,9 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {GalyleoRemoteTableSpec} connector - A structure containing the url, and possibly a dashboard name and interval
      */
   constructor (columns, tableName, connector) {
+    super(columns, tableName, async () => await this._getRowsFromURL_());
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
-    super(columns, tableName, this._getRowsFromURL_);
     this.headers = { 'Table-Name': tableName };
     if (connector.dashboardName != null) {
       this.dashboardName = connector.dashboardName;
