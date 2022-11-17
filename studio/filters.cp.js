@@ -31,7 +31,8 @@ const VisualFilter = component({
     orderByIndex: true,
     padding: rect(0, 13, 0, 0),
     resizeSubmorphs: false,
-    spacing: 13
+    spacing: 13,
+    wrapSubmorphs: true
   })
 });
 
