@@ -25,14 +25,17 @@ const VisualFilter = component({
   reactsToPointer: false,
   layout: new TilingLayout({
     autoResize: true,
+    axisAlign: 'center',
+    align: 'top',
     // direction: 'topToBottom',
     axis: 'column',
     hugContentsVertically: true,
+    hugContentsHorizontally: true,
     orderByIndex: true,
-    padding: rect(0, 13, 0, 0),
+    padding: rect(0, 0, 0, 0),
     resizeSubmorphs: false,
-    spacing: 13,
-    wrapSubmorphs: true
+    spacing: 0,
+    wrapSubmorphs: false
   })
 });
 
@@ -164,7 +167,7 @@ export class BooleanFilterMorph extends Morph {
   }
 }
 
-// BooleanFilter.openInWorld()
+// part(BooleanFilter).openInWorld()
 const BooleanFilter = component(VisualFilter, {
   name: 'boolean filter',
   type: BooleanFilterMorph,
@@ -489,7 +492,7 @@ export class DoubleSliderFilterMorph extends Morph {
   }
 }
 
-// DoubleSliderFilter.openInWorld()
+// part(DoubleSliderFilter).openInWorld()
 const DoubleSliderFilter = component(VisualFilter, {
   name: 'double slider filter',
   type: DoubleSliderFilterMorph,
@@ -634,7 +637,7 @@ export class ListFilterMorph extends Morph {
   }
 }
 
-// ListFilter.openInWorld()
+// part(ListFilter).openInWorld()
 const ListFilter = component(VisualFilter, {
   name: 'list filter',
   type: ListFilterMorph,
@@ -1341,7 +1344,7 @@ export class SliderFilterMorph extends Morph {
   }
 }
 
-// SliderFilter.openInWorld()
+// part(SliderFilter).openInWorld()
 const SliderFilter = component(VisualFilter, {
   name: 'slider filter',
   type: SliderFilterMorph,
