@@ -853,6 +853,8 @@ const SliderWithValue = component({
   extent: pt(250, 100),
   layout: new TilingLayout({
     axisAlign: 'center',
+    // align: 'left',
+    axis: 'row',
     orderByIndex: true,
     spacing: 5,
     wrapSubmorphs: false

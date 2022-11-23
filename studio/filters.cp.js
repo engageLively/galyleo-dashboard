@@ -35,7 +35,7 @@ const VisualFilter = component({
     padding: rect(0, 0, 0, 0),
     resizeSubmorphs: false,
     spacing: 0,
-    wrapSubmorphs: false
+    wrapSubmorphs: true
   })
 });
 
@@ -167,7 +167,7 @@ export class BooleanFilterMorph extends Morph {
   }
 }
 
-// part(BooleanFilter).openInWorld()
+// BooleanFilter.openInWorld()
 const BooleanFilter = component(VisualFilter, {
   name: 'boolean filter',
   type: BooleanFilterMorph,
@@ -492,7 +492,7 @@ export class DoubleSliderFilterMorph extends Morph {
   }
 }
 
-// part(DoubleSliderFilter).openInWorld()
+// DoubleSliderFilter.openInWorld()
 const DoubleSliderFilter = component(VisualFilter, {
   name: 'double slider filter',
   type: DoubleSliderFilterMorph,
@@ -637,7 +637,7 @@ export class ListFilterMorph extends Morph {
   }
 }
 
-// part(ListFilter).openInWorld()
+// ListFilter.openInWorld()
 const ListFilter = component(VisualFilter, {
   name: 'list filter',
   type: ListFilterMorph,

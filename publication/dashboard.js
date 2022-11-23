@@ -540,7 +540,7 @@ export default class PublishedDashboard extends ViewModel {
     // room to position it (unlike other morphs, the logo can be repositioned, so
     // we don't need to take its position into account when resizing)
     const logoRequirement = this.logo.height + 10;
-    const morphs = this.submorphs.filter(m => m != this.logo);
+    const morphs = this.view.submorphs.filter(m => m != this.logo);
     // Figure out the width and height morphs require
     const morphsWidth = morphs.reduce((acc, morph) => Math.max(acc, morph.bounds().right()), 0);
     const morphsHeight = morphs.reduce((acc, morph) => Math.max(acc, morph.bounds().bottom()), 0);
@@ -1268,7 +1268,7 @@ export default class PublishedDashboard extends ViewModel {
     if (this.dashboardController) {
       this.dashboardController.update();
     }
-    chartSpecification.dataManagerFilter = this._prepareChartFilter(chartSpecification.viewOrTable);
+    chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
     if (editChartStyle) {
       this.editChartStyle(chartName);
     }
@@ -1328,3 +1328,4 @@ export default class PublishedDashboard extends ViewModel {
     return chartMorph;
   }
 }
+

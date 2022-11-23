@@ -301,7 +301,7 @@ export class TableLoaderModel extends ViewModel {
   }
 }
 
-
+// part(CloseButton).openInWorld()
 const CloseButton = component(MenuBarButton, {
   name: 'close button',
   extent: pt(90, 35),
@@ -330,7 +330,7 @@ const DataLoader = component(GalyleoWindow, {
     fill: Color.rgba(215, 219, 221, 0),
     layout: new TilingLayout({
       align: 'right',
-      axis:'column',
+      axis: 'column',
       hugContentsVertically: true,
       autoResize: true,
       direction: 'topToBottom',
@@ -364,7 +364,7 @@ const DataLoader = component(GalyleoWindow, {
         borderRadius: 10,
         extent: pt(311, 50),
         fill: Color.rgba(215, 219, 221, 0),
-        layout: new TilingLayout ({
+        layout: new TilingLayout({
           align: 'top',
           axis: 'row',
           autoResize: true,

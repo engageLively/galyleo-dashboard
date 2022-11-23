@@ -948,18 +948,18 @@ const GalyleoSideBarControls = component({
   })]
 });
 
-// part(GalyleoSideBar)
+// part(GalyleoSideBar).openInWindow()
 // GalyleoSideBar.get('background fill input').master._overriddenProps.get(GalyleoSideBar.get('background fill input'))
 const GalyleoSideBar = component({
   viewModelClass: DashboardControl,
   name: 'galyleo/side bar',
   layout: new TilingLayout({
     axis: 'column',
-    axisAlign: 'center',
+    axisAlign: 'right',
     orderByIndex: true,
     resizePolicies: [['button wrapper', {
       height: 'fixed',
-      width: 'fill'
+      width: 'fixed'
     }], ['controls', {
       height: 'fill',
       width: 'fill'
@@ -985,8 +985,10 @@ const GalyleoSideBar = component({
       layout: new TilingLayout({
         align: 'right',
         axisAlign: 'center',
+        axis: 'row',
         orderByIndex: true,
-        padding: rect(0, 0, 10, 0)
+        padding: rect(0, 0, 0, 0),
+        wrapSubmorphs: true
       }),
       submorphs: [
         part(MenuBarButton, {
