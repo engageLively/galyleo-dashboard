@@ -305,6 +305,11 @@ export class TableLoaderModel extends ViewModel {
 const CloseButton = component(MenuBarButton, {
   name: 'close button',
   extent: pt(90, 35),
+  layout: new TilingLayout({
+    axis: 'row',
+    axisAlign: 'center',
+    align: 'right'
+  }),
   submorphs: [{
     name: 'label', value: ['CLOSE', null]
   }, {

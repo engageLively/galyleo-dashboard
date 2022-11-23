@@ -987,7 +987,7 @@ const GalyleoSideBar = component({
         axisAlign: 'center',
         axis: 'row',
         orderByIndex: true,
-        padding: rect(0, 0, 0, 0),
+        padding: rect(10, 0, 10, 0),
         wrapSubmorphs: true
       }),
       submorphs: [
@@ -995,6 +995,12 @@ const GalyleoSideBar = component({
           tooltip: 'Close this dialog without loading',
           name: 'close button',
           extent: pt(84.3, 28),
+          layout: new TilingLayout({
+            align: 'row',
+            axisAlign: 'center',
+            align: 'right',
+            spacing: 4
+          }),
           submorphs: [{
             name: 'label',
             textAndAttributes: ['CLOSE', null]

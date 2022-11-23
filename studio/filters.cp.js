@@ -1348,6 +1348,7 @@ export class SliderFilterMorph extends Morph {
 const SliderFilter = component(VisualFilter, {
   name: 'slider filter',
   type: SliderFilterMorph,
+  fill: Color.rgb(0xdd, 0xdd, 0xdd),
   submorphs: [
     add(part(SliderWithValue, { name: 'slider' }))
   ]
