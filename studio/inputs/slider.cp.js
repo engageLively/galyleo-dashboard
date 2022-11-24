@@ -784,8 +784,8 @@ const Slider = component({
     borderColor: Color.rgb(23, 160, 251),
     borderRadius: 3,
     extent: pt(200, 11.4),
-    fill: Color.rgb(127, 140, 141),
     position: pt(0, 9),
+    fill: Color.rgb(127, 140, 141),
     reactsToPointer: false
   }, {
     type: SliderKnob,

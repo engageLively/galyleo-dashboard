@@ -35,7 +35,7 @@ const VisualFilter = component({
     padding: rect(0, 0, 0, 0),
     resizeSubmorphs: false,
     spacing: 0,
-    wrapSubmorphs: true
+    wrapSubmorphs: false
   })
 });
 
@@ -167,7 +167,7 @@ export class BooleanFilterMorph extends Morph {
   }
 }
 
-// BooleanFilter.openInWorld()
+// part(BooleanFilter).openInWorld()
 const BooleanFilter = component(VisualFilter, {
   name: 'boolean filter',
   type: BooleanFilterMorph,
@@ -309,7 +309,7 @@ export class DateFilterMorph extends Morph {
   }
 }
 
-// DateFilter.openInWorld()
+// part(DateFilter).openInWorld()
 const DateFilter = component(VisualFilter, {
   name: 'date filter',
   type: DateFilterMorph,
@@ -492,7 +492,7 @@ export class DoubleSliderFilterMorph extends Morph {
   }
 }
 
-// DoubleSliderFilter.openInWorld()
+// part(DoubleSliderFilter).openInWorld()
 const DoubleSliderFilter = component(VisualFilter, {
   name: 'double slider filter',
   type: DoubleSliderFilterMorph,
@@ -637,7 +637,7 @@ export class ListFilterMorph extends Morph {
   }
 }
 
-// ListFilter.openInWorld()
+// part(ListFilter).openInWorld()
 const ListFilter = component(VisualFilter, {
   name: 'list filter',
   type: ListFilterMorph,
@@ -1348,7 +1348,6 @@ export class SliderFilterMorph extends Morph {
 const SliderFilter = component(VisualFilter, {
   name: 'slider filter',
   type: SliderFilterMorph,
-  fill: Color.rgb(0xdd, 0xdd, 0xdd),
   submorphs: [
     add(part(SliderWithValue, { name: 'slider' }))
   ]
