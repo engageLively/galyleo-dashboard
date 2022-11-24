@@ -358,9 +358,10 @@ class DoubleSliderModel extends ViewModel {
   }
 
   updateConnector () {
-    const { connector: conn, maxKnob, minKnob } = this.ui;
+    const { connector: conn, maxKnob, minKnob, sliderCenter } = this.ui;
     conn.width = maxKnob.center.subPt(minKnob.center).x;
     conn.left = minKnob.center.x;
+    conn.position.y = sliderCenter.position.y;
   }
 
   confirm () {

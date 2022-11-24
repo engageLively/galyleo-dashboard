@@ -966,7 +966,7 @@ export class RangeFilterMorph extends Morph {
    * @param { StoredRangeFilter } savedForm - Persistent form of a range filter.
    */
   restoreFromSavedForm (savedForm) {
-    this.init(savedForm.columnName, savedForm.tableName, savedForm.minVal, savedForm.maxVal);
+    this.init(savedForm.columnName, savedForm.tableName, savedForm.min, savedForm.max);
     const minInput = this.getSubmorphNamed('min');
     const maxInput = this.getSubmorphNamed('max');
     // disable signaling before each set, in case the change handlers
