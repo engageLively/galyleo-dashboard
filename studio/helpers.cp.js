@@ -333,16 +333,17 @@ const DataLoader = component(GalyleoWindow, {
     borderRadius: 10,
     extent: pt(311, 135),
     fill: Color.rgba(215, 219, 221, 0),
-    layout: new TilingLayout({
+    /* layout: new TilingLayout({
       align: 'right',
       axis: 'column',
-      hugContentsVertically: true,
-      autoResize: true,
+      hugContentsVertically: false,
+      autoResize: false,
       direction: 'topToBottom',
       orderByIndex: true,
       resizeSubmorphs: false,
-      spacing: 10
-    }),
+      spacing: 10,
+      wrapSubmorphs: true
+    }), */
     submorphs: [
       // fixme: the overridden props are not carried over
       // part(CloseButton, {
@@ -352,6 +353,7 @@ const DataLoader = component(GalyleoWindow, {
       part(MenuBarButton, {
         name: 'close button',
         extent: pt(90, 35),
+        position: pt(250, 5),
         tooltip: 'Close this dialog without loading',
         submorphs: [{
           name: 'label', value: ['CLOSE', null]
@@ -361,13 +363,22 @@ const DataLoader = component(GalyleoWindow, {
           imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
         }]
       }),
-      part(GalyleoSearch, { name: 'url', placeholder: 'Enter URL to datasource' }),
-      part(GalyleoSearch, { name: 'table', placeholder: 'Enter name of table' }),
+      part(GalyleoSearch, {
+        name: 'url',
+        placeholder: 'Enter URL to datasource',
+        position: pt(15, 45)
+      }),
+      part(GalyleoSearch, {
+        name: 'table',
+        placeholder: 'Enter name of table',
+        position: pt(15, 80)
+      }),
       {
         name: 'update_panel',
         borderColor: Color.rgb(127, 140, 141),
         borderRadius: 10,
         extent: pt(311, 50),
+        position: pt(15, 125),
         fill: Color.rgba(215, 219, 221, 0),
         layout: new TilingLayout({
           align: 'top',
@@ -423,6 +434,7 @@ const DataLoader = component(GalyleoWindow, {
       part(PromptButton, {
         name: 'load button',
         extent: pt(106.5, 30.9),
+        position: pt(228, 170),
         submorphs: [without('icon')]
       })]
   })]
