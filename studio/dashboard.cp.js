@@ -1475,6 +1475,7 @@ export class Dashboard extends ViewModel {
     await this.addChart(chartName, chartSpecification, false);
     const chartMorph = this.charts[chartName].chartMorph;
     this._restoreMorphicProperties(storedChart, chartMorph);
+    console.log(`Morphic properties restored for ${chartName}`);
     // await chartMorph.whenRendered();
     return chartMorph;
   }
@@ -2097,13 +2098,14 @@ export class Dashboard extends ViewModel {
 
   async init (controller) {
     this.dashboardController = controller;
+    console.log('Calling init');
     await this._loadGoogleChartPackages();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
         this[prop] = {};
       }
     });
-    this.gCharts.setOnLoadCallback(() => {});
+    this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
     this._initializeJupyterLabCallbacks();
     this.dirty = false;
     if (!this.dataManager) {
@@ -2471,7 +2473,12 @@ export class Dashboard extends ViewModel {
     }
     // chartSpecification.filter =                this._prepareChartFilter(chartSpecification.viewOrTable);
     chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
-    await this.drawChart(chartName);
+    if (this.gViz) {
+      // this should ALWAYS be true
+      await this.drawChart(chartName);
+    }
+
+    console.log(`initial chart drawn for ${chartName}`);
     if (editChartStyle) {
       this.editChartStyle(chartName);
     }
@@ -2586,6 +2593,5 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };

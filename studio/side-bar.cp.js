@@ -1003,7 +1003,8 @@ const GalyleoSideBar = component({
           }),
           submorphs: [{
             name: 'label',
-            textAndAttributes: ['CLOSE', null]
+            textAndAttributes: ['CLOSE', null],
+            fontFamily: 'Barlow, Sans-Serif'
           }, {
             name: 'icon',
             extent: pt(14, 14),
