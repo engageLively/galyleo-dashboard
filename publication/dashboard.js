@@ -1000,7 +1000,7 @@ export default class PublishedDashboard extends ViewModel {
         }
       }
       if (fields.indexOf('max_value') >= 0) {
-        return `${filter.max_value} >= ${filter.column} >= ${filter.min_value}`;
+        return `${filter.max_val} >= ${filter.column} >= ${filter.min_val}`;
       }
       return null;
     } else {
@@ -1328,4 +1328,3 @@ export default class PublishedDashboard extends ViewModel {
     return chartMorph;
   }
 }
-

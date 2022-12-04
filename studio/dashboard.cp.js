@@ -1909,8 +1909,8 @@ export class Dashboard extends ViewModel {
           return `${filter.column} in ${filter.values}`;
         }
       }
-      if (fields.indexOf('max_value') >= 0) {
-        return `${filter.max_value} >= ${filter.column} >= ${filter.min_value}`;
+      if (fields.indexOf('max_val') >= 0) {
+        return `${filter.max_val} >= ${filter.column} >= ${filter.min_val}`;
       }
       return null;
     } else {
@@ -2594,6 +2594,5 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };
