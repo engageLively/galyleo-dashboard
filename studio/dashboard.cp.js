@@ -1833,6 +1833,7 @@ export class Dashboard extends ViewModel {
     });
     const columns = aView.fullColumns(this.dataManager.tables).map(column => this._createGVizColumn(column));
     const result = new this.gViz.DataTable({ cols: columns });
+    debugger;
     const rows = await aView.getData(filterSpecs, this.dataManager.tables);
     result.addRows(rows);
     return result;
@@ -2593,5 +2594,6 @@ export class Dashboard extends ViewModel {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 export { LoadDialog, SaveDialog };

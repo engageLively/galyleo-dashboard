@@ -668,7 +668,7 @@ export class ExplicitGalyleoTable extends GalyleoTable {
 export class URLFetcher {
   constructor (url, tableName) {
     this.url = url;
-    this.table_name = tableName;
+    this.tableName = tableName;
     this.headers = { 'Table-Name': tableName };
     this.body = null;
   }
@@ -765,6 +765,13 @@ export class URLFetcher {
 }
 
 /**
+ * A little utility to make an URL from a base URL and a route, robustly
+ */
+const _makeURL = (baseURL, method) => {
+  return baseURL.endsWith('/') ? `${baseURL}${method}` : `${baseURL}/${method}`;
+};
+
+/**
  * typedef (Object) GalyleoRemoteTableSpec
  * @property {string} url - the base url for all methods
  * @property {string?} dashboardName - if present, the name of the dashboard to use in remote requests
@@ -848,7 +855,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getFilteredRows (filterSpec = null) {
-    const urlFetcher = this._makeURLFetcher_(`${this.url}/get_filtered_rows`);
+    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, 'get_filtered_rows'));
     if (filterSpec) {
       urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
     }
@@ -862,7 +869,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName -- the name of the column to make the request for
      */
   async _executeGetRequest_ (request, columnName) {
-    const urlFetcher = this._makeURLFetcher_(`${this.url}/${request}?column_name=${columnName}`);
+    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, `${request}?column_name=${columnName}`));
     return await urlFetcher.readJson();
   }
 
