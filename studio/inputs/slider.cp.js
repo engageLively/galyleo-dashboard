@@ -588,6 +588,7 @@ class SliderWithValueModel extends ViewModel {
   // connected to the knob position.
   // Just displays the value of the knob in the  input field
   updateValue () {
+    debugger;
     this.ui.valueInput.value = this.models.slider.value;
   }
 
