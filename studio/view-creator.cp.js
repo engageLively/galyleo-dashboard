@@ -183,10 +183,15 @@ export class ViewBuilderModel extends ViewModel {
     this.ui.columnList.selectAll();
   }
 
+  selectAllWidgets () {
+    this.ui.widgetList.selectAll();
+  }
+
   orderColumns () {
     this.ui.columnList.toggleOrderMode();
   }
 }
+
 
 // ViewBuilder.openInWorld();
 const ViewBuilder = component(GalyleoWindow, {
