@@ -314,7 +314,7 @@ const CloseButton = component(MenuBarButton, {
     name: 'label', value: ['CLOSE', null]
   }, {
     name: 'icon',
-    extent: pt(14, 14),
+    extent: pt(14, 18),
     imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
   }]
 });

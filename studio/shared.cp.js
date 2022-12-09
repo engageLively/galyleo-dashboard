@@ -353,6 +353,7 @@ export class GalyleoListMorph extends Morph {
     this.items.forEach(({ morph }) => {
       morph.orderMode = !morph.orderMode;
     });
+    this.relayout();
   }
 
   toggleEdit () {
@@ -741,7 +742,7 @@ const MenuBarButtonDefault = component({
       height: 0,
       width: 0,
       x: 10,
-      y: 10
+      y: 0
     },
     reactToSubmorphAnimations: false,
     renderViaCSS: true,
@@ -900,8 +901,8 @@ const SelectableEntry = component({
   fill: Color.rgba(0, 0, 0, 0),
   isSelected: false,
   layout: new TilingLayout({
-    align: 'center',
-    axis:'row',
+    align: 'left',
+    axis: 'row',
     autoResize: false,
     direction: 'leftToRight',
     orderByIndex: true,
