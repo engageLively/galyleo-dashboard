@@ -830,6 +830,8 @@ const CheckboxChecked = component({
   layout: new TilingLayout({
     autoResize: true,
     axis: 'column',
+    align: 'center',
+    axisAlign: 'center',
     hugsContentsVertically: true,
     // direction: 'topToBottom',
     orderByIndex: true,
