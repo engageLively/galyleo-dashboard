@@ -848,6 +848,11 @@ const GalyleoSideBarControls = component({
           }]
         }, {
           name: 'add button',
+          layout: new TilingLayout({
+            axis: 'row',
+            align: 'center',
+            axisAlign: 'center'
+          }),
           submorphs: [{
             name: 'label',
             textAndAttributes: ['Add view', null]

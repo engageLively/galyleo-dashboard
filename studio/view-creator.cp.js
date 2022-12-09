@@ -368,6 +368,11 @@ const ViewBuilder = component(GalyleoWindow, {
         submorphs: [part(PromptButton, {
           name: 'update button',
           extent: pt(139.2, 33.2),
+          layout: new TilingLayout({
+            axis: 'row',
+            axisAlign: 'center',
+            align: 'center'
+          }),
           submorphs: [{
             type: Label,
             name: 'label',

@@ -735,6 +735,7 @@ const MenuBarButtonDefault = component({
   layout: new TilingLayout({
     align: 'center',
     axis: 'row',
+    axisAlign: 'center',
     autoResize: false,
     direction: 'centered',
     orderByIndex: true,
