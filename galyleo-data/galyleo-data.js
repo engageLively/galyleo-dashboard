@@ -926,44 +926,6 @@ function constructGalyleoTable (name, galyleoTableSpec) {
 }
 
 /**
- * Construct a RemoteGalyleoTable from a name and a connector.  Uses the URL from the
- * connector to call the server to get columns of table tableName, and then uses those
- * as the schema for the remote table.
- * @param {string} tableName: name of the table
- * @param {GalyleoRemoteTableSpec} connector - A structure containing the url, and possibly a dashboard name and interval
- */
-
-const constructRemoteGalyleoTableFromConnector = async (tableName, connector) => {
-  const remoteServer = connector.url;
-  try {
-    const rs = remoteServer.endsWith('/') ? remoteServer : `${remoteServer}/`;
-    const getTableURL = `${rs}/get_tables`;
-    const tables = await resource(getTableURL).readJson();
-    if (tables) {
-      if (tables[tableName]) {
-        return {
-          result: new RemoteGalyleoTable(tables[tableName], tableName, connector)
-        };
-      } else {
-        return {
-          msg: `table ${tableName} not found at ${remoteServer}`
-        };
-      }
-    } else {
-      return {
-        msg: `No tables found at ${remoteServer}`
-      };
-    }
-  } catch (err) {
-    return {
-      msg: `Error ${err} in contacting ${remoteServer}`
-    };
-  }
-};
-
-{ constructRemoteGalyleoTableFromConnector; }
-
-/**
  * @typedef {Object <string, FilterSpec>}FilterDictionary.  A Dictionary of FilterSpecs, indexed by Name
  */
 
@@ -1303,7 +1265,7 @@ class GalyleoDataManager {
 }
 
 export {
-  GalyleoDataManager, GalyleoView, constructRemoteGalyleoTableFromConnector,
+  GalyleoDataManager, GalyleoView,
   constructGalyleoTable, URLFetcher, RemoteGalyleoTable, ExplicitGalyleoTable, GalyleoTable,
   constructFilter, checkSpecValid, Filter
 

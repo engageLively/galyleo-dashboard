@@ -2150,6 +2150,16 @@ export class Dashboard extends ViewModel {
   }
 
   /**
+   * A utility to make an URL from a base and a method.  Designed so that 'https://foo.com/' and 'bar'
+   * and 'https://foo.com' and 'bar' both return 'https://foo.com/bar'
+   * @param{string} base -- the base URL
+   * @param{string} method -- the rest of teh URL
+   */
+  _makeURL (base, method) {
+    return base.endsWith('/') ? `${base}${method}` : `${base}/${method}`;
+  }
+
+  /**
    * Load a table from the URL given. This queries a GalyleoTableServer for the table.  Given a URL
    * it issues the query <url>/get_tables and searches the list of tables for the matching table name.
    * If it finds it, it loads it.  If not, returns an error.
@@ -2161,8 +2171,8 @@ export class Dashboard extends ViewModel {
    */
   async loadDataFromUrl (url, tableName, checkUpdates, updateInterval) {
     try {
-      const table_spec_url = `${url}/get_tables`;
-      const schemaText = await resource(table_spec_url).read();
+      const tableSpecURL = this._makeURL(url, 'get_tables');
+      const schemaText = await resource(tableSpecURL).read();
       const schemaDict = JSON.parse(schemaText);
       const connector = {
         url: url

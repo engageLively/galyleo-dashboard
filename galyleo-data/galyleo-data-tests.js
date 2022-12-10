@@ -131,18 +131,6 @@ describe('Remote Table', () => {
       expect(specFromTable).to.eql(spec);
       done();
     });
-    it('should get the schema automatically from a connector', async (done) => {
-      const constructionResult = await constructRemoteGalyleoTableFromConnector('electoral_college', connector);
-      // The code is working but these tests are timing out, for some reason.
-      // commented out for now
-      /* expect(constructionResult.msg.to.be.undefined);
-      expect(constructionResult.result.to.not.be.undefined);
-      expect(constructionResult.result.columns.to.eql.remoteTable.columns);
-      const spec = { max_val: 2020, min_val: 1828, increment: 4 };
-      const specFromTable = await constructionResult.result.getNumericSpec('Year');
-      expect(specFromTable).to.eql(spec); */
-      done();
-    });
   }
   const pollCatcher = new PollCatcher();
   const pollingConnector = { url: 'https://engagelively.wl.r.appspot.com/', dashboardName: 'foo', interval: 1 };
