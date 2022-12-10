@@ -46,7 +46,7 @@ BSD 3-Clause License
  * A Filter.  This is constructed with a Filter Specifcation and a table
  */
 
-export class Filter {
+class Filter {
   /**
     * Create a Filter
     * @param table, a GalyleoTable
@@ -376,7 +376,7 @@ class InRangeFilter extends PrimitiveFilter {
  * @param {filterSpec} FilterSpec
  * @returns true/false if this is/is not a valid FilterSpec
  */
-export function checkSpecValid (table, filterSpec) {
+function checkSpecValid (table, filterSpec) {
   try {
     if (filterSpec.operator == 'IN_RANGE' || filterSpec.operator == 'IN_LIST') {
       const index = table.getColumnIndex(filterSpec.column);
@@ -399,7 +399,7 @@ export function checkSpecValid (table, filterSpec) {
  * @param {filterSpec} FilterSpec
  * @returns {Filter} filter over the table as given by the specification
  */
-export function constructFilter (table, filterSpec) {
+function constructFilter (table, filterSpec) {
   if (filterSpec.operator == 'IN_RANGE') {
     return new InRangeFilter(table, table.getColumnIndex(filterSpec.column), filterSpec.max_val, filterSpec.min_val);
   }
@@ -446,7 +446,7 @@ export function constructFilter (table, filterSpec) {
  * used for any instantiated member.
  */
 
-export class GalyleoTable {
+class GalyleoTable {
   /**
      * Create a GalyleoTable.
      * @param {GalyleoColumn[]} columns - The columns of the Table.
@@ -622,7 +622,7 @@ export class GalyleoTable {
  * An ExplicitTable -- one with the rows right in the table itself
  */
 
-export class ExplicitGalyleoTable extends GalyleoTable {
+class ExplicitGalyleoTable extends GalyleoTable {
   /**
    * Construct an ExplicitGalyleoTable
    * @param {GalyleoColumn[]} columns - The columns of the Table.
@@ -665,7 +665,7 @@ export class ExplicitGalyleoTable extends GalyleoTable {
 /**
  * A class to do fetches and call success/error callbacks.  An overlay on resource()
  */
-export class URLFetcher {
+class URLFetcher {
   constructor (url, tableName) {
     this.url = url;
     this.tableName = tableName;
@@ -782,7 +782,7 @@ const _makeURL = (baseURL, method) => {
  * A Remote Table -- one which accesses the rows from an URL
  */
 
-export class RemoteGalyleoTable extends GalyleoTable {
+class RemoteGalyleoTable extends GalyleoTable {
   /**
      * Construct an RemoteGalyleoTable
      * @param {GalyleoColumn[]} columns - The columns of the Table.
@@ -913,7 +913,7 @@ export class RemoteGalyleoTable extends GalyleoTable {
  * @param {GalyleoTableSpec} galyleoTableSpec: specification of the table
  */
 
-export function constructGalyleoTable (name, galyleoTableSpec) {
+function constructGalyleoTable (name, galyleoTableSpec) {
   const columns = galyleoTableSpec.columns;
   if (galyleoTableSpec.rows != null) {
     return new ExplicitGalyleoTable(columns, name, galyleoTableSpec.rows);
@@ -924,6 +924,44 @@ export function constructGalyleoTable (name, galyleoTableSpec) {
   // should never get here
   return null;
 }
+
+/**
+ * Construct a RemoteGalyleoTable from a name and a connector.  Uses the URL from the
+ * connector to call the server to get columns of table tableName, and then uses those
+ * as the schema for the remote table.
+ * @param {string} tableName: name of the table
+ * @param {GalyleoRemoteTableSpec} connector - A structure containing the url, and possibly a dashboard name and interval
+ */
+
+const constructRemoteGalyleoTableFromConnector = async (tableName, connector) => {
+  const remoteServer = connector.url;
+  try {
+    const rs = remoteServer.endsWith('/') ? remoteServer : `${remoteServer}/`;
+    const getTableURL = `${rs}/get_tables`;
+    const tables = await resource(getTableURL).readJson();
+    if (tables) {
+      if (tables[tableName]) {
+        return {
+          result: new RemoteGalyleoTable(tables[tableName], tableName, connector)
+        };
+      } else {
+        return {
+          msg: `table ${tableName} not found at ${remoteServer}`
+        };
+      }
+    } else {
+      return {
+        msg: `No tables found at ${remoteServer}`
+      };
+    }
+  } catch (err) {
+    return {
+      msg: `Error ${err} in contacting ${remoteServer}`
+    };
+  }
+};
+
+{ constructRemoteGalyleoTableFromConnector; }
 
 /**
  * @typedef {Object <string, FilterSpec>}FilterDictionary.  A Dictionary of FilterSpecs, indexed by Name
@@ -945,7 +983,7 @@ export function constructGalyleoTable (name, galyleoTableSpec) {
  * @property {[string]} filterNames -- The names of the filters for this column
  */
 
-export class GalyleoView {
+class GalyleoView {
   /**
    * Build a GalyleoView from a specification
    * @param {GalyleoViewSpec} viewSpec: specification of the view
@@ -1046,7 +1084,7 @@ export class GalyleoView {
  * @property {Object <string, GalyleoTable>} tables
  * @property {Object <string, GalyleoView>} views
  */
-export class GalyleoDataManager {
+class GalyleoDataManager {
   /**
    * Construct a new DataManager.  Just initializes tables and views and sets the updateListener if there is one
    * @param {GalyleoViewSpec} viewSpec: specification of the view
@@ -1263,3 +1301,10 @@ export class GalyleoDataManager {
     }
   }
 }
+
+export {
+  GalyleoDataManager, GalyleoView, constructRemoteGalyleoTableFromConnector,
+  constructGalyleoTable, URLFetcher, RemoteGalyleoTable, ExplicitGalyleoTable, GalyleoTable,
+  constructFilter, checkSpecValid, Filter
+
+};
