@@ -1,5 +1,0 @@
-{
-  "packageManager": "python",
-  "packageName": "lively-universal-extension",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package galyleo"
-}
