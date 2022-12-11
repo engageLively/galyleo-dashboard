@@ -7,6 +7,7 @@ import { Color, pt } from 'lively.graphics';
 import { TilingLayout, Text, Label } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
+import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -222,6 +223,30 @@ const BugReporter = component(GalyleoWindow, {
 });
 
 /**
+ * A utility to check and rewrite a string to be an URL.  Returns an object
+ * with two fields: action and resultString.  The action is one of ok/rewritten/failed
+ * and the resultString, if present, is a valid URL.
+ * @param {string} url -- the original string
+ */
+const _checkUrl = (url) => {
+  if (typeof url != 'string') {
+    return { action: 'failed', resultString: null };
+  }
+  let tmp;
+  try {
+    tmp = new URL(url);
+    return { action: 'ok', resultString: tmp.toString() };
+  } catch (error) {
+  }
+  try {
+    tmp = new URL(`https://${url}`);
+    return { action: 'rewritten', resultString: tmp.toString() };
+  } catch (error) {
+    return { action: 'failed', resultString: null };
+  }
+};
+
+/**
  * A very simple part that just consists of an input string and two buttons,
  * where an URL is entered and then read and loaded.  The URL must reference
  * a JSON structure which is a suitable argument to Google DataTable, see:
@@ -283,13 +308,20 @@ export class TableLoaderModel extends ViewModel {
       return;
     }
     const table = this.ui.table;
-    if (table.input.length == 0) {
+    if (table.input.length === 0) {
       table.indicateError('Please enter the table name');
       return;
     }
+    const checkResult = _checkUrl(url.textString);
+    if (checkResult.action === 'failed') {
+      url.indicateError(`${url.textString} is not a valid URL`);
+      return;
+    }
+    // if this is rewritten, we really should prompt the user to confirm that
+    // it's rewritten
     const doUpdate = this.ui.updateToggle.state;
     const updateInterval = this.ui.updateInterval.number;
-    const result = await this.dashboard.loadDataFromUrl(url.textString, table.textString, doUpdate, updateInterval);
+    const result = await this.dashboard.loadDataFromUrl(checkResult.resultString, table.textString, doUpdate, updateInterval);
     if (result.result) {
       this.view.remove();
     } else {
