@@ -471,7 +471,7 @@ export default class PublishedDashboard extends ViewModel {
       // to preserve front-to-back ordering.  So the first step is just to collect
       // the descriptors of each type in unorderedDescriptors, keeping the
       // the information we need to instantiate them later
-      //
+
       const storedFilterNames = Object.keys(storedForm.filters);
 
       for (let i = 0; i < storedFilterNames.length; i++) {
@@ -619,22 +619,43 @@ export default class PublishedDashboard extends ViewModel {
    * @param { string|Morph } componentOrString - The component or (now invalid) component URL
    * @return { Morph } The original or resolved component.
    */
+  /**
+   * We ensure compatibility with older dashboard by translating
+   * component URLs to actual component objects.
+   * @param { string|Morph } componentOrString - The component or (now invalid) component URL
+   * @return { Morph } The original or resolved component.
+   */
   _ensurePart (componentOrString) {
-    if (componentOrString.isComponent) return componentOrString;
+    let partName;
+    if (componentOrString.exportedName) {
+      // there has to be a better way to do this
+      partName = componentOrString.exportedName;
+    } else if (componentOrString.startsWith('part://')) {
+      const pathParts = componentOrString.split('/');
+      partName = pathParts[pathParts.length - 1];
+    } else {
+      partName = componentOrString;
+    }
+
     const parts = {
       'select filter': SelectFilter,
+      SelectFilter: SelectFilter,
       DateFilter: DateFilter,
       'list filter': ListFilter,
+      ListFilter: ListFilter,
       'range filter': RangeFilter,
+      RangeFilter: RangeFilter,
       SliderFilter: SliderFilter,
       booleanFilter: BooleanFilter,
-      doubleSliderFilter: DoubleSliderFilter
+      BooleanFilter: BooleanFilter,
+      doubleSliderFilter: DoubleSliderFilter,
+      DoubleSliderFilter: DoubleSliderFilter
     };
-    if (componentOrString.startsWith('part://')) {
-      const pathParts = componentOrString.split('/');
-      const partName = pathParts[pathParts.length - 1];
-      return parts[partName];
-    }
+    return parts[partName];
+
+    /* return ({
+      'part://Dashboard Studio Development/galyleo/select filter': SelectFilter
+    })[componentOrString]; */
   }
 
   // restore a chart from a saved form.
@@ -906,7 +927,7 @@ export default class PublishedDashboard extends ViewModel {
     const filterForName = name => this._getFilterForName(name);
     const filters = view.filterNames.map(name => filterForName(name));
     // return filters.filter(filter => this.__filterValid__(filter));
-    return filters;
+    return filters.filter(galyleoFilter => galyleoFilter);
   }
 
   // Prepare the data for a view using the data manager.  A view has an underlying table,
@@ -1328,3 +1349,4 @@ export default class PublishedDashboard extends ViewModel {
     return chartMorph;
   }
 }
+
