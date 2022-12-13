@@ -336,7 +336,7 @@ class DoubleSliderModel extends ViewModel {
         // read the range values from the positions of the knobs.  Make sure
         // that the minKnob exists (i.e., is rendered) before calling.
       },
-      expose: { get () { return ['positionRanges', 'updateConnector']; } },
+      expose: { get () { return ['positionRanges', 'updateConnector', 'minValue', 'maxValue', 'increment']; } },
       bindings: {
         get () {
           return [
@@ -612,6 +612,7 @@ class DoubleSliderWithValuesModel extends ViewModel {
           return [
             ['minValue', { model: 'double slider' }],
             ['maxValue', { model: 'double slider' }],
+            ['increment', { model: 'double slider' }],
             ['range', { model: 'double slider' }]];
         }
       },

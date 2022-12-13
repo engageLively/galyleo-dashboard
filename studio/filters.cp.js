@@ -344,8 +344,8 @@ export class DoubleSliderFilterMorph extends Morph {
       filterChanged: { derived: true, readOnly: true, isSignal: true },
       columnName: { defaultValue: null },
       tableName: { defaultValue: null },
-      minVal: { defaultValue: null },
-      maxVal: { defaultValue: null },
+      minValue: { defaultValue: null },
+      maxValue: { defaultValue: null },
       signalEnabled: { defaultValue: false },
       filterType: {
         serialize: false,
@@ -392,9 +392,9 @@ export class DoubleSliderFilterMorph extends Morph {
   init (columnName, tableName, minVal, maxVal, increment) {
     this.signalEnabled = false;
     const { doubleSlider } = this;
-    doubleSlider.minValue = minVal;
-    doubleSlider.maxValue = maxVal;
-    doubleSlider.increment = increment;
+    this.minValue = doubleSlider.minValue = minVal;
+    this.maxValue = doubleSlider.maxValue = maxVal;
+    this.increment = doubleSlider.increment = increment;
     doubleSlider.range = { min: minVal, max: maxVal };
     this.columnName = columnName;
     this.tableName = tableName;
@@ -487,6 +487,7 @@ export class DoubleSliderFilterMorph extends Morph {
     // disable signaling before each set, in case the change handlers
     // re-enable
     this.signalEnabled = false;
+    this.increment = savedForm.increment;
     this.doubleSlider.range = { min: savedForm.min, max: savedForm.max };
     this.signalEnabled = true;
   }
