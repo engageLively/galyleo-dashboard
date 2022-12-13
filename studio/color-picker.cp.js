@@ -1,7 +1,7 @@
 import { ColorPicker } from 'lively.ide/styling/color-picker.cp.js';
 import { Color, pt, rect } from 'lively.graphics';
 import { TilingLayout, component, add } from 'lively.morphic';
-import { GalyleoDropDown, GalyleoTextInput, GalyleoNumberInput, GalyleoDropDownList } from './shared.cp.js';
+import { GalyleoDropDown, GalyleoTextInput, GalyleoNumberInput, GalyleoDropDownList, galyleoFont } from './shared.cp.js';
 
 // GalyleoColorPicker.edit()
 const GalyleoColorPicker = component(ColorPicker, {
@@ -24,7 +24,7 @@ const GalyleoColorPicker = component(ColorPicker, {
         type: 'label',
         fontWeight: 700,
         fontSize: 14,
-        fontFamily: 'Barlow',
+        fontFamily: galyleoFont,
         textString: 'Color Picker',
         fontColor: Color.rgb(255, 255, 255)
       }]
@@ -42,7 +42,7 @@ const GalyleoColorPicker = component(ColorPicker, {
           fontColor: Color.rgb(128, 128, 128),
           fontWeight: 700,
           fontSize: 15,
-          fontFamily: 'Barlow',
+          fontFamily: galyleoFont,
           textAndAttributes: ['CLOSE ', null, '', { fontFamily: 'Material Icons', fontSize: 20, textStyleClasses: ['material-icons'] }]
         }
       ]

@@ -11,6 +11,8 @@ import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
 
+const galyleoFont = 'Sans-Serif'; // formerly 'Barlow', changed due to failure to import
+
 ensureFont({
   Barlow: 'https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap'
 });
@@ -547,7 +549,7 @@ const GalyleoWindow = component({
 // part(GalyleoDropDownList, { items: ['hello', 'world', 'there']}).openInWorld()
 const GalyleoDropDownList = component(SystemList, {
   name: 'galyleo/drop down list',
-  fontFamily: 'Barlow',
+  fontFamily: galyleoFont,
   fontSize: 14,
   fill: Color.rgb(230, 230, 230),
   selectionFontColor: Color.white,
@@ -761,7 +763,7 @@ const MenuBarButtonDefault = component({
     type: Label,
     name: 'label',
     fontColor: Color.rgb(128, 128, 128),
-    fontFamily: 'Barlow',
+    fontFamily: galyleoFont,
     fontSize: 15,
     fontWeight: 'bold',
     reactsToPointer: false,
@@ -938,7 +940,7 @@ const SelectableEntry = component({
     type: Label,
     name: 'entry name',
     reactsToPointer: false,
-    fontFamily: 'Barlow',
+    fontFamily: galyleoFont,
     textAndAttributes: ['entry', null]
   }]
 });
@@ -983,7 +985,7 @@ const TableEntry = component({
   }, {
     type: Label,
     name: 'entry name',
-    fontFamily: 'Barlow',
+    fontFamily: galyleoFont,
     textAndAttributes: ['A table entry', null]
   }, {
     name: 'buffer',
@@ -1103,7 +1105,7 @@ const WindowHeader = component({
     {
       name: 'title',
       type: 'label',
-      fontFamily: 'Barlow',
+      fontFamily: galyleoFont,
       fontWeight: 'bold',
       fontColor: Color.rgb(255, 255, 255)
     }
@@ -1140,5 +1142,5 @@ export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
   TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive, GalyleoDropDownAuto,
-  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat
+  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat, galyleoFont
 };

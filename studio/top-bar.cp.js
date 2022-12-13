@@ -7,6 +7,7 @@ import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user/morphic/user-ui.js';
 import { signal } from 'lively.bindings/index.js';
+import { galyleoFont } from './shared.cp.js';
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -96,7 +97,7 @@ const GalyleoTopBar = component(TopBar, {
           nativeCursor: 'pointer',
           scale: 1.1388694516782336,
           textAndAttributes: [...Icon.textAttribute('life-ring'), '  Help', {
-            fontFamily: 'Barlow',
+            fontFamily: galyleoFont,
             fontSize: 15,
             fontWeight: 'bold',
             paddingTop: '2px'

@@ -6,7 +6,7 @@ import {
 } from 'lively.morphic';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
-import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry } from './shared.cp.js';
+import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry, galyleoFont } from './shared.cp.js';
 import { ViewCreatorPrompt } from './view-creator.cp.js';
 import { ChartBuilder } from './chart-creator.cp.js';
 import { FilterBuilder, FilterEditor } from './filter-creator.cp.js';
@@ -50,7 +50,7 @@ const SideBarTab = component({
     name: 'tab label',
     fontSize: 14,
     fontColor: Color.rgb(81, 90, 90),
-    fontFamily: 'Barlow',
+    fontFamily: galyleoFont,
     fontWeight: 700,
     nativeCursor: 'pointer',
     textAndAttributes: ['Tab Name', null]
@@ -693,7 +693,7 @@ const ControlPanel = component({
         type: Label,
         name: 'control label',
         fontColor: Color.rgb(81, 90, 90),
-        fontFamily: 'Barlow',
+        fontFamily: galyleoFont,
         fontSize: 14,
         fontWeight: 700,
         nativeCursor: 'pointer',
@@ -848,11 +848,11 @@ const GalyleoSideBarControls = component({
           }]
         }, {
           name: 'add button',
-          layout: new TilingLayout({
+          /* layout: new TilingLayout({
             axis: 'row',
             align: 'center',
             axisAlign: 'center'
-          }),
+          }), */
           submorphs: [{
             name: 'label',
             textAndAttributes: ['Add view', null]
@@ -1009,7 +1009,7 @@ const GalyleoSideBar = component({
           submorphs: [{
             name: 'label',
             textAndAttributes: ['CLOSE', null],
-            fontFamily: 'Barlow, Sans-Serif'
+            fontFamily: galyleoFont
           }, {
             name: 'icon',
             extent: pt(14, 14),

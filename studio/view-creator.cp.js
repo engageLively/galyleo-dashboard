@@ -192,7 +192,6 @@ export class ViewBuilderModel extends ViewModel {
   }
 }
 
-
 // ViewBuilder.openInWorld();
 const ViewBuilder = component(GalyleoWindow, {
   name: 'view builder',
@@ -508,7 +507,7 @@ const ViewCreator = component({
       submorphs: [part(MenuBarButton, {
         tooltip: 'Close this dialog without loading',
         name: 'close button',
-        extent: pt(90, 35),
+        extent: pt(100, 35),
         submorphs: [{
           name: 'label',
           textAndAttributes: ['CLOSE', null]

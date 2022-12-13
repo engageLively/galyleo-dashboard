@@ -1,6 +1,6 @@
 
 import { resource } from 'lively.resources/src/helpers.js';
-import { MenuBarButton, GalyleoNumberInput, GalyleoWindow, PromptButton } from './shared.cp.js';
+import { MenuBarButton, galyleoFont, GalyleoNumberInput, GalyleoWindow, PromptButton } from './shared.cp.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { Color, pt } from 'lively.graphics';
@@ -193,7 +193,7 @@ const BugReporter = component(GalyleoWindow, {
         borderRadius: 20,
         fontSize: 18,
         lineWrapping: true,
-        fontFamily: 'Barlow',
+        fontFamily: galyleoFont,
         padding: rect(10, 10, 0, 0),
         extent: pt(318, 58.4),
         fixedWidth: true,
@@ -384,8 +384,8 @@ const DataLoader = component(GalyleoWindow, {
       // }),
       part(MenuBarButton, {
         name: 'close button',
-        extent: pt(90, 35),
-        position: pt(250, 5),
+        extent: pt(100, 35),
+        position: pt(230, 5),
         tooltip: 'Close this dialog without loading',
         submorphs: [{
           name: 'label', value: ['CLOSE', null]

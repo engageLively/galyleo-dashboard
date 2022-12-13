@@ -6,7 +6,7 @@ import { Color, pt } from 'lively.graphics';
 import { Toggle } from './inputs/toggle.cp.js';
 import { DatePicker } from './inputs/date.cp.js';
 import { DoubleSliderWithValues, SliderWithValue } from './inputs/slider.cp.js';
-import { GalyleoDropDownList, GalyleoNumberInput, GalyleoDropDown } from './shared.cp.js';
+import { GalyleoDropDownList, GalyleoNumberInput, GalyleoDropDown, galyleoFont } from './shared.cp.js';
 import { rect } from 'lively.graphics/geometry-2d.js';
 
 // fixme: turn this into a transparent filter?
@@ -749,7 +749,7 @@ const NamedFilter = component(VisualFilter, {
       type: Label,
       name: 'column name',
       fontColor: Color.rgb(81, 90, 90),
-      fontFamily: 'Barlow',
+      fontFamily: galyleoFont,
       fontSize: 15,
       textAndAttributes: ['I am a label!', null],
       visible: false
@@ -1002,7 +1002,7 @@ const RangeFilter = component(VisualFilter, {
           type: Label,
           name: 'max label',
           fontColor: Color.rgb(48, 48, 48),
-          fontFamily: 'Barlow',
+          fontFamily: galyleoFont,
           fontWeight: 800,
           fontSize: 14,
           textAndAttributes: ['Max:', null]
@@ -1019,7 +1019,7 @@ const RangeFilter = component(VisualFilter, {
           type: Label,
           name: 'min label',
           fontColor: Color.rgb(48, 48, 48),
-          fontFamily: 'Barlow',
+          fontFamily: galyleoFont,
           fontSize: 14,
           fontWeight: 800,
           textAndAttributes: ['Min:', null]

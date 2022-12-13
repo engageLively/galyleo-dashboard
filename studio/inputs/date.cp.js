@@ -1,10 +1,10 @@
 import { signal } from 'lively.bindings/index.js';
-import { component, ViewModel, part } from 'lively.morphic/components/core.js';
+import { component, ViewModel, part, ensureFont } from 'lively.morphic/components/core.js';
 import { InputLine, Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
 import { Color, rect, pt } from 'lively.graphics/index.js';
 
 import { arr, date } from 'lively.lang/index.js';
-
+import { galyleoFont } from '../shared.cp.js';
 
 export class GalyleoDate extends Label {
   /*
@@ -413,8 +413,8 @@ export default class DatePickerModel extends ViewModel {
       dateString = `${this.monthName.slice(0, 3)} ${start} - ${end} ${this.year}`;
     }
 
-    if (!this._preserveInputDate_) { 
-      signal(this, 'dateChanged', dateString); 
+    if (!this._preserveInputDate_) {
+      signal(this, 'dateChanged', dateString);
       this.ui.dateInput.textString = dateString;
     }
   }
@@ -664,7 +664,7 @@ const DateInput = component({
   extent: pt(115.8, 23.3),
   fill: Color.rgb(253, 254, 254),
   fontColor: Color.rgb(66, 73, 73),
-  fontFamily: 'Barlow',
+  fontFamily: galyleoFont,
   fontSize: 13,
   fontWeight: 500,
   haloShadow: new ShadowObject({
@@ -695,7 +695,7 @@ const DateDefault = component({
   fill: Color.rgba(255, 255, 255, 0),
   fontColor: Color.rgb(81, 90, 90),
   padding: rect(4, 2, 2, 2),
-  fontFamily: 'Barlow',
+  fontFamily: galyleoFont,
   fontWeight: 500,
   borderRadius: 50
 });
@@ -717,7 +717,7 @@ const DayOfWeek = component({
   name: 'day of week',
   fill: Color.rgba(255, 255, 255, 0),
   fontColor: Color.rgb(66, 73, 73),
-  fontFamily: 'Barlow',
+  fontFamily: galyleoFont,
   fontWeight: 600,
   position: pt(367.6, 433),
   renderOnGPU: true,
@@ -783,8 +783,8 @@ const DatePicker = component({
   borderColor: Color.rgb(23, 160, 251),
   borderRadius: 6,
   clipMode: 'hidden',
-  extent: pt(166.6,245.9),
-  fill: Color.rgb(247,180,30),
+  extent: pt(166.6, 245.9),
+  fill: Color.rgb(247, 180, 30),
   position: pt(327.2, 247.1),
   submorphs: [{
     type: Label,
@@ -817,7 +817,7 @@ const DatePicker = component({
       type: Label,
       name: 'month label',
       fontColor: Color.rgb(66, 73, 73),
-      fontFamily: 'Barlow',
+      fontFamily: galyleoFont,
       fontSize: 13,
       fontWeight: 'bold',
       padding: rect(5, 0, -5, 0),
@@ -870,15 +870,15 @@ const DatePicker = component({
       part(DayOfWeek, {
         name: 'monday',
         textAndAttributes: [' M', null]
-      }), 
+      }),
       part(DayOfWeek, {
         name: 'tuesday',
         textAndAttributes: [' T', null]
-      }), 
+      }),
       part(DayOfWeek, {
         name: 'wednesday',
         textAndAttributes: [' W', null]
-      }), 
+      }),
       part(DayOfWeek, {
         name: 'thursday',
         textAndAttributes: ['T', null]
@@ -936,11 +936,11 @@ const DoubleDatePicker = component({
         name: 'date input',
         opacity: 0,
         reactsToPointer: false
-      }] 
+      }]
     }),
     part(DatePicker, {
       name: 'max date selector',
-      borderRadius: { topLeft: 0, topRight: 6, bottomLeft: 0, bottomRight: 6 }, 
+      borderRadius: { topLeft: 0, topRight: 6, bottomLeft: 0, bottomRight: 6 },
       viewModel: { rangeSelection: true },
       submorphs: [{
         name: 'monthLabel',
@@ -949,7 +949,7 @@ const DoubleDatePicker = component({
         name: 'date input',
         opacity: 0,
         reactsToPointer: false
-      }] 
+      }]
     }), {
       name: 'date inputs',
       position: pt(0, 19),
@@ -982,8 +982,8 @@ const DoubleDatePicker = component({
           dropShadow: new ShadowObject({ distance: 0, blur: 0 })
         })
       ]
-    } 
-  ]  
+    }
+  ]
 });
 
 export { DateDefault, DateInput, CalendarNavButton, DayOfWeek, DatePicker, DoubleDatePicker };
