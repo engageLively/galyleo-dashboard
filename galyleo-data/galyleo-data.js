@@ -377,6 +377,9 @@ class InRangeFilter extends PrimitiveFilter {
  * @returns true/false if this is/is not a valid FilterSpec
  */
 function checkSpecValid (table, filterSpec) {
+  if (!filterSpec) {
+    return false;
+  }
   try {
     if (filterSpec.operator == 'IN_RANGE' || filterSpec.operator == 'IN_LIST') {
       const index = table.getColumnIndex(filterSpec.column);
