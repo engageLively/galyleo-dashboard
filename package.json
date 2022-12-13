@@ -15,6 +15,7 @@
   "scripts": {
     "build": "./tools/build.sh",
     "build-published": "./tools/build-published.sh",
+    "clean": "./tools/clean.sh",
     "test": "mocha -r esm galyleo-data/galyleo-data-tests.js"
   }
 }

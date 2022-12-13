@@ -483,7 +483,7 @@ export class DoubleSliderFilterMorph extends Morph {
    * @param { StoredDoubleSliderFilter } savedForm - The persistent form of a double slider filter.
    */
   restoreFromSavedForm (savedForm) {
-    this.init(savedForm.columnName, savedForm.tableName, savedForm.min, savedForm.max, savedForm.increment);
+    this.init(savedForm.columnName, savedForm.tableName, savedForm.minVal, savedForm.maxVal, savedForm.increment);
     // disable signaling before each set, in case the change handlers
     // re-enable
     this.signalEnabled = false;
