@@ -802,6 +802,14 @@ export class RangeFilterMorph extends Morph {
         get () {
           return RangeFilter[Symbol.for('lively-module-meta')]; // eslint-disable-line no-use-before-define
         }
+      },
+      bindings: {
+        get () {
+          return [
+            { target: 'max', signal: 'numberChanged', handler: 'entryChanged' },
+            { target: 'min', signal: 'numberChanged', handler: 'entryChanged' }
+          ];
+        }
       }
     };
   }
@@ -834,8 +842,8 @@ export class RangeFilterMorph extends Morph {
     minInput.max = maxInput.max = this.maxVal = maxInput.number = maxVal;
 
     // setup connections
-    connect(minInput, 'numberChanged', this, 'entryChanged');
-    connect(maxInput, 'numberChanged', this, 'entryChanged');
+    /* connect(minInput, 'numberChanged', this, 'entryChanged');
+    connect(maxInput, 'numberChanged', this, 'entryChanged'); */
 
     this.columnName = columnName;
     this.tableName = tableName;
@@ -850,6 +858,7 @@ export class RangeFilterMorph extends Morph {
     const maxInput = this.getSubmorphNamed('max');
     const doSignal = this.signalEnabled;
     this.signalEnabled = false;
+
     if (maxInput.number > this.maxVal) {
       maxInput.number = this.maxVal;
     }
@@ -857,6 +866,7 @@ export class RangeFilterMorph extends Morph {
       minInput.number = this.minVal;
     }
     if (minInput.number >= maxInput.number) {
+      debugger;
       minInput.number = maxInput.number;
     }
     this.signalEnabled = doSignal;
