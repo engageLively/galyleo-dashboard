@@ -834,8 +834,8 @@ export class RangeFilterMorph extends Morph {
     minInput.max = maxInput.max = this.maxVal = maxInput.number = maxVal;
 
     // setup connections
-    connect(minInput, 'numberChanged', this, 'minChanged');
-    connect(maxInput, 'numberChanged', this, 'maxChanged');
+    connect(minInput, 'numberChanged', this, 'entryChanged');
+    connect(maxInput, 'numberChanged', this, 'entryChanged');
 
     this.columnName = columnName;
     this.tableName = tableName;
@@ -843,7 +843,27 @@ export class RangeFilterMorph extends Morph {
   }
 
   /**
-   * Called when the maximum input entry is changed, through a connection
+   * Ensure that the numbers haven't busted the bounds.  Used internally only...
+   */
+  _ensureWithinBounds () {
+    const minInput = this.getSubmorphNamed('min');
+    const maxInput = this.getSubmorphNamed('max');
+    const doSignal = this.signalEnabled;
+    this.signalEnabled = false;
+    if (maxInput.number > this.maxVal) {
+      maxInput.number = this.maxVal;
+    }
+    if (minInput.number < this.minVal) {
+      minInput.number = this.minVal;
+    }
+    if (minInput.number >= maxInput.number) {
+      minInput.number = maxInput.number;
+    }
+    this.signalEnabled = doSignal;
+  }
+
+  /**
+   * Called when the maximum or minimum input entry is changed, through a connection
    * which was set up when the part was designed.  The maximum input is
    * changed either through user action, the init() or minChange() methods above
    * If it is changed through user action, this.signalEnabled == true.
@@ -855,41 +875,9 @@ export class RangeFilterMorph extends Morph {
    * If this was not changed through user action, this.signalEnabled == false,
    * and no action need be taken.
    */
-  minChanged () {
-    const minInput = this.getSubmorphNamed('min');
-    const maxInput = this.getSubmorphNamed('max');
+  entryChanged () {
+    this._ensureWithinBounds();
     if (this.signalEnabled) {
-      if (minInput.number > maxInput.number) {
-        this.signalEnabled = false;
-        maxInput.number = minInput.number;
-        this.signalEnabled = true;
-      }
-      signal(this, 'filterChanged');
-    }
-  }
-
-  /**
-   * Called when the minimum input entry is changed, through a connection
-   * which was set up when the part was designed.  The minimum input is
-   * changed either through user action, the init method above, or maxChanged()
-   * below.  If it is changed through user action, this.signalEnabled == true.
-   * In this case, there are two actions.  First, we must check to see if
-   * minInput.number > maxInput.number.  If it is we disable
-   * signaling,  to prevent a bogus signal from being fired then set
-   *  maxInput.number = minInput.number and re-enable signaling.  Second, we
-   * must fire the signal due to the user action.
-   * If this was not changed through user action, this.signalEnabled == false,
-   * and no action need be taken.
-   */
-  maxChanged () {
-    const minInput = this.getSubmorphNamed('min');
-    const maxInput = this.getSubmorphNamed('max');
-    if (this.signalEnabled) {
-      if (minInput.number > maxInput.number) {
-        this.signalEnabled = false;
-        minInput.number = maxInput.number;
-        this.signalEnabled = true;
-      }
       signal(this, 'filterChanged');
     }
   }
