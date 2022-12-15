@@ -66,7 +66,7 @@ const GalyleoTopBar = component(TopBar, {
   defaultViewModel: GalyleoTopBarModel,
   submorphs: [
     {
-      name: 'horizontal layout',
+      name: 'tiling layout',
       submorphs: [
         add({
           type: Image,
