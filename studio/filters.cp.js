@@ -866,7 +866,6 @@ export class RangeFilterMorph extends Morph {
       minInput.number = this.minVal;
     }
     if (minInput.number >= maxInput.number) {
-      debugger;
       minInput.number = maxInput.number;
     }
     this.signalEnabled = doSignal;
