@@ -44,6 +44,18 @@ class GalyleoTopBarModel extends TopBarModel {
           return m => m.owner === this.primaryTarget || m === this.primaryTarget;
         }
       },
+      shapeToIcon: {
+        get () {
+          return {
+            Rectangle: { shortcut: 'R', args: ['square', { textStyleClasses: ['fas'] }] },
+            Ellipse: { shortcut: 'E', args: ['circle', { textStyleClasses: ['fas'] }] },
+            Image: { shortcut: 'I', args: ['image', { textStyleClasses: ['fas'], paddingTop: '1px' }] },
+            Path: { shortcut: 'P', args: ['bezier-curve', { fontSize: 13, paddingTop: '3px' }] },
+            Polygon: { shortcut: 'Q', args: ['draw-polygon', { fontSize: 17 }] },
+            HTML: { shortcut: 'H', args: ['code', { paddingTop: '1px' }] }
+          };
+        }
+      },
       bindings: {
         get () {
           return super.prototype.bindings.concat([
