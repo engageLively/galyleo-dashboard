@@ -815,6 +815,19 @@ export class RangeFilterMorph extends Morph {
   }
 
   /**
+   * Set the minimum/maximum/initial value for a number widget.  Because
+   * these widgets have a bug (reported to the Lively team) we need
+   * to set the min/max for both the widget and its value submorph.
+   * When the Lively bug is fixed remove this patch
+   */
+  _setMaxAndMin (numberWidget, min, max, initVal) {
+    const valueInput = numberWidget.getSubmorphNamed('value');
+    numberWidget.min = valueInput.min = min;
+    numberWidget.max = valueInput.max = max;
+    numberWidget.number = initVal;
+  }
+
+  /**
    * Called as soon as the filter is created.  The
    * columnName, minVal, and maxVal properties are set.  The two
    * input parts (currently spinners, see part://SystemWidgets/numberField/dark)
@@ -835,11 +848,13 @@ export class RangeFilterMorph extends Morph {
    */
   init (columnName, tableName, minVal, maxVal, increment) {
     this.signalEnabled = false;
+    this.minVal = minVal;
+    this.maxVal = maxVal;
 
     const maxInput = this.getSubmorphNamed('max');
+    this._setMaxAndMin(maxInput, minVal, maxVal, maxVal);
     const minInput = this.getSubmorphNamed('min');
-    minInput.min = maxInput.min = this.minVal = minInput.number = minVal;
-    minInput.max = maxInput.max = this.maxVal = maxInput.number = maxVal;
+    this._setMaxAndMin(minInput, minVal, maxVal, minVal);
 
     // setup connections
     /* connect(minInput, 'numberChanged', this, 'entryChanged');
@@ -904,6 +919,15 @@ export class RangeFilterMorph extends Morph {
   }
 
   /**
+   * return the actual min and max values, ordered
+   */
+  _minMax () {
+    const inputMin = this._inputValue('min');
+    const inputMax = this._inputValue('max');
+    return { min: Math.min(inputMin, inputMax), max: Math.max(inputMin, inputMax) };
+  }
+
+  /**
    * Return the filter as a JavaScript object.  Per the requirement in
    * GoogleDataTable.getFilteredRows(), this must have a minValue and a
    * maxValue field.  It also has a columnName field, which processing
@@ -911,9 +935,8 @@ export class RangeFilterMorph extends Morph {
    * given the identity of the table being used for the filter.
    */
   get filter () {
-    const min = this._inputValue('min');
-    const max = this._inputValue('max');
-    return { columnName: this.columnName, maxValue: max, minValue: min };
+    const minMax = this._minMax();
+    return { columnName: this.columnName, maxValue: minMax.max, minValue: minMax.min };
   }
 
   /**
@@ -924,9 +947,8 @@ export class RangeFilterMorph extends Morph {
    */
 
   get dataManagerFilter () {
-    const min = this._inputValue('min');
-    const max = this._inputValue('max');
-    return { operator: 'IN_RANGE', column: this.columnName, max_val: max, min_val: min };
+    const minMax = this._minMax();
+    return { operator: 'IN_RANGE', column: this.columnName, max_val: minMax.max, min_val: minMax.min };
   }
 
   /**
@@ -934,9 +956,8 @@ export class RangeFilterMorph extends Morph {
    * action of the filter in chart titles, etc.
    */
   get filterString () {
-    const min = this._inputValue('min');
-    const max = this._inputValue('max');
-    return `${max} >= ${this.columnName} >= ${min}`;
+    const minMax = this._minMax();
+    return `${minMax.max} >= ${this.columnName} >= ${minMax.min}`;
   }
 
   /**
@@ -976,6 +997,7 @@ export class RangeFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
+
 
 // part(RangeFilter).openInWorld()
 const RangeFilter = component(VisualFilter, {
