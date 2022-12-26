@@ -93,14 +93,13 @@ const GalyleoTopBar = component(TopBar, {
         without('open component browser'),
         without('comment browser button'),
         without('load world button'),
-        without('load world button'),
         without('undo button'),
         without('redo button'),
         without('save button'),
-        {
+        /* {
           name: 'text mode button',
-          visible: false
-        },
+          visible: true
+        }, */
         add({
           type: Label,
           name: 'help button',

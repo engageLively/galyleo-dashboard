@@ -147,7 +147,7 @@ const BugReporter = component(GalyleoWindow, {
         submorphs: [
           part(MenuBarButton, {
             name: 'close button',
-            extent: pt(90, 35),
+            extent: pt(100, 35),
             tooltip: 'Close this dialog without loading',
             submorphs: [{
               name: 'label', value: ['CLOSE', null]
