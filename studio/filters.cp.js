@@ -998,7 +998,6 @@ export class RangeFilterMorph extends Morph {
   }
 }
 
-
 // part(RangeFilter).openInWorld()
 const RangeFilter = component(VisualFilter, {
   name: 'range filter',
