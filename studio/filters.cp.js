@@ -565,6 +565,7 @@ export class ListFilterMorph extends Morph {
     this.columnName = columnName;
     this.tableName = tableName;
     this.valueList.items = choices;
+    this.valueList.multiSelect = true;
     this.isString = isString;
     this.valueList.selection = choices[0];
     connect(this.valueList, 'selection', this, 'signalFilterChanged');
@@ -598,13 +599,14 @@ export class ListFilterMorph extends Morph {
    */
 
   get dataManagerFilter () {
-    const valueField = this.valueList.selection;
-    const valueValue = this.isString ? `"${valueField}"` : valueField;
-    return { operator: 'IN_LIST', column: this.columnName, values: [valueValue] };
+    const mapToString = val => isNaN(val) ? val : `"${val}"`;
+    const valueField = this.valueList.selections;
+    const formattedValues = this.isString ? valueField.map(val => mapToString(val)) : valueField;
+    return { operator: 'IN_LIST', column: this.columnName, values: formattedValues };
   }
 
   get filterString () {
-    return `${this.columnName} = ${this.valueList.selection}`;
+    return `${this.columnName} IN ${this.valueList.selections}`;
   }
 
   /**
