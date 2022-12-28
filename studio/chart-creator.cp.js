@@ -4,6 +4,10 @@ import { connect } from 'lively.bindings';
 import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { GalyleoWindow, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
+import { Chart, Legend, ArcElement, PieController, registry } from 'esm://cache/chart.js@3.9.1';
+import { Canvas } from 'lively.components/canvas.js';
+import { copy } from 'lively.serializer2/index.js';
+import { obj } from 'lively.lang/index.js';
 
 /**
  * The second generation of chart builder.  Very simple.  Consists of two
@@ -422,6 +426,122 @@ const GoogleChartHolder = component({
   submorphs: [
     { name: 'resizer' }
   ]
+});
+
+Chart.register(PieController, ArcElement, Legend);
+
+export default class ChartDiagramModel extends ViewModel {
+  // this.init()
+
+  // JSON.stringify(this.chart.options)
+  // this.options.legend.labels.fontFamily = 'IBM Plex Sans'
+
+  // this.options.layout.padding = 0
+  // this.update()
+  // this.type = 'pie'
+  // this.chart.data.datasets[0]
+
+  static get properties () {
+    return {
+      type: {
+        type: 'Enum',
+        values: ['bar', 'bubble', 'doughnut', 'horizontalBar', 'line', 'polarArea', 'pie', 'radar', 'scatter', 'scale'],
+        defaultValue: 'pie'
+      },
+      bindings: {
+        get () {
+          return [{
+            signal: 'onOwnerChanged', handler: 'ensureChart'
+          }];
+        }
+      },
+      data: {
+        initialize () {
+          this.data = {
+            datasets: [{
+              backgroundColor: [
+                'rgb(204, 0, 0)',
+                'rgb(255, 153, 0)',
+                'rgb(204, 204, 0)',
+                'rgb(0, 204, 0)',
+                'rgb(0, 0, 204)'],
+              borderWidth: 0,
+              data: [50, 60, 100, 200, 300],
+              label: 'Dataset 1'
+            }],
+            labels: ['Red', 'Orange', 'Yellow', 'Green', 'Blue']
+          };
+        }
+      },
+      options: {
+        initialize () {
+          this.options = {
+            layout: {
+              padding: 10
+            },
+            plugins: {
+              legend: {
+                display: true,
+                align: 'start',
+                labels: {
+                  fontColor: Color.black,
+                  fontFamily: 'IBM Plex Sans'
+                },
+                position: 'left'
+              }
+            },
+            maintainAspectRatio: false,
+            padding: 50,
+            responsive: true
+          };
+        }
+      },
+      config: {
+        derived: true,
+        get () {
+          return copy({
+      			type: this.type,
+      			data: this.data,
+      			options: this.options
+      		});
+        }
+      }
+    };
+  }
+
+  restoreContent (oldCanvas, newCanvas) {
+    super.restoreContent(oldCanvas, newCanvas);
+    this.init();
+  }
+
+  ensureChart () {
+    if (!this.chart) this.init();
+  }
+
+  onRefresh () {
+    if (!this.view.context) return;
+    this.ensureChart();
+    this.chart.config.type = this.type;
+    this.chart.options = this.config.options;
+    this.chart.data = this.config.data;
+    this.chart.update();
+  }
+
+  init (config = this.config) {
+    this.view.env.forceUpdate();
+    if (this.chart) {
+      this.chart.destroy();
+    }
+    this.chart = new Chart(this.view.context, config);
+  }
+}
+
+const ChartDiagram = component({
+  type: Canvas,
+  defaultViewModel: ChartDiagramModel,
+  borderRadius: 5,
+  fill: Color.rgb(254, 254, 254),
+  extent: pt(465.6, 400.5)
 });
 
 export { ChartBuilder, GoogleChartHolder };
