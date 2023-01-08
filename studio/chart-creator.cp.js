@@ -1,13 +1,14 @@
-import { ViewModel, without, part, add, component } from 'lively.morphic';
+import { ViewModel, Label, without, part, add, component } from 'lively.morphic';
 import { pt, Color, rect } from 'lively.graphics';
 import { connect } from 'lively.bindings';
 import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
-import { GalyleoWindow, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
-import { Chart, Legend, ArcElement, PieController, registry } from 'esm://cache/chart.js@3.9.1';
+import { GalyleoWindow, GalyleoColorInput, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
+import { Chart, Legend, ArcElement, PieController, registry, registerables } from 'esm://cache/chart.js@3.9.1';
 import { Canvas } from 'lively.components/canvas.js';
 import { copy } from 'lively.serializer2/index.js';
 import { obj } from 'lively.lang/index.js';
+import { GalyleoFillControl } from './controls/fill.cp.js';
 
 /**
  * The second generation of chart builder.  Very simple.  Consists of two
@@ -429,6 +430,7 @@ const GoogleChartHolder = component({
 });
 
 Chart.register(PieController, ArcElement, Legend);
+Chart.register(...registerables);
 
 export default class ChartDiagramModel extends ViewModel {
   // this.init()
@@ -445,7 +447,7 @@ export default class ChartDiagramModel extends ViewModel {
     return {
       type: {
         type: 'Enum',
-        values: ['bar', 'bubble', 'doughnut', 'horizontalBar', 'line', 'polarArea', 'pie', 'radar', 'scatter', 'scale'],
+        values: ['area', 'bar', 'bubble', 'doughnut', 'line', 'polarArea', 'pie', 'radar', 'scatter'/* , 'scale' */],
         defaultValue: 'pie'
       },
       bindings: {
@@ -473,6 +475,7 @@ export default class ChartDiagramModel extends ViewModel {
           };
         }
       },
+
       options: {
         initialize () {
           this.options = {
@@ -496,43 +499,249 @@ export default class ChartDiagramModel extends ViewModel {
           };
         }
       },
+      chartJSType: {
+        derived: true,
+        get () {
+          return this.type == 'area' ? 'line' : this.type;
+        }
+      },
       config: {
         derived: true,
         get () {
           return copy({
-      			type: this.type,
+      			type: this.chartJSType,
       			data: this.data,
       			options: this.options
       		});
         }
+      },
+      datasetOptions: {
+        defaultValue: null
       }
     };
   }
 
   restoreContent (oldCanvas, newCanvas) {
     super.restoreContent(oldCanvas, newCanvas);
-    this.init();
+    this.drawChart();
   }
 
   ensureChart () {
-    if (!this.chart) this.init();
+    if (!this.chart) this.drawChart();
   }
 
   onRefresh () {
     if (!this.view.context) return;
     this.ensureChart();
-    this.chart.config.type = this.type;
+    this.chart.config.type = this.chartJSType;
     this.chart.options = this.config.options;
     this.chart.data = this.config.data;
     this.chart.update();
   }
 
-  init (config = this.config) {
-    this.view.env.forceUpdate();
-    if (this.chart) {
-      this.chart.destroy();
+  setData (galyleoTabularData) {
+    console.log(galyleoTabularData);
+    this.galyleoData = galyleoTabularData;
+    this._setupDatasetOptions();
+    this.drawVisualization();
+  }
+
+  get chartTypes () {
+    return ['area', 'bar', 'bubble', 'doughnut', 'line', 'polarArea', 'pie', 'radar', 'scatter'/* , 'scale' */];
+  }
+
+  chartTypesMatchingData () {
+    return this.chartTypes.filter(type => this.dataMatches(type));
+  }
+
+  setType (chartType) {
+    if (this.chartTypes.indexOf(chartType) >= 0) {
+      this.type = chartType;
+      this._setupDatasetOptions();
+      this.drawVisualization();
     }
-    this.chart = new Chart(this.view.context, config);
+  }
+
+  restoreFromSavedForm (savedForm) {
+    this.type = savedForm.type;
+    this.datasetOptions = savedForm.datasetOptions;
+  }
+
+  savedForm () {
+    return {
+      type: this.type,
+      datasetOptions: this.datasetOptions
+    };
+  }
+
+  get defaultColorSpecs () {
+    const defaultColorSpecs = ['#EBF5C9', '#AFD32E', '#4426CD', '#F65A06', '#110A32', '#FF6384', '#36A2EB', '#FFCD56'];
+    const result = defaultColorSpecs.map(hexCode => {
+      const solid = Color.rgbHex(hexCode);
+      const background = Color.rgbHex(hexCode);
+      background.a = 0.2;
+      return {
+        borderColor: solid,
+        backgroundColor: background
+      };
+    });
+    return result;
+  }
+
+  _setupDatasetOptions () {
+    console.log(this.galyleoData);
+    const dataNamesInColumn0 = ['bubble', 'doughnut', 'polarArea', 'pie', 'scatter'].indexOf(this.type) >= 0;
+    const datasetNames = dataNamesInColumn0 ? this.galyleoData.rows.map(row => row[0]) : this.galyleoData.columns.slice(1).map(column => column.name);
+    if (!this.datasetOptions) {
+      this.datasetOptions = {};
+    }
+    Object.keys(this.datasetOptions).forEach(datasetName => {
+      if (datasetNames.indexOf(datasetName) < 0) {
+        delete this.datasetOptions[datasetName];
+      }
+    });
+    const colorSpecs = this.defaultColorSpecs;
+    datasetNames.forEach(datasetName => {
+      if (!this.datasetOptions[datasetName]) {
+        const chosenColor = colorSpecs.pop();
+        this.datasetOptions[datasetName] = chosenColor;
+      }
+    });
+  }
+
+  /**
+   * Determine if the loaded data matches a chartType, where chartType is one of the supported types.
+   * This is determined by the numbers and types of columns that can be loaded.  Briefly:
+   * 1. A pie, doughnut, or polarArea chart has dataset categories  in the first column and values in the
+   *    second column.  Therefore, the first column is arbitrary, the second column numeric
+   * 2. A line, area, or  bar chart has data points in the first column and dataset values in
+   *    the other columns.  The first column is arbitrary, the remainder numeric
+   * 3. A scatter chart has three columns: the first column is the dataset name, the second column is the x value,
+   *    and the third column is the y value.  The first column is arbitrary, the second and third numeric
+   * 4. A bubble chart has four columns: the first column is the dataset name, the second column is the x value,
+   *    the third column is the y value, and the fourth the size of the point.  The first column is arbitrary,
+   *    the remainder numeric
+   */
+
+  dataMatches (chartType = this.type) {
+    if (!(this.galyleoData)) {
+      return false;
+    }
+    const columns = this.galyleoData.columns;
+    const numericColumns = columns => columns.reduce((acc, col) => acc && col.type == 'number', true);
+    switch (chartType) {
+      case 'pie':
+      case 'doughnut':
+      case 'polarArea':
+        return columns.length == 2 && columns[1].type == 'number';
+      case 'line':
+      case 'area':
+      case 'bar':
+      case 'radar':
+        return columns.length > 1 && numericColumns(columns.slice(1));
+      case 'scatter':
+        return columns.length == 3 && numericColumns(columns.slice(1));
+      case 'bubble':
+        return columns.length == 4 && numericColumns(columns.slice(1));
+
+      default:
+        return false;
+    }
+  }
+
+  _prepareScatterOrBubbleData () {
+    // for a scatter chart or a bubble chart, the data set name is in column 0,
+    // the x/y coordinates are in columns 1/2, and, for bubble charts, the
+    // r (size) coordinate is in column 3.
+    const dataDictionary = {};
+    this.galyleoData.rows.forEach(row => {
+      const key = row[0]; const data = row.slice(1);
+      if (key in dataDictionary) {
+        dataDictionary[key].push(data);
+      } else {
+        dataDictionary[key] = [data];
+      }
+    });
+    const mapRow = this.type == 'scatter' ? row => { return { x: row[0], y: row[1] }; } : row => { return { x: row[0], y: row[1], r: row[2] }; };
+    const datasets = Object.keys(dataDictionary).map(key => {
+      return {
+        label: key,
+        data: dataDictionary[key].map(row => mapRow(row))
+      };
+    });
+    return {
+      labels: [],
+      datasets: datasets
+    };
+  }
+
+  _prepareLineData () {
+    // For area, bar, doughnut, pie, line, polarArea, and radar charts the datasets are in the columns, and the x-axis labels are in column 0
+    // Note we want the ordered values for the labels just as they appear in column 0
+    const datasets = this.galyleoData.columns.slice(1).map((column, index) => {
+      return {
+        label: column.name,
+        data: this.galyleoData.rows.map(row => row[index + 1]) // Note we must use index + 1, since the column index is offset by 1 due to the slice operation
+      };
+    });
+    return {
+      labels: this.galyleoData.rows.map(row => row[0]),
+      datasets: datasets
+    };
+  }
+
+  _prepareData () {
+    const bubbleOrScatter = this.type == 'bubble' || this.type == 'scatter';
+    return bubbleOrScatter ? this._prepareScatterOrBubbleData() : this._prepareLineData();
+  }
+
+  _prepareChart () {
+    const data = this._prepareData();
+    const pieCharts = ['doughnut', 'polarArea', 'pie'];
+    const backgroundColor = hexCode => {
+      const result = Color.rgbHex(hexCode);
+      result.a = 0.2;
+      return result;
+    };
+    if (pieCharts.indexOf(this.type) >= 0) {
+      data.datasets[0].borderColor = data.labels.map(label => this.datasetOptions[label].borderColor.toString());
+      data.datasets[0].backgroundColor = data.labels.map(label => this.datasetOptions[label].backgroundColor.toString());
+    } else {
+      data.datasets.forEach(dataset => {
+        dataset.borderColor = this.datasetOptions[dataset.label].borderColor.toString();
+        dataset.backgroundColor = this.datasetOptions[dataset.label].backgroundColor.toString();
+        // area charts are line charts with the fill parameter specified for
+        // each dataset.
+        if (this.type == 'area') {
+          dataset.fill = 'origin';
+        } else {
+          if (dataset.fill) {
+            delete dataset.fill;
+          }
+        }
+        // dataset[colorParameter[this.type]] = this.datasetOptions[dataset.label].color;
+      });
+    }
+    return data;
+  }
+
+  drawVisualization () {
+    if (this.view.context) {
+      this.data = this._prepareChart();
+      this.drawChart();
+    }
+  }
+
+  drawChart (config = this.config) {
+    // this.view.env.forceUpdate();
+    this.view.whenRendered().then(_ => {
+      if (this.chart) {
+        this.chart.destroy();
+      }
+      if (this.view.context) {
+        this.chart = new Chart(this.view.context, config);
+      }
+    });
   }
 }
 
@@ -543,5 +752,237 @@ const ChartDiagram = component({
   fill: Color.rgb(254, 254, 254),
   extent: pt(465.6, 400.5)
 });
+
+const _pieData = {
+  columns: [{ name: 'Color', type: 'string' }, { name: 'value', type: 'number' }],
+  rows: [['red', 300], ['blue', 50], ['yellow', 100]]
+};
+
+const _testChartModel = {
+  type: 'pie',
+  datasetOptions: {
+    blue: {
+      backgroundColor: Color.rgba(0, 0, 255, 0.2),
+      borderColor: Color.rgb(0, 0, 255)
+    },
+    red: {
+      backgroundColor: Color.rgba(255, 0, 0, 0.2),
+      borderColor: Color.rgb(255, 0, 0)
+    },
+    yellow: {
+      backgroundColor: Color.rgba(255, 255, 0, 0.2),
+      borderColor: Color.rgb(255, 255, 0)
+    }
+  }
+};
+
+const makeTestChart = _ => {
+  const chart = part(ChartDiagram);
+  chart.viewModel.restoreFromSavedForm(_testChartModel);
+  chart.viewModel.setData(_pieData);
+  return chart;
+};
+
+const showTestChart = _ => {
+  const chart = makeTestChart();
+  chart.openInWorld();
+  chart.viewModel.drawVisualization();
+};
+
+const editTestChart = _ => {
+  const chart = makeTestChart();
+  const chartEditor = part(ChartJSEditorWindow);
+  chartEditor.getSubmorphNamed('editor').viewModel.loadModel(chart.viewModel);
+  chartEditor.openInWorld();
+};
+// editTestChart()
+
+// testChart()
+export class ChartJSEditorModel extends ViewModel {
+  static get properties () {
+    return {
+      baseChart: { defaultValue: null },
+      bindings: {
+        get () {
+          return [
+            { model: 'chartTypeSelector', signal: 'selection', handler: 'updateChartSelection' },
+            { model: 'columnSelector', signal: 'selection', handler: 'updateDatasetConfiguration' },
+            { model: 'strokeColor', signal: 'color', handler: 'updateStrokeColor' },
+            { model: 'fillColor', signal: 'color', handler: 'updateFillColor' },
+            { model: 'close button', signal: 'fire', handler: 'close' },
+            { model: 'updateChart', signal: 'fire', handler: 'updateBaseChart' }
+          ];
+        }
+      }
+    };
+  }
+
+  close () {
+    this.view.owner.remove();
+  }
+
+  loadModel (baseChartModel) {
+    const wrapper = baseChartModel.savedForm();
+    const previewChart = this.ui.preview.viewModel;
+    previewChart.restoreFromSavedForm(wrapper);
+    console.log(baseChartModel.galyleoData);
+    previewChart.setData(baseChartModel.galyleoData);
+    this.baseChart = baseChartModel;
+    if (this.viewLoaded) {
+      this._initItems();
+    }
+  }
+
+  viewDidLoad () {
+    this.acceptDatasetUpdate = true;
+    if (this.ui.preview.viewModel && this.ui.preview.viewModel.galyleoData) {
+      this._initItems();
+    } else {
+      this.viewLoaded = true;
+    }
+  }
+
+  updateChartSelection () {
+    const chartType = this.ui.chartTypeSelector.selection;
+    if (chartType) {
+      this.ui.preview.viewModel.setType(chartType);
+    }
+  }
+
+  updateDatasetConfiguration () {
+    const setColorField = (uiField, value) => {
+      this.ui[uiField].viewModel.colorValue = value;
+      this.ui[uiField].viewModel.update();
+    };
+    const dataset = this.ui.columnSelector.selection;
+    const colorOptions = this.ui.preview.viewModel.datasetOptions[dataset];
+    this.acceptDatasetUpdate = false;
+    setColorField('fillColor', colorOptions.backgroundColor);
+    setColorField('strokeColor', colorOptions.borderColor);
+    this.acceptDatasetUpdate = true;
+  }
+
+  _updateColorField (colorValue, datasetColorField) {
+    const dataset = this.ui.columnSelector.selection;
+    this.ui.preview.viewModel.datasetOptions[dataset][datasetColorField] = colorValue;
+    this.ui.preview.viewModel.drawVisualization();
+  }
+
+  updateStrokeColor () {
+    if (this.acceptDatasetUpdate) {
+      this._updateColorField(this.ui.strokeColor.colorValue, 'borderColor');
+    }
+  }
+
+  updateFillColor () {
+    if (this.acceptDatasetUpdate) {
+      this._updateColorField(this.ui.fillColor.colorValue, 'backgroundColor');
+    }
+  }
+
+  // this.updateBaseChart()
+  updateBaseChart () {
+    const previewModel = this.ui.preview.viewModel;
+    const saved = previewModel.savedForm();
+    this.baseChart.restoreFromSavedForm(saved);
+  }
+
+  _initItems () {
+    this.ui.chartTypeSelector.items = this.ui.preview.viewModel.chartTypesMatchingData();
+    this.ui.columnSelector.items = Object.keys(this.ui.preview.viewModel.datasetOptions);
+    this.ui.preview.viewModel.drawVisualization();
+  }
+
+  updateBaseChart () {
+    this.baseChart.restoreFromSavedForm(this.savedForm());
+    this.baseChart.drawVisualization();
+  }
+}
+
+
+// part(ChartJSEditor).openInWorld()
+const ChartJSEditor = component({
+  name: 'chart editor',
+  defaultViewModel: ChartJSEditorModel,
+  extent: pt(800, 460),
+  fill: Color.rgba(255, 255, 255, 0),
+  submorphs: [
+    part(MenuBarButton, {
+      tooltip: 'Close this dialog without loading',
+      name: 'close button',
+      extent: pt(100, 35),
+      position: pt(680, 10),
+      submorphs: [{
+        name: 'label',
+        textAndAttributes: ['CLOSE', null]
+      }, {
+        name: 'icon',
+        extent: pt(14, 14),
+        imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+      }]
+
+    }),
+    part(GalyleoDropDown, { name: 'chartTypeSelector', viewModel: { placeholder: 'Select chart type...', openListInWorld: true }, position: pt(490, 40) }),
+    part(GalyleoDropDown, { name: 'columnSelector', viewModel: { placeholder: 'Select column...', openListInWorld: true }, position: pt(490, 95) }),
+    {
+      type: Label,
+      name: 'Fill Label',
+      textAndAttributes: ['Fill', null],
+      fontColor: Color.rgb(0, 0, 0),
+      fontFamily: 'Sans-Serif',
+      fontSize: 14,
+      fontWeight: 'bold',
+      position: pt(490, 170)
+    },
+    part(GalyleoColorInput, { name: 'fillColor', position: pt(540, 165) }),
+    {
+      type: Label,
+      name: 'Stroke Label',
+      textAndAttributes: ['Stroke', null],
+      fontColor: Color.rgb(0, 0, 0),
+      fontFamily: 'Sans-Serif',
+      fontSize: 14,
+      fontWeight: 'bold',
+      position: pt(490, 200)
+    },
+    part(GalyleoColorInput, { name: 'strokeColor', position: pt(540, 195) }),
+    part(ChartDiagram, { name: 'preview', position: pt(10, 10) }),
+    part(PromptButton, {
+      name: 'updateChart',
+      position: pt(610, 360),
+      extent: pt(165, 40),
+      submorphs: [{
+        name: 'label', textAndAttributes: ['Apply Changes', null]
+      }]
+    })
+
+  ]
+});
+
+// part(ChartJSEditorWindow).openInWorld()
+
+const ChartJSEditorWindow = component(GalyleoWindow, {
+  name: 'ChartJS Editor',
+  extent: pt(800, 450),
+  layout: new TilingLayout({
+    axis: 'column',
+    orderByIndex: true,
+    padding: rect(0, 0, 2, 0),
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['editor', {
+      height: 'fixed',
+      width: 'fixed'
+    }]],
+    wrapSubmorphs: false
+  }),
+  submorphs: [
+    { name: 'window title', textString: 'ChartJS Editor' },
+    add(part(ChartJSEditor, { name: 'editor' }))
+  ]
+});
+
+// part(ChartDiagram).openInWorld()
 
 export { ChartBuilder, GoogleChartHolder };
