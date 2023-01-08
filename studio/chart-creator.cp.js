@@ -429,20 +429,22 @@ const GoogleChartHolder = component({
   ]
 });
 
+// Registrations required for ChartJS
+
 Chart.register(PieController, ArcElement, Legend);
 Chart.register(...registerables);
 
+/**
+ * The ViewModel for a ChartJS editor.  This renders all ChartJS type charts, and should be extended as needed for
+ * future Charts.
+ * @property: Chart type -- the type of the chart
+ * @property: data -- the chart data
+ * @property: chartJSType -- the actual type for ChartJS.
+ * @property: config -- the chart configuration used to draw the chart.  This is dervied from the data property
+ * @property: datasetOptions -- the options to be used for each dataset
+ */
+
 export default class ChartDiagramModel extends ViewModel {
-  // this.init()
-
-  // JSON.stringify(this.chart.options)
-  // this.options.legend.labels.fontFamily = 'IBM Plex Sans'
-
-  // this.options.layout.padding = 0
-  // this.update()
-  // this.type = 'pie'
-  // this.chart.data.datasets[0]
-
   static get properties () {
     return {
       type: {
@@ -453,7 +455,7 @@ export default class ChartDiagramModel extends ViewModel {
       bindings: {
         get () {
           return [{
-            signal: 'onOwnerChanged', handler: 'ensureChart'
+            signal: 'onOwnerChanged', handler: 'drawVisualization'
           }];
         }
       },
@@ -523,11 +525,11 @@ export default class ChartDiagramModel extends ViewModel {
 
   restoreContent (oldCanvas, newCanvas) {
     super.restoreContent(oldCanvas, newCanvas);
-    this.drawChart();
+    this.drawVisualization();
   }
 
   ensureChart () {
-    if (!this.chart) this.drawChart();
+    if (!this.chart) this.drawVisualization();
   }
 
   onRefresh () {
@@ -539,20 +541,39 @@ export default class ChartDiagramModel extends ViewModel {
     this.chart.update();
   }
 
+  /**
+   * Set the data from the Dashboard.  This should follow the standard for data coming in from a View:
+   * a set of rows and columns.  Draws the visualization once the data is set
+   * @param  {GalyleoTabularData} galyleoTabularData
+   */
+
   setData (galyleoTabularData) {
-    console.log(galyleoTabularData);
     this.galyleoData = galyleoTabularData;
     this._setupDatasetOptions();
     this.drawVisualization();
   }
 
+  /**
+   * the chart types
+   */
+
   get chartTypes () {
+    // should area be a separate type, or should it be a dataset option ("fill")?
     return ['area', 'bar', 'bubble', 'doughnut', 'line', 'polarArea', 'pie', 'radar', 'scatter'/* , 'scale' */];
   }
+
+  /**
+   * return the set of chart types matching the currently-loaded data.  This is used by the chart editor to
+   * display the possible charts for the user.
+   */
 
   chartTypesMatchingData () {
     return this.chartTypes.filter(type => this.dataMatches(type));
   }
+
+  /**
+   * Set the type of the chart to the argument. Once the type is set, set up the data set options and draw the chart.
+   */
 
   setType (chartType) {
     if (this.chartTypes.indexOf(chartType) >= 0) {
@@ -562,17 +583,53 @@ export default class ChartDiagramModel extends ViewModel {
     }
   }
 
+  /**
+   * @typedef DatasetColorSpecification
+   * @property {Color} backgroundColor: the background color as returned by Color.rgba
+   * @property {Color} borderColor: the borderColor color as returned by Color.rgba
+   */
+
+  /**
+   * @typedef ChartJSDataSetOptions
+   * Object {string.DatasetColorSpecification}
+   */
+
+  /**
+   * @typedef ChartJSSavedForm.  The object giving the saved form of a chart
+   * @property {string} chartMorph -- the library of the chart.  This must be ChartJSMorph
+   * @property {string} type -- the type of the chart.
+   * @property {ChartJSDataSetOptions} -- the options of the datasets
+   */
+
+  /**
+   * restore a chart from its savedForm.
+   * @param {ChartJSSavedForm} savedForm -- form to restore from
+   */
+
   restoreFromSavedForm (savedForm) {
     this.type = savedForm.type;
     this.datasetOptions = savedForm.datasetOptions;
   }
 
+  /**
+   * Generate the saved form
+   * @returns {ChartJSSavedForm}
+   */
+
   savedForm () {
     return {
+      chartMorph: 'ChartJSMorph',
       type: this.type,
       datasetOptions: this.datasetOptions
     };
   }
+
+  /**
+   * Generate default color specifications for use before these are specified.  Grabbed a color wheel off the web
+   * and use the same base color for a borderColor and a backgroundColor, where the borderColor has opacity 1 and the
+   * backgroundColor has opacity 0.2
+   * @return [{DatasetColorSpecification}]
+   */
 
   get defaultColorSpecs () {
     const defaultColorSpecs = ['#EBF5C9', '#AFD32E', '#4426CD', '#F65A06', '#110A32', '#FF6384', '#36A2EB', '#FFCD56'];
@@ -588,18 +645,27 @@ export default class ChartDiagramModel extends ViewModel {
     return result;
   }
 
+  // Set the data set options from the specifications.  This is somewhat complicated by the fact that For a bubble,
+  // doughnut, polarArea, pie, or scatter chart, the data set names are in the column 0 labels, and
+  //    for the other charts they are the column names in column 1...n
+  // But the basic idea is to go through the datasets and ensure that there is a color for each.
+
   _setupDatasetOptions () {
-    console.log(this.galyleoData);
+    // Pull the dataset names into datasetNames, correcly.  See (1) above
     const dataNamesInColumn0 = ['bubble', 'doughnut', 'polarArea', 'pie', 'scatter'].indexOf(this.type) >= 0;
     const datasetNames = dataNamesInColumn0 ? this.galyleoData.rows.map(row => row[0]) : this.galyleoData.columns.slice(1).map(column => column.name);
+    // ensure that there are dataset options
     if (!this.datasetOptions) {
       this.datasetOptions = {};
     }
+    // delete dead or trailing dataset names
     Object.keys(this.datasetOptions).forEach(datasetName => {
       if (datasetNames.indexOf(datasetName) < 0) {
         delete this.datasetOptions[datasetName];
       }
     });
+    // Ensure that every dataset has options set.  Don't disturb existing datasets, but for once that aren't present, pull
+    // one of the default colors.
     const colorSpecs = this.defaultColorSpecs;
     datasetNames.forEach(datasetName => {
       if (!this.datasetOptions[datasetName]) {
@@ -621,6 +687,8 @@ export default class ChartDiagramModel extends ViewModel {
    * 4. A bubble chart has four columns: the first column is the dataset name, the second column is the x value,
    *    the third column is the y value, and the fourth the size of the point.  The first column is arbitrary,
    *    the remainder numeric
+   * @param {string} chartType
+   * @returns {boolean}
    */
 
   dataMatches (chartType = this.type) {
@@ -676,8 +744,8 @@ export default class ChartDiagramModel extends ViewModel {
   }
 
   _prepareLineData () {
-    // For area, bar, doughnut, pie, line, polarArea, and radar charts the datasets are in the columns, and the x-axis labels are in column 0
-    // Note we want the ordered values for the labels just as they appear in column 0
+    // For area, bar, doughnut, pie, line, polarArea, and radar charts the datasets are in the columns, and the x-axis
+    // labels are in column 0.  Note we want the ordered values for the labels just as they appear in column 0
     const datasets = this.galyleoData.columns.slice(1).map((column, index) => {
       return {
         label: column.name,
@@ -690,23 +758,33 @@ export default class ChartDiagramModel extends ViewModel {
     };
   }
 
+  // Prepare the data, calling the appropriate preparation routine
+
   _prepareData () {
     const bubbleOrScatter = this.type == 'bubble' || this.type == 'scatter';
     return bubbleOrScatter ? this._prepareScatterOrBubbleData() : this._prepareLineData();
   }
 
+  // Prepare the chart for drawing, loading the data property with the specification understood by ChartJS to draw
+  // the chart.  This uses _prepareData() to get the data into chart form, and then goes through the options to annotate
+  // the dataset with appropriate options.
+  // This is mostly just going through the datasetOptions property and annotating the data property appropriately, with
+  // a couple of complications.
+  // 1. For a pie, doughnut, or polarArea chart, there is a single dataset and the labels each have a separate color.
+  // 2. An area chart is just a line chart with the fill parameter set.
+  // We can simplify these away, and probably should.
+
   _prepareChart () {
     const data = this._prepareData();
     const pieCharts = ['doughnut', 'polarArea', 'pie'];
-    const backgroundColor = hexCode => {
-      const result = Color.rgbHex(hexCode);
-      result.a = 0.2;
-      return result;
-    };
+
+    // Note that ChartJS takes colors as strings 'rbga(255, 0, 0, 0.2)', e.g., so convert the colors to strings.
     if (pieCharts.indexOf(this.type) >= 0) {
+      // If this is a pie chart, stick the datasets in the labels and put the colors in arrays in dataset 0.
       data.datasets[0].borderColor = data.labels.map(label => this.datasetOptions[label].borderColor.toString());
       data.datasets[0].backgroundColor = data.labels.map(label => this.datasetOptions[label].backgroundColor.toString());
     } else {
+      // Otherwise, set the background and border colors for each dataset individually
       data.datasets.forEach(dataset => {
         dataset.borderColor = this.datasetOptions[dataset.label].borderColor.toString();
         dataset.backgroundColor = this.datasetOptions[dataset.label].backgroundColor.toString();
@@ -719,11 +797,14 @@ export default class ChartDiagramModel extends ViewModel {
             delete dataset.fill;
           }
         }
-        // dataset[colorParameter[this.type]] = this.datasetOptions[dataset.label].color;
       });
     }
     return data;
   }
+
+  /**
+ * Draw the visualization.  Just prepare the chart and call drawChart to draw it.
+ */
 
   drawVisualization () {
     if (this.view.context) {
@@ -731,6 +812,11 @@ export default class ChartDiagramModel extends ViewModel {
       this.drawChart();
     }
   }
+
+  /**
+ * Draw the chart.  Takes a config parameter, which is the chartJS specification.  If this isn't provided,
+ * the default is this.config, which is derived from this.data.  See properties, above
+ */
 
   drawChart (config = this.config) {
     // this.view.env.forceUpdate();
@@ -791,9 +877,10 @@ const showTestChart = _ => {
 
 const editTestChart = _ => {
   const chart = makeTestChart();
-  const chartEditor = part(ChartJSEditorWindow);
-  chartEditor.getSubmorphNamed('editor').viewModel.loadModel(chart.viewModel);
+  const chartEditor = part(ChartJSEditor);
+  chartEditor.viewModel.loadModel(chart.viewModel);
   chartEditor.openInWorld();
+  chartEditor.whenRendered().then(_ => chartEditor.viewModel.updatePreview());
 };
 // editTestChart()
 
@@ -818,7 +905,7 @@ export class ChartJSEditorModel extends ViewModel {
   }
 
   close () {
-    this.view.owner.remove();
+    this.view.remove();
   }
 
   loadModel (baseChartModel) {
@@ -835,7 +922,7 @@ export class ChartJSEditorModel extends ViewModel {
 
   viewDidLoad () {
     this.acceptDatasetUpdate = true;
-    if (this.ui.preview.viewModel && this.ui.preview.viewModel.galyleoData) {
+    if (this.ui.preview && this.ui.preview.viewModel && this.ui.preview.viewModel.galyleoData) {
       this._initItems();
     } else {
       this.viewLoaded = true;
@@ -846,6 +933,7 @@ export class ChartJSEditorModel extends ViewModel {
     const chartType = this.ui.chartTypeSelector.selection;
     if (chartType) {
       this.ui.preview.viewModel.setType(chartType);
+      this.ui.columnSelector.items = Object.keys(this.ui.preview.viewModel.datasetOptions);
     }
   }
 
@@ -880,6 +968,10 @@ export class ChartJSEditorModel extends ViewModel {
     }
   }
 
+  updatePreview () {
+    this.ui.preview.viewModel.drawVisualization();
+  }
+
   // this.updateBaseChart()
   updateBaseChart () {
     const previewModel = this.ui.preview.viewModel;
@@ -892,68 +984,82 @@ export class ChartJSEditorModel extends ViewModel {
     this.ui.columnSelector.items = Object.keys(this.ui.preview.viewModel.datasetOptions);
     this.ui.preview.viewModel.drawVisualization();
   }
-
-  updateBaseChart () {
-    this.baseChart.restoreFromSavedForm(this.savedForm());
-    this.baseChart.drawVisualization();
-  }
 }
 
-
 // part(ChartJSEditor).openInWorld()
-const ChartJSEditor = component({
-  name: 'chart editor',
+const ChartJSEditor = component(GalyleoWindow, {
+  name: 'ChartJS Editor',
+  extent: pt(800, 450),
   defaultViewModel: ChartJSEditorModel,
-  extent: pt(800, 460),
-  fill: Color.rgba(255, 255, 255, 0),
+  layout: new TilingLayout({
+    axis: 'column',
+    orderByIndex: true,
+    padding: rect(0, 0, 2, 0),
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }], ['editor', {
+      height: 'fixed',
+      width: 'fixed'
+    }]],
+    wrapSubmorphs: false
+  }),
   submorphs: [
-    part(MenuBarButton, {
-      tooltip: 'Close this dialog without loading',
-      name: 'close button',
-      extent: pt(100, 35),
-      position: pt(680, 10),
-      submorphs: [{
-        name: 'label',
-        textAndAttributes: ['CLOSE', null]
-      }, {
-        name: 'icon',
-        extent: pt(14, 14),
-        imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
-      }]
+    { name: 'window title', textString: 'ChartJS Editor' },
+    add({
+      extent: pt(800, 400),
+      name: 'editor',
+      fill: Color.rgba(255, 255, 255, 0),
+      submorphs: [
+        part(MenuBarButton, {
+          tooltip: 'Close this dialog without loading',
+          name: 'close button',
+          extent: pt(100, 35),
+          position: pt(680, 10),
+          submorphs: [{
+            name: 'label',
+            textAndAttributes: ['CLOSE', null]
+          }, {
+            name: 'icon',
+            extent: pt(14, 14),
+            imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+          }]
 
-    }),
-    part(GalyleoDropDown, { name: 'chartTypeSelector', viewModel: { placeholder: 'Select chart type...', openListInWorld: true }, position: pt(490, 40) }),
-    part(GalyleoDropDown, { name: 'columnSelector', viewModel: { placeholder: 'Select column...', openListInWorld: true }, position: pt(490, 95) }),
-    {
-      type: Label,
-      name: 'Fill Label',
-      textAndAttributes: ['Fill', null],
-      fontColor: Color.rgb(0, 0, 0),
-      fontFamily: 'Sans-Serif',
-      fontSize: 14,
-      fontWeight: 'bold',
-      position: pt(490, 170)
-    },
-    part(GalyleoColorInput, { name: 'fillColor', position: pt(540, 165) }),
-    {
-      type: Label,
-      name: 'Stroke Label',
-      textAndAttributes: ['Stroke', null],
-      fontColor: Color.rgb(0, 0, 0),
-      fontFamily: 'Sans-Serif',
-      fontSize: 14,
-      fontWeight: 'bold',
-      position: pt(490, 200)
-    },
-    part(GalyleoColorInput, { name: 'strokeColor', position: pt(540, 195) }),
-    part(ChartDiagram, { name: 'preview', position: pt(10, 10) }),
-    part(PromptButton, {
-      name: 'updateChart',
-      position: pt(610, 360),
-      extent: pt(165, 40),
-      submorphs: [{
-        name: 'label', textAndAttributes: ['Apply Changes', null]
-      }]
+        }),
+        part(GalyleoDropDown, { name: 'chartTypeSelector', viewModel: { placeholder: 'Select chart type...', openListInWorld: true }, position: pt(490, 40) }),
+        part(GalyleoDropDown, { name: 'columnSelector', viewModel: { placeholder: 'Select column...', openListInWorld: true }, position: pt(490, 95) }),
+        {
+          type: Label,
+          name: 'Fill Label',
+          textAndAttributes: ['Fill', null],
+          fontColor: Color.rgb(0, 0, 0),
+          fontFamily: 'Sans-Serif',
+          fontSize: 14,
+          fontWeight: 'bold',
+          position: pt(490, 170)
+        },
+        part(GalyleoColorInput, { name: 'fillColor', position: pt(540, 165) }),
+        {
+          type: Label,
+          name: 'Stroke Label',
+          textAndAttributes: ['Stroke', null],
+          fontColor: Color.rgb(0, 0, 0),
+          fontFamily: 'Sans-Serif',
+          fontSize: 14,
+          fontWeight: 'bold',
+          position: pt(490, 200)
+        },
+        part(GalyleoColorInput, { name: 'strokeColor', position: pt(540, 195) }),
+        part(ChartDiagram, { name: 'preview', position: pt(10, 10) }),
+        part(PromptButton, {
+          name: 'updateChart',
+          position: pt(610, 360),
+          extent: pt(165, 40),
+          submorphs: [{
+            name: 'label', textAndAttributes: ['Apply Changes', null]
+          }]
+        })
+      ]
     })
 
   ]
