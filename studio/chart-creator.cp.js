@@ -1090,7 +1090,7 @@ const ChartJSEditor = component(GalyleoWindow, {
     wrapSubmorphs: false
   }),
   submorphs: [
-    { name: 'window title', textString: 'ChartJS Editor' },
+    { name: 'window title', textString: 'ChartJS Editor', reactsToPointer: false },
     add({
       extent: pt(800, 400),
       name: 'editor',
