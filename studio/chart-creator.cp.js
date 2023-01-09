@@ -1,6 +1,6 @@
 import { ViewModel, Label, without, part, add, component } from 'lively.morphic';
 import { pt, Color, rect } from 'lively.graphics';
-import { connect } from 'lively.bindings';
+import { connect, signal } from 'lively.bindings';
 import { TilingLayout, HTMLMorph } from 'lively.morphic';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { GalyleoWindow, GalyleoColorInput, PromptButton, GalyleoDropDown, MenuBarButton } from './shared.cp.js';
@@ -442,7 +442,11 @@ Chart.register(...registerables);
  * @property: chartJSType -- the actual type for ChartJS.
  * @property: config -- the chart configuration used to draw the chart.  This is dervied from the data property
  * @property: datasetOptions -- the options to be used for each dataset
+ * @property: dataManagerFilter -- the filter describing a selection event.
+ * @property: filterChanged -- a signal that the filter has changed
  */
+
+// TODO: write an edit method to pop up a chart editor with this as the base chart
 
 export default class ChartDiagramModel extends ViewModel {
   static get properties () {
@@ -497,7 +501,15 @@ export default class ChartDiagramModel extends ViewModel {
             },
             maintainAspectRatio: false,
             padding: 50,
-            responsive: true
+            responsive: true,
+            onClick: (e) => {
+              const canvasPosition = Chart.helpers.getRelativePosition(e, this.chart);
+
+              // Substitute the appropriate scale IDs
+              const dataX = this.chart.scales.x.getValueForPixel(canvasPosition.x);
+              const dataY = this.chart.scales.y.getValueForPixel(canvasPosition.y);
+              this.updateSelection(dataX);
+            }
           };
         }
       },
@@ -519,8 +531,32 @@ export default class ChartDiagramModel extends ViewModel {
       },
       datasetOptions: {
         defaultValue: null
-      }
+      },
+      filterChanged: { derived: true, readOnly: true, isSignal: true }
     };
+  }
+
+  updateSelection (xValue) {
+    this.columnSelection = xValue;
+    signal(this, 'filterChanged');
+  }
+
+  /**
+   * Return the filter as a JavaScript object for use with the data manager.
+   * Per the requirement in galyleo-data.InListFilter, returns an
+   * object with operator 'IN_LIST', column: this.galyleoData.columns[0].name, values: [this.columnValueSelection]
+   */
+
+  get dataManagerFilter () {
+    return { operator: 'IN_LIST', column: this.galyleoData.columns[0].name, values: [this.columnValueSelection] };
+  }
+
+  /**
+   * Return a short string describing the filter.  This is used to show the
+   * action of the filter in chart titles, etc.
+   */
+  get filterString () {
+    return `${this.galyleoData.columns[0].name} = ${this.columnValueSelection}`;
   }
 
   restoreContent (oldCanvas, newCanvas) {
@@ -814,9 +850,9 @@ export default class ChartDiagramModel extends ViewModel {
   }
 
   /**
- * Draw the chart.  Takes a config parameter, which is the chartJS specification.  If this isn't provided,
- * the default is this.config, which is derived from this.data.  See properties, above
- */
+   * Draw the chart.  Takes a config parameter, which is the chartJS specification.  If this isn't provided,
+   * the default is this.config, which is derived from this.data.  See properties, above
+   */
 
   drawChart (config = this.config) {
     // this.view.env.forceUpdate();
@@ -838,6 +874,8 @@ const ChartDiagram = component({
   fill: Color.rgb(254, 254, 254),
   extent: pt(465.6, 400.5)
 });
+
+// Test data for ChartJS.  Should move to chart-test.js
 
 const _pieData = {
   columns: [{ name: 'Color', type: 'string' }, { name: 'value', type: 'number' }],
@@ -861,7 +899,7 @@ const _testChartModel = {
     }
   }
 };
-
+// Simple test routines for ChartJS.  Should move to chart-test.js
 const makeTestChart = _ => {
   const chart = part(ChartDiagram);
   chart.viewModel.restoreFromSavedForm(_testChartModel);
@@ -885,6 +923,12 @@ const editTestChart = _ => {
 // editTestChart()
 
 // testChart()
+
+/**
+ * The model for an initial ChartJS editor. This permits the user to set the properties of a ChartJS Chart, primarily
+ * the chart type and the colors of the various data sets.
+ * @properties: baseChart: the ChartDiagramModel of the chart we're editing
+ */
 export class ChartJSEditorModel extends ViewModel {
   static get properties () {
     return {
@@ -904,15 +948,24 @@ export class ChartJSEditorModel extends ViewModel {
     };
   }
 
+  /**
+   * Handle a close-button event -- close the editor without updating
+   */
+
   close () {
     this.view.remove();
   }
+
+  /**
+   * Load the base chart model that we're editing.  Just pull out its savedForm, set the preview to the saved form,
+   * pull its data into the preview, and display the preview.
+   * @param {ChartDiagramModel} baseChartModel
+   */
 
   loadModel (baseChartModel) {
     const wrapper = baseChartModel.savedForm();
     const previewChart = this.ui.preview.viewModel;
     previewChart.restoreFromSavedForm(wrapper);
-    console.log(baseChartModel.galyleoData);
     previewChart.setData(baseChartModel.galyleoData);
     this.baseChart = baseChartModel;
     if (this.viewLoaded) {
@@ -929,6 +982,12 @@ export class ChartJSEditorModel extends ViewModel {
     }
   }
 
+  /**
+   * Handle an updateChartSelection event.  Set the type of the preview to the chosen type, and update the column selector
+   * to the keys for the datasetOptions -- these are the dataset names for the chosen chart.  Note that setting the type
+   * of the preview redraws the chart.
+   */
+
   updateChartSelection () {
     const chartType = this.ui.chartTypeSelector.selection;
     if (chartType) {
@@ -936,6 +995,12 @@ export class ChartJSEditorModel extends ViewModel {
       this.ui.columnSelector.items = Object.keys(this.ui.preview.viewModel.datasetOptions);
     }
   }
+
+  /**
+   * Handle the dataset selected event from the dataset menu; just update the color values to the
+   * colors for this dataset, first taking care to ensure that spurious events from the data color being changed
+   * don't force updates to the dataset change.
+   */
 
   updateDatasetConfiguration () {
     const setColorField = (uiField, value) => {
@@ -950,11 +1015,20 @@ export class ChartJSEditorModel extends ViewModel {
     this.acceptDatasetUpdate = true;
   }
 
+  // An internal routine to update the color option for a data set with a chosen color value, then redraw the preview.
+  // It performs the work for updateStrokeColor(), which updates the borderColor field in response to a user action,
+  // and updateFillColor(), which updates the backgroundColor field.
+  // colorValue is a Color, datasetColorField is a string which tells us what to update.
+
   _updateColorField (colorValue, datasetColorField) {
     const dataset = this.ui.columnSelector.selection;
     this.ui.preview.viewModel.datasetOptions[dataset][datasetColorField] = colorValue;
     this.ui.preview.viewModel.drawVisualization();
   }
+
+  /**
+   * Respond to a color selection on the Stroke Color widget by updating the borderColor of the selected dataset
+   */
 
   updateStrokeColor () {
     if (this.acceptDatasetUpdate) {
@@ -962,17 +1036,28 @@ export class ChartJSEditorModel extends ViewModel {
     }
   }
 
+  /**
+   * Respond to a color selection on the Fill Color widget by updating the backgroundColor of the selected dataset
+   */
+
   updateFillColor () {
     if (this.acceptDatasetUpdate) {
       this._updateColorField(this.ui.fillColor.colorValue, 'backgroundColor');
     }
   }
 
+  /**
+   * Redraw the preview chart
+   */
+
   updatePreview () {
     this.ui.preview.viewModel.drawVisualization();
   }
 
-  // this.updateBaseChart()
+  /**
+   * Update the base chart model with the settings from the preview (which has been updated with user actions).
+   * This is the handler when the Apply Updates button is pushed.
+   */
   updateBaseChart () {
     const previewModel = this.ui.preview.viewModel;
     const saved = previewModel.savedForm();
