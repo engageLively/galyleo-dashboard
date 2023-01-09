@@ -1150,30 +1150,4 @@ const ChartJSEditor = component(GalyleoWindow, {
   ]
 });
 
-// part(ChartJSEditorWindow).openInWorld()
-
-const ChartJSEditorWindow = component(GalyleoWindow, {
-  name: 'ChartJS Editor',
-  extent: pt(800, 450),
-  layout: new TilingLayout({
-    axis: 'column',
-    orderByIndex: true,
-    padding: rect(0, 0, 2, 0),
-    resizePolicies: [['window title', {
-      height: 'fixed',
-      width: 'fill'
-    }], ['editor', {
-      height: 'fixed',
-      width: 'fixed'
-    }]],
-    wrapSubmorphs: false
-  }),
-  submorphs: [
-    { name: 'window title', textString: 'ChartJS Editor' },
-    add(part(ChartJSEditor, { name: 'editor' }))
-  ]
-});
-
-// part(ChartDiagram).openInWorld()
-
-export { ChartBuilder, GoogleChartHolder };
+export { ChartBuilder, GoogleChartHolder, ChartJSEditor, ChartDiagram };
