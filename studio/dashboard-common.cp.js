@@ -1505,4 +1505,4 @@ export class DashboardCommon extends ViewModel {
   
 }
 
-export { LoadDialog, SaveDialog };
+export { DashboardCommon }
