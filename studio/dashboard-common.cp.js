@@ -220,7 +220,7 @@ class DashboardCommon extends ViewModel {
         $world.inform(check.message);
       }
     } catch (error) {
-      $world.alert(`Error loading from ${anURL}`);
+      $world.inform(`Error loading from ${anURL}`);
     }
   }
 
