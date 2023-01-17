@@ -10,7 +10,7 @@ import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilte
 import { GoogleChartHolder } from './chart-creator.cp.js';
 import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 
-export class DashboardCommon extends ViewModel {
+class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
    * Properties.
    * 1. Tables: a dictionary of the tables for this dashboard.  Each table
@@ -84,8 +84,6 @@ export class DashboardCommon extends ViewModel {
     };
   }
 
- 
-
   // ensure a data manager.  This is called from init(), and
   // loadDashboardFromURL.  Just makes sure that there is a DataManager available
 
@@ -113,10 +111,7 @@ export class DashboardCommon extends ViewModel {
     this.defaultFilters = {};
     this.view.removeAllMorphs();
     this.dirty = false;
-    
   }
-
-  
 
   /**
    * Load all the demo dashboards.
@@ -222,19 +217,19 @@ export class DashboardCommon extends ViewModel {
       if (check.valid) {
         await this._restoreFromSaved(jsonForm);
       } else {
-        $world.alert(check.message);
+        $world.inform(check.message);
       }
     } catch (error) {
       $world.alert(`Error loading from ${anURL}`);
     }
   }
 
- /**
+  /**
    * Make sure a JSON form is OK.  This parses a JSON string into an object and
    * uses checkIntermediateForm to see that the parsed object is OK
    * @param { sring } string - The json string to be checked.
    */
- checkJSONForm (string) {
+  checkJSONForm (string) {
     const dashboardObject = JSON.parse(string);
     return this.checkIntermediateForm(dashboardObject);
   }
@@ -267,8 +262,6 @@ export class DashboardCommon extends ViewModel {
     }
   }
 
-
- 
   /**
    * Get a field from an object, making sure it's valid, and returning the default if it isn't.
    * @param { object } source - The source object containing the field
@@ -366,8 +359,6 @@ export class DashboardCommon extends ViewModel {
     };
   }
 
-  
- 
   /**
    * Reorder morphs to mirror their stored order, in the parameter orderedMorphs.  This is so morphs on the
    * dashboard retain their z-index (effectively, their morph order)
@@ -391,7 +382,6 @@ export class DashboardCommon extends ViewModel {
     });
   }
 
-  
   /**
    * A little utility to turn an RGBA struct (four fields, r, g, b, a, each
    * in the range [0,1]) into a Color, since Color.rgba requires r, g, b
@@ -599,7 +589,6 @@ export class DashboardCommon extends ViewModel {
         unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
       }
 
-      
       // We used to store morphs as a dictionary, which we no longer do.  So check
       // the type, and if it's an object, convert to an array.  Fortunately, since
       // Object.keys() of an array returns [0, 1, 2...] the "conversion" here
@@ -617,12 +606,11 @@ export class DashboardCommon extends ViewModel {
       // descriptors = unorderedDescriptors
 
       await this._restoreMorphsFromDescriptors(unorderedDescriptors);
-
-      
     } catch (e) {
       console.log(`Error in _restoreFromSaved_: ${e}`);
     }
     this._restore = false;
+    this.drawAllCharts();
   }
 
   /**
@@ -931,8 +919,6 @@ export class DashboardCommon extends ViewModel {
         from widgets.  This code finds the parameters for a ViewBuilder and executes
         the filters in a build to get the data for the view. -- */
 
-
-
   // Convert a GalyleoColumn to a Google Viz Column
   // Should migrate into a Google-specific library
   // parameters:
@@ -963,7 +949,6 @@ export class DashboardCommon extends ViewModel {
       return null;
     }
   }
-
 
   /**
    * Get a filter for a name.  The name is either the name of a filter
@@ -1192,7 +1177,6 @@ export class DashboardCommon extends ViewModel {
     chart.options.title = title;
   }
 
- 
   addView (viewName, spec) {
     this.dataManager.addView(viewName, spec);
     this.dashboardController.update();
@@ -1250,8 +1234,6 @@ export class DashboardCommon extends ViewModel {
     }
     this.dirty = true;
   }
-
-  
 
   /**
    * Add a named filter.  This is called by ExternalFilterCreator.createFilter, and
@@ -1411,8 +1393,6 @@ export class DashboardCommon extends ViewModel {
     }
   }
 
- 
-
   /**
    * Add a chart, given a specification.  The specification is an entry in the
    * charts table (see the description under properties at the top).  Steps:
@@ -1501,8 +1481,7 @@ export class DashboardCommon extends ViewModel {
     chartMorph.position = pt(0, 0);
     return chartMorph;
   }
-
-  
 }
+
 
 export { DashboardCommon }

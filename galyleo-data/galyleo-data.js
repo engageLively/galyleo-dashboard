@@ -862,7 +862,11 @@ class RemoteGalyleoTable extends GalyleoTable {
     if (filterSpec) {
       urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
     }
-    return await urlFetcher.readJson();
+    try {
+      return await urlFetcher.readJson();
+    } catch (error) {
+      return [];
+    }
   }
 
   /**
