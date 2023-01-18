@@ -6,14 +6,14 @@ import { createMorphSnapshot } from 'lively.morphic/serialization.js';
 import { resource } from 'lively.resources/src/helpers.js';
 import { pt, Color, rect } from 'lively.graphics/index.js';
 import { LoadingIndicator } from 'lively.components';
-import {  promise, arr, string } from 'lively.lang';
+import { promise, arr, string } from 'lively.lang';
 import { getClassName } from 'lively.serializer2/class-helper.js';
 import { GalyleoWindow, GalyleoConfirmPrompt, PromptButton } from './shared.cp.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { ViewBuilder } from './view-creator.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
-import { DashboardCommon } from './dashboard-common.cp.js'
-import {  GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
+import { DashboardCommon } from './dashboard-common.cp.js';
+import { GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 
 // import './jupiter-drive-resource.js';
 
@@ -108,10 +108,24 @@ class LoadDialogMorph extends Morph {
    * @param { object } dashboard - the dashboard that invoked this, and which will be called back
    * @param { string } path - the initial file path, if any, which is the initial value of the file input.
    */
+
+  static get properties () {
+    return {
+      bindings: {
+        get () {
+          return [
+            { model: 'cancel button', signal: 'fire', handler: 'cancel' },
+            { model: 'load button', signal: 'fire', handler: 'load' }
+          ];
+        }
+      }
+    };
+  }
+
   init (dashboard, path) {
     this.dashboard = dashboard;
     if (path && path.length > 0) {
-      this.getSubmorphNamed('fileInput').textString = path;
+      this.getSubmorphNamed('file input').textString = path;
     }
   }
 
@@ -123,12 +137,20 @@ class LoadDialogMorph extends Morph {
    * shot.
    */
   async load () {
-    const filePath = this.getSubmorphNamed('fileInput').textString;
-    if (await this.dashboard.checkAndLoad(filePath)) {
+    const filePath = this.getSubmorphNamed('file input').textString;
+    if (await this.dashboard.loadDashboardFromURL(filePath)) {
       this.remove();
     }
   }
+
+  /**
+   * Cancel.  This is called from the Cancel button
+   */
+  cancel () {
+    this.remove();
+  }
 }
+
 
 // LoadDialog.openInWorld()
 const LoadDialog = component(GalyleoWindow, {
@@ -151,7 +173,7 @@ const LoadDialog = component(GalyleoWindow, {
       name: 'window title',
       textString: 'Load Dashboard from...'
     },
-    add(part(GalyleoSearch, { name: 'file input', placeholder: 'path/to/file' })),
+    add(part(GalyleoSearch, { name: 'file input', placeholder: 'url/to/dashboard' })),
     add({
       name: 'button wrapper',
       layout: new TilingLayout({
@@ -219,7 +241,7 @@ export class Dashboard extends DashboardCommon {
       dataManager: { defaultValue: null, serialize: false },
       filters: { defaultValue: null },
       charts: { defaultValue: null },
-      
+
       expose: {
         get () {
           return [
@@ -487,9 +509,6 @@ export class Dashboard extends DashboardCommon {
     }
   }
 
- 
-
-
   /* -- Snapshotting and serialization code -- */
 
   /**
@@ -515,7 +534,6 @@ export class Dashboard extends DashboardCommon {
     confirmDialog.label = ask;
     return await confirmDialog.activate();
   }
-
 
   isDirty () {
     return this._snapshots.length > 0;
@@ -624,8 +642,6 @@ export class Dashboard extends DashboardCommon {
     window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
   }
 
-  
-
   /**
    * Prepare the properties as a JSON document. This is to support
    * load/save/save as and persist the tables. Just involves the JSON of
@@ -697,8 +713,6 @@ export class Dashboard extends DashboardCommon {
     resultObject.numMorphs = canvas.submorphs.length;
     return resultObject;
   }
-
- 
 
   /**
    * A helper routine for _restoreFromSnapshot_ to turn charts, filters, and
@@ -774,9 +788,6 @@ export class Dashboard extends DashboardCommon {
     this._restoreFromSnapshot(this._snapshots[this._changePointer]);
   }
 
-  
-  
-
   /**
    * Restore from JSON form.  This involves parsing the JSON string and
    * restoring the tables, views, filters, and charts from the saved description
@@ -797,16 +808,6 @@ export class Dashboard extends DashboardCommon {
     if (this.dashboardController) { this.dashboardController.update(); }
   }
 
- 
-  
-
-  
-
- 
-
-  
-
-  
   /* -- Code which deals with Views.  A View is a subset of a table, with the
         columns selected statically and the rows by internal or external filtering
         from widgets.  This code finds the parameters for a ViewBuilder and executes
@@ -838,8 +839,6 @@ export class Dashboard extends DashboardCommon {
     this._initViewEditor(editor, viewName);
     editor.center = $world.innerBounds().center();
   }
-
- 
 
   /**
    * Initialize a view editor.  Just register it as the viewBuilder for this
@@ -879,11 +878,8 @@ export class Dashboard extends DashboardCommon {
     tableMorph.drawChart(wrapper);
   }
 
- 
-  
   /* -- Code that deals with Charts.  This takes care of prepping chart titles,
        calling the View code to get the data, and displaying the char  -- */
-
 
   /**
    * Check to see if a filter is used in any view.  This is used by
@@ -1102,7 +1098,6 @@ export class Dashboard extends DashboardCommon {
     }
   }
 
-
   /**
    * A simple routine to consistency-check a dashboard.   This should
    * be called:
@@ -1178,11 +1173,6 @@ export class Dashboard extends DashboardCommon {
     return result;
   }
 
-  
-
-  
-  
-
   /**
    * Edit the chart's type and physical appearance, using the Google Chart Editor
    * Simple.  First, create the editor, then get the chart corresponding to
@@ -1212,9 +1202,6 @@ export class Dashboard extends DashboardCommon {
     editor.openDialog(wrapper);
   }
 
- 
-
-  
   getDashboardName () {
     return this.get('dashboard selector').selection || 'some Dashboard';
   }

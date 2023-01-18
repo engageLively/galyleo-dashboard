@@ -11,7 +11,7 @@ import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilte
 import { GalyleoDataManager, GalyleoView } from 'galyleo-dashboard/galyleo-data/galyleo-data.js';
 import { GoogleChartHolder } from 'galyleo-dashboard/studio/chart-creator.cp.js';
 import { LoadDialog } from 'galyleo-dashboard/studio/dashboard.cp.js';
-import { DashboardCommon } from 'galyleo-dashboard/studio/dashboard-common.cp.js'
+import { DashboardCommon } from 'galyleo-dashboard/studio/dashboard-common.cp.js';
 
 export default class PublishedDashboard extends DashboardCommon {
   static get properties () {
@@ -56,17 +56,21 @@ export default class PublishedDashboard extends DashboardCommon {
     if (logo) {
       this.view.addMorph(logo);
     }
-    
   }
 
-  // We need dashboardInputForm as a part
+  /**
+   * Pull up the load dialog with the URL, if any, first showing the message, if
+   * any
+   * @param { string } url -- if non-null, the url to offer as a first choice
+   * @param { string } message -- a message to display
+   */
   _initURLPrompt_ (url, message) {
     if (message) {
-      window.alert(message);
+      $world.inform(message);
     }
     const loadDialog = part(LoadDialog);
-    // loadDialog.init(this, url);
-    // loadDialog.openInWorld();
+    loadDialog.init(this, url);
+    loadDialog.openInWorld();
   }
 
   // Restore from JSON form.  This involves parsing the JSON string and
@@ -136,9 +140,8 @@ export default class PublishedDashboard extends DashboardCommon {
     const parameters = new URLSearchParams(document.location.search);
     const url = parameters.get('dashboard');
     if (url) {
-      const result = await this.loadDashboardFromUrl(url);
-      if (!result.valid) {
-        window.alert(result.message);
+      const valid = await this.loadDashboardFromURL(url);
+      if (!valid) {
         this._initURLPrompt_(url);
       }
     } else {
@@ -160,7 +163,4 @@ export default class PublishedDashboard extends DashboardCommon {
   }
 
   // this.loadTestDashboard('drilldown-test')
-
- 
 }
-

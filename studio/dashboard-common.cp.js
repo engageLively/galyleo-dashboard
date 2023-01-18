@@ -1,6 +1,6 @@
 import 'https://www.gstatic.com/charts/loader.js';
 import { Morph, morph, ShadowObject } from 'lively.morphic';
-import { ViewModel, part  } from 'lively.morphic/components/core.js';
+import { ViewModel, part } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/src/helpers.js';
 import { pt, Rectangle, Point, Color } from 'lively.graphics/index.js';
 import { obj, promise } from 'lively.lang';
@@ -205,10 +205,10 @@ class DashboardCommon extends ViewModel {
 
   /**
    * Load a dashboard from an URL.  Uses checkAndLoad to do the actual work.
-   * This is primarily to support testing -- test dashboards have URLs.  ATM,
-   * no parameters or options aside from the URL; if there are other use cases
-   * these can be added later.
+   *  ATM, no parameters or options aside from the URL; if there are other
+   *  use cases these can be added later.
    * @param { string } anURL - The URL to load from.
+   * @return { boolean } true on successful load
    */
   async loadDashboardFromURL (anURL = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/mtbf_mttr_dashboard.gd.json') {
     try {
@@ -219,8 +219,10 @@ class DashboardCommon extends ViewModel {
       } else {
         $world.inform(check.message);
       }
+      return check.valid;
     } catch (error) {
       $world.inform(`Error loading from ${anURL}`);
+      return false;
     }
   }
 
@@ -244,7 +246,7 @@ class DashboardCommon extends ViewModel {
   checkIntermediateForm (dashboardObject) {
     // dashboardObject = await resource(this.testDashboards['testempty']).readJson()
     if (typeof dashboardObject !== 'object') {
-      return { result: false, message: 'Parsed JSON was not an Object' };
+      return { valid: false, message: 'Parsed JSON was not an Object' };
     }
     const fields = Object.keys(dashboardObject);
     const expectedFields = ['tables', 'views', 'filters', 'charts'];
@@ -1483,5 +1485,4 @@ class DashboardCommon extends ViewModel {
   }
 }
 
-
-export { DashboardCommon }
+export { DashboardCommon };
