@@ -151,7 +151,6 @@ class LoadDialogMorph extends Morph {
   }
 }
 
-
 // LoadDialog.openInWorld()
 const LoadDialog = component(GalyleoWindow, {
   type: LoadDialogMorph,
@@ -789,18 +788,8 @@ export class Dashboard extends DashboardCommon {
   }
 
   /**
-   * Restore from JSON form.  This involves parsing the JSON string and
-   * restoring the tables, views, filters, and charts from the saved description
-   * created in _prepareSerialization.
-   * @param { string } storedForm - The stored form in a JSON string
-   */
-  async restoreFromJSONForm (storedForm) {
-    await this._restoreFromSaved(JSON.parse(storedForm));
-  }
-
-  /**
-   * The actual body of restoreFromJSONForm.  Broken out as a separate
-   * routine for testing.
+   * Just call the _restoreFromSaved method in the superclass and then update the
+   * controller.
    * @param { object } storedForm - An object created by _perpareSerialization
    */
   async _restoreFromSaved (storedForm) {
@@ -994,41 +983,19 @@ export class Dashboard extends DashboardCommon {
   }
 
   addView (viewName, spec) {
-    this.dataManager.addView(viewName, spec);
+    super.addView(viewName, spec);
     this.dashboardController.update();
   }
 
   async init (controller) {
     this.dashboardController = controller;
-    console.log('Calling init');
-    await this._loadGoogleChartPackages();
-    ['charts', 'filters'].forEach(prop => {
-      if (!this[prop]) {
-        this[prop] = {};
-      }
-    });
-    this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
-    this._initializeJupyterLabCallbacks();
-    this.dirty = false;
-    if (!this.dataManager) {
-      this.dataManager = new GalyleoDataManager(this);
-    }
+    await super.init();
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
   }
 
   /**
-   * Load the Google chart packages.  Only called internally
-   * Note: we're going to have to drop the mapsApiKey at some point.
-   * @param { string[] } packageList - The packages to be loaded. Default is the core chart package, the map package, and the chart editor..
-   */
-  async _loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor']) {
-    await promise.waitFor(20 * 1000, () => !!window.google);
-    await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
-  }
-
-  /**
-   * Each datatable is represented as a Google Chart Data Table
+   * Each datatable is represented as a Data Manager GalyleoTable
    * and a name, which identifies it here.  This is called internally;
    * the externally visible method is (ATM) loadDataFromUrl.
    * ensures that the table dictionary exists, then just stores
@@ -1038,13 +1005,7 @@ export class Dashboard extends DashboardCommon {
    * @param { object } tableSpec - An object of the form {name: <name> table: { columns: <list of the form <name, type>, rows: <list of list of values>}}
    */
   addTable (tableSpec) {
-    // should add some error-checking
-    this.lastTable = tableSpec;
-    if (!this.dataManager) {
-      this.dataManager = new GalyleoDataManager(this);
-    }
-    this.dataManager.addTable(tableSpec.name, tableSpec.table);
-    // this.tables[tableSpec.name] = tableSpec.table;
+    super.addTable(tableSpec);
     if (this.dashboardController) {
       this.dashboardController.update();
     }
@@ -1200,6 +1161,36 @@ export class Dashboard extends DashboardCommon {
       editor.closeDialog();
     });
     editor.openDialog(wrapper);
+  }
+
+  /**
+   * Add a chart, given a specification.  The specification is an entry in the
+   * charts table (see the description under properties at the top).  Steps:
+   * 1. give the chart a unique name, which we do by catenating the timestamp with a
+   *    three-digit random number
+   * 2. Get the morph for this chart, which will usually (in fact, always)
+   *     create a new googleChartMorph for it
+   * 3. Add the chartmorph to the specification and then store the specification
+   *    under the chart name in the dictionary
+   * 4. draw the chart
+   * 5. Tell the controller to update itself, so the user sees the new chart name
+   *    in the chart list
+   * This is called by the ChartBuilder once the user clicks Create Chart.
+   * @param { string } chartName - name of the chart
+   * @param { object } chartSpecification - specification of the new chart.
+   * @param { boolean } [editChartStyle=true] - edit the chart immediately upon creation
+   */
+  async addChart (chartName, chartSpecification, editChartStyle = true) {
+    super.addChart(chartName, chartSpecification, editChartStyle);
+
+    if (this.dashboardController) {
+      this.dashboardController.update();
+    }
+
+    if (editChartStyle) {
+      this.editChartStyle(chartName);
+    }
+    this.dirty = true;
   }
 
   getDashboardName () {

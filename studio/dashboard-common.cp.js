@@ -1181,12 +1181,9 @@ class DashboardCommon extends ViewModel {
 
   addView (viewName, spec) {
     this.dataManager.addView(viewName, spec);
-    this.dashboardController.update();
   }
 
-  async init (controller) {
-    this.dashboardController = controller;
-    console.log('Calling init');
+  async init () {
     await this._loadGoogleChartPackages();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
@@ -1199,8 +1196,6 @@ class DashboardCommon extends ViewModel {
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
     }
-    this.viewBuilders = {}; // list of open view builders, can have only 1 per view
-    this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
   }
 
   /**
@@ -1214,7 +1209,7 @@ class DashboardCommon extends ViewModel {
   }
 
   /**
-   * Each datatable is represented as a Google Chart Data Table
+   * Each datatable is represented as a Data Manager GalyleoTable
    * and a name, which identifies it here.  This is called internally;
    * the externally visible method is (ATM) loadDataFromUrl.
    * ensures that the table dictionary exists, then just stores
@@ -1231,10 +1226,6 @@ class DashboardCommon extends ViewModel {
     }
     this.dataManager.addTable(tableSpec.name, tableSpec.table);
     // this.tables[tableSpec.name] = tableSpec.table;
-    if (this.dashboardController) {
-      this.dashboardController.update();
-    }
-    this.dirty = true;
   }
 
   /**
@@ -1387,6 +1378,7 @@ class DashboardCommon extends ViewModel {
   async drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
+    if (!this.gViz) return;
     this._makeTitle(chart);
     const wrapper = await this._makeWrapper(chart, chartName);
     if (wrapper) {
@@ -1415,21 +1407,11 @@ class DashboardCommon extends ViewModel {
   async addChart (chartName, chartSpecification, editChartStyle = true) {
     chartSpecification.chartMorph = await this._getChartMorph(chartName);
     this.charts[chartName] = chartSpecification;
-    if (this.dashboardController) {
-      this.dashboardController.update();
-    }
-    // chartSpecification.filter =                this._prepareChartFilter(chartSpecification.viewOrTable);
     chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
     if (this.gViz) {
       // this should ALWAYS be true
       await this.drawChart(chartName);
     }
-
-    console.log(`initial chart drawn for ${chartName}`);
-    if (editChartStyle) {
-      this.editChartStyle(chartName);
-    }
-    this.dirty = true;
   }
 
   /**

@@ -127,16 +127,7 @@ export default class PublishedDashboard extends DashboardCommon {
   async init () {
     // is whenRendered Needed anymore?
     // await this.whenRendered();
-    await this.__loadGoogleChartPackages__();
-    ['charts', 'filters', 'defaultFilters'].forEach(prop => {
-      if (!this[prop]) {
-        this[prop] = {};
-      }
-    });
-    this._ensureDataManager_();
-    this.gCharts.setOnLoadCallback(() => {
-    });
-    if (!lively.FreezerRuntime) return;
+    await super.init();
     const parameters = new URLSearchParams(document.location.search);
     const url = parameters.get('dashboard');
     if (url) {
@@ -149,17 +140,6 @@ export default class PublishedDashboard extends DashboardCommon {
     }
     // const url = (new URL(document.location)).searchParams.get("dashboard")
     // try to load the url; if it fails, pop up the error message and the URL form
-  }
-
-  // Load the Google chart packages.  Only called internally
-  // parameters:
-  // packageList: packages to be loaded.  default is the core chart package,
-  //    the map package, and the chart editor.
-  // Note: we're going to have to drop the mapsApiKey at some point.
-
-  async __loadGoogleChartPackages__ (packageList = ['corechart', 'map', 'charteditor']) {
-    await promise.waitFor(20 * 1000, () => !!window.google);
-    await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
   }
 
   // this.loadTestDashboard('drilldown-test')
