@@ -318,27 +318,6 @@ export class Dashboard extends DashboardCommon {
         detecting changes made to the storage system by JupyterLab services,
         and ensuring consistency with those -- */
 
-  // Initialize JupyterLab callbacks.  This is called from onLoad() and is used
-  // to reliably register events with JupyterLab components.  Why this is easier
-  // here than in JupyterLab is a good question, but the fact is, it is!
-  // Leave a dirty bit in window.EXTENSION_INFO.callbackRegistered.  There's no
-  // convenient way to check the callbacks on a signal in JupyteLab -- at least,
-  // none I have found -- so leave our own and don't register this callback if the
-  // dirty bit is set.
-  // parameters:
-  //   none
-
-  _initializeJupyterLabCallbacks_ () {
-    const jupyterObject = window.EXTENSION_INFO;
-    if (jupyterObject && !jupyterObject.callbackRegistered) {
-      window.EXTENSION_INFO.callbackRegistered = jupyterObject.browserModel.fileChanged.connect((model, args) => {
-      // for debugging, delete later
-        console.log(`File renamed in browser: ${JSON.stringify(args)}`);
-        this.checkPossibleRenameFromBrowser(model, args);
-      }, this);
-    }
-  }
-
   // check to see if the file we're working on has been moved or renamed
   // This is called from the extension code, so the extension info variable
   // exists and the current path is in the currentFilePath variable.  Just make
@@ -987,9 +966,15 @@ export class Dashboard extends DashboardCommon {
     this.dashboardController.update();
   }
 
+  /**
+   * Initialize. Just do the super, setup the controller, and initialize
+   * JupyterLab
+   */
+
   async init (controller) {
     this.dashboardController = controller;
     await super.init();
+    this._initializeJupyterLabCallbacks();
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
   }

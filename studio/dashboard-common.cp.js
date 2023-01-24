@@ -168,7 +168,11 @@ class DashboardCommon extends ViewModel {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // this.loadDashboardFromURL(this.demoDashboards.name)
+=======
+  // this.loadDashboardFromURL(this.demoDashboards.name).
+>>>>>>> Stashed changes
 =======
   // this.loadDashboardFromURL(this.demoDashboards.name).
 >>>>>>> Stashed changes
@@ -1206,7 +1210,10 @@ class DashboardCommon extends ViewModel {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     this._initializeJupyterLabCallbacks();
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
