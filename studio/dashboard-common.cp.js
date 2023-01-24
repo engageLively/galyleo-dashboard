@@ -165,7 +165,11 @@ class DashboardCommon extends ViewModel {
   }
 
   // The current set of demo dashboards.  To load a demo,
+<<<<<<< Updated upstream
   // this.loadDashboardFromURL(this.demoDashboards.name)
+=======
+  // this.loadDashboardFromURL(this.demoDashboards.name).
+>>>>>>> Stashed changes
 
   get demoDashboards () {
     if (this._demoDashboards) {
@@ -1191,7 +1195,10 @@ class DashboardCommon extends ViewModel {
       }
     });
     this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
+<<<<<<< Updated upstream
     this._initializeJupyterLabCallbacks();
+=======
+>>>>>>> Stashed changes
     this.dirty = false;
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
