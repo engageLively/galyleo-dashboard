@@ -166,7 +166,11 @@ class DashboardCommon extends ViewModel {
 
   // The current set of demo dashboards.  To load a demo,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // this.loadDashboardFromURL(this.demoDashboards.name)
+=======
+  // this.loadDashboardFromURL(this.demoDashboards.name).
+>>>>>>> Stashed changes
 =======
   // this.loadDashboardFromURL(this.demoDashboards.name).
 >>>>>>> Stashed changes
@@ -1196,7 +1200,10 @@ class DashboardCommon extends ViewModel {
     });
     this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     this._initializeJupyterLabCallbacks();
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     this.dirty = false;
