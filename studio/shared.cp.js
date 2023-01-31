@@ -6,7 +6,7 @@ import { MorphList, DropDownListModel } from 'lively.components';
 import { connect, noUpdate } from 'lively.bindings';
 import { SystemList } from 'lively.ide/styling/shared.cp.js';
 import { DropDownList } from 'lively.components/list.cp.js';
-import { DarkNumberIconWidget, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
+import { DarkNumberIconWidget, EnumSelector, TextInput, PropertyLabelHovered, PropertyLabelActive, PropertyLabel, AddButton } from 'lively.ide/studio/shared.cp.js';
 import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
@@ -411,7 +411,7 @@ const GalyleoTextInput = component(TextInput, {
   fontColor: Color.black
 });
 
-// m = part(GalyleoNumberInput).openInWorld()
+// m = part(DarkNumberIconWidget).openInWorld()
 // m.master = GalyleoNumberInput
 const GalyleoNumberInput = component(DarkNumberIconWidget, {
   name: 'galyleo/number input',
@@ -423,8 +423,17 @@ const GalyleoNumberInput = component(DarkNumberIconWidget, {
     fontColor: Color.rgba(100, 100, 100, .5)
   }, {
     name: 'value',
-    readOnly: false,
     cursorColor: Color.black,
+    fontColor: Color.black
+  }]
+});
+
+const GalyleoEnumSelector = component(EnumSelector, {
+  borderColor: Color.rgbHex('8E9B9B'),
+  borderWidth: 1,
+  fill: Color.rgba(0, 0, 0, 0.15),
+  submorphs: [{
+    name: 'label',
     fontColor: Color.black
   }]
 });
@@ -476,6 +485,7 @@ const GalyleoPropertyLabelHovered = component(PropertyLabelHovered, {
 });
 
 // ColorInput.openInWorld()
+// part(GalyleoTextInput, { readOnly: true, needsDocument: false })
 // part(GalyleoNumberInput).openInWorld()
 // part(GalyleoColorInput).openInWorld()
 const GalyleoColorInput = component(ColorInput, {
@@ -496,6 +506,8 @@ const GalyleoColorInput = component(ColorInput, {
   }),
   submorphs: [{
     name: 'hex input',
+    readOnly: true,
+    needsDocument: false,
     master: GalyleoTextInput
   }, {
     name: 'opacity input',
@@ -1142,5 +1154,5 @@ export {
   GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
   CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
   TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive, GalyleoDropDownAuto,
-  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat, galyleoFont
+  GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat, galyleoFont, GalyleoEnumSelector
 };

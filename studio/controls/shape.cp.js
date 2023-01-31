@@ -1,6 +1,6 @@
 import { component } from 'lively.morphic/components/core.js';
 import { ShapeControl } from 'lively.ide/studio/controls/shape.cp.js';
-import { GalyleoAddButtonDefault, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton, GalyleoNumberInput, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
+import { GalyleoAddButtonDefault, GalyleoEnumSelector, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton, GalyleoNumberInput, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
 import { Color } from 'lively.graphics';
 import { GalyleoPropertySection } from './section.cp.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
@@ -11,6 +11,7 @@ const GalyleoShapeControl = component(ShapeControl, {
   name: 'galyleo/shape control',
   layout: new TilingLayout({
     axisAlign: 'center',
+    wrapSubmorphs: true,
     hugContentsVertically: true,
     orderByIndex: true,
     padding: rect(20, 20, 0, 0),
@@ -35,14 +36,45 @@ const GalyleoShapeControl = component(ShapeControl, {
       master: GalyleoNumberInput
     },
     { name: 'proportional resize toggle', master: GalyleoAddButton },
+    {
+      name: 'width mode selector',
+      master: GalyleoEnumSelector,
+      viewModel: {
+        listMaster: GalyleoDropDownList
+      },
+      submorphs: [{
+        name: 'interactive label',
+        fontColor: Color.rgba(100, 100, 100, 0.5)
+      }, {
+        name: 'label',
+        fontSize: 12
+      }]
+    },
+    {
+      name: 'height mode selector',
+      master: GalyleoEnumSelector,
+      viewModel: {
+        listMaster: GalyleoDropDownList
+      },
+      submorphs: [{
+        name: 'interactive label',
+        fontColor: Color.rgba(100, 100, 100, 0.5)
+      }, {
+        name: 'label',
+        fontSize: 12
+      }]
+    },
     { name: 'rotation input', master: GalyleoNumberInput },
     { name: 'radius input', master: GalyleoNumberInput },
     { name: 'independent corner toggle', master: GalyleoAddButton },
     {
       name: 'multi radius container',
       submorphs: [{
-        name: 'border indicator',
-        fontColor: Color.rgb(66, 73, 73)
+        name: 'centering wrapper',
+        submorphs: [{
+          name: 'border indicator',
+          fontColor: Color.rgb(66, 73, 73)
+        }]
       }, {
         name: 'radius input top left',
         master: GalyleoNumberInput

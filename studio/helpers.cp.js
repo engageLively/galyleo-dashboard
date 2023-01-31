@@ -338,9 +338,11 @@ const CloseButton = component(MenuBarButton, {
   name: 'close button',
   extent: pt(90, 35),
   layout: new TilingLayout({
-    axis: 'row',
+    align: 'right',
     axisAlign: 'center',
-    align: 'right'
+    justifySubmorphs: 'spaced',
+    orderByIndex: true,
+    padding: rect(5, 0, 0, 0)
   }),
   submorphs: [{
     name: 'label', value: ['CLOSE', null]
