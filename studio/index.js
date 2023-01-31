@@ -6,6 +6,7 @@ import { GalyleoStudioWorld } from './ui.cp.js';
 
 export async function main () {
   const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en');
+  // const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/jp/index.cp.js');
   const dashboard = part(GalyleoDashboardStudio);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
