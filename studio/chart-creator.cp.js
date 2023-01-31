@@ -1071,7 +1071,6 @@ export class ChartJSEditorModel extends ViewModel {
   }
 }
 
-// part(ChartJSEditor).openInWorld()
 const ChartJSEditor = component(GalyleoWindow, {
   name: 'ChartJS Editor',
   extent: pt(800, 450),

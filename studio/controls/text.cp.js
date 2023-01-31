@@ -5,7 +5,6 @@ import { Color } from 'lively.graphics';
 import { TilingLayout } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
 
-// GalyleoRichTextControl.openInWorld()
 const GalyleoRichTextControl = component(RichTextControl, {
   name: 'galyleo/rich text control',
   layout: new TilingLayout({

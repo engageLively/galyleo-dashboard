@@ -60,6 +60,8 @@ export default class SpreadsheetMorph extends HTMLMorph {
     };
   }
 
+  // this.setData([['hello', 'world'],[1,2],[4,5]])
+
   reset () {
     this.html = this.html;
     this.jexcel = null;
@@ -174,8 +176,6 @@ export default class SpreadsheetMorph extends HTMLMorph {
   }
 }
 
-// import { part } from 'lively.morphic/components/core.js'
-// part(Spreadsheet).openInWorld().setData([['hello', 'world'],[1,2],[4,5]])
 const Spreadsheet = component({
   type: SpreadsheetMorph,
   name: 'spreadsheet',

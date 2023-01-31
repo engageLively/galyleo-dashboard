@@ -422,7 +422,7 @@ export class ViewControlModel extends EntityControlModel {
 }
 
 // GalyleoPropertiesPanel.get('clip mode selector').owner.master.auto.derivedMorph.ownerChain()
-// PropertiesPanel.openInWorld()
+// part(GalyleoPropertiesPanel).openInWorld()
 // GalyleoPropertiesPanel.edit()
 // m = GalyleoPropertiesPanel.get('background fill input')
 // m.master._overriddenProps.get(m)
@@ -659,7 +659,6 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
   }]
 });
 
-// ControlPanel.edit()
 const ControlPanel = component({
   name: 'control panel',
   extent: pt(262.6, 238.8),
@@ -953,8 +952,6 @@ const GalyleoSideBarControls = component({
   })]
 });
 
-// part(GalyleoSideBar).openInWindow()
-// GalyleoSideBar.get('background fill input').master._overriddenProps.get(GalyleoSideBar.get('background fill input'))
 const GalyleoSideBar = component({
   viewModelClass: DashboardControl,
   name: 'galyleo/side bar',

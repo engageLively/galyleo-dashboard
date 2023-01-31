@@ -2,7 +2,6 @@ import { GalyleoSideBar } from '../../side-bar.cp.js';
 import { pt } from 'lively.graphics';
 import { component, part } from 'lively.morphic';
 
-// part(GalyleoSideBarJp).openInWorld()
 const GalyleoSideBarJp = component(GalyleoSideBar, {
   name: 'galyleo/side bar/jp',
   extent: pt(324.8, 668),
