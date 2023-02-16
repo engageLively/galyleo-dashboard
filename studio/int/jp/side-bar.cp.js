@@ -83,7 +83,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'tables control',
+            name: 'table control',
             visible: true,
             submorphs: [
               {
@@ -101,7 +101,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'filters control',
+            name: 'filter control',
             submorphs: [
               {
                 name: 'v wrapper',
