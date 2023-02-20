@@ -5,7 +5,7 @@ import { pt } from 'lively.graphics/geometry-2d.js';
 import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
-import { UserFlap } from 'lively.user/morphic/user-ui.js';
+import { UserFlap } from 'lively.user';
 import { signal } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
 
@@ -71,7 +71,6 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 }
 
-// GalyleoTopBar.openInWorld()
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',
   fill: Color.rgb(208, 211, 212),
@@ -117,7 +116,7 @@ const GalyleoTopBar = component(TopBar, {
         }), {
           name: 'shape mode button',
           extent: pt(47.9, 24.7)
-        }
+        }, without('mini map button')
       ]
     },
     without('user flap')]
