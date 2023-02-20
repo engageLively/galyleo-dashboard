@@ -126,6 +126,7 @@ const GalyleoBorderControl = component(BorderControl, {
       layout: new TilingLayout({
         hugContentsVertically: true,
         orderByIndex: true,
+        wrapSubmorphs: true,
         spacing: 10
       }),
       extent: pt(275.9, 102),

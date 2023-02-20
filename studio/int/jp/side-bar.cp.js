@@ -1,6 +1,6 @@
 import { GalyleoSideBar } from '../../side-bar.cp.js';
 import { pt } from 'lively.graphics';
-import { component, part } from 'lively.morphic';
+import { component } from 'lively.morphic';
 
 const GalyleoSideBarJp = component(GalyleoSideBar, {
   name: 'galyleo/side bar/jp',
@@ -171,7 +171,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'alignment control',
+            name: 'constraints control',
             submorphs: [
               {
                 name: 'h floater',

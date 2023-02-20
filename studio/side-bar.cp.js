@@ -429,7 +429,7 @@ export class ViewControlModel extends EntityControlModel {
 const GalyleoPropertiesPanel = component(PropertiesPanel, {
   name: 'galyleo/properties panel',
   fill: Color.rgb(215, 219, 221),
-  extent: pt(255.4, 917.3),
+  extent: pt(267.9, 1000),
   submorphs: [
     {
       name: 'background control',
@@ -573,7 +573,7 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
       ]
     },
     {
-      name: 'alignment control',
+      name: 'constraints control',
       visible: true,
       master: GalyleoAlignmentControl,
       submorphs: [
@@ -949,10 +949,12 @@ const GalyleoSideBarControls = component({
         width: 'fill'
       }], ['layout control', {
         width: 'fill'
-      }], ['alignment control', {
+      }],
+      ['constraints control', {
         height: 'fixed',
         width: 'fill'
-      }], ['fill control', {
+      }],
+      ['fill control', {
         height: 'fixed',
         width: 'fill'
       }], ['border control', {
