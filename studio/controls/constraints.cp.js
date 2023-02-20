@@ -1,5 +1,5 @@
-import { component, part } from 'lively.morphic
-import { rect } from "lively.graphics/geometry-2d.js";/components/core.js';
+import { component, part } from "lively.morphic";
+import { rect } from "lively.graphics/geometry-2d.js";
 import { ConstraintMarker, ConstraintsManager, AlignmentControl, ResizingSimulator, ConstraintSizeSelectorDefault, ConstraintsSimulator, ConstraintMarkerActive } from 'lively.ide/studio/controls/constraints.cp.js';
 import { Color } from 'lively.graphics';
 import { GalyleoDropDown, GalyleoDropDownList, GalyleoDropDownListModel } from '../shared.cp.js';
