@@ -14,6 +14,7 @@
   },
   "scripts": {
     "build": "./tools/build.sh",
+    "build-japan": "./tools/build.sh --lang jp",
     "build-published": "./tools/build-published.sh",
     "clean": "./tools/clean.sh",
     "test": "mocha -r esm galyleo-data/galyleo-data-tests.js"

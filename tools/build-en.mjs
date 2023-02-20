@@ -7,12 +7,12 @@ import resolver from 'lively.freezer/src/resolvers/node.cjs';
 import PresetEnv from '@babel/preset-env';
 
 const build = await rollup({
-  input: './studio/index.js',
+  input: './studio/int/en/app.js',
   shimMissingExports: true,  
   plugins: [
     lively({
       autoRun: { title: 'Galyleo Dashboard' },
-      minify: false,
+      minify: true,
       asBrowserModule: true,
       excludedModules: [
 	'lively.collab',
@@ -38,5 +38,5 @@ const build = await rollup({
 
 await build.write({
   format: 'system',
-  dir: 'bin/studio'
+  dir: 'bin/studio-en'
 });
