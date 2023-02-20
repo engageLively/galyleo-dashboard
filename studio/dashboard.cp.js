@@ -1,5 +1,4 @@
 import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
-import 'https://www.gstatic.com/charts/loader.js';
 import { Morph, TilingLayout } from 'lively.morphic';
 import { component, without, part, add } from 'lively.morphic/components/core.js';
 import { createMorphSnapshot } from 'lively.morphic/serialization.js';
