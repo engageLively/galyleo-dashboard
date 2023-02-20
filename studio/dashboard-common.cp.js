@@ -1,4 +1,3 @@
-import 'https://www.gstatic.com/charts/loader.js';
 import { Morph, morph, ShadowObject } from 'lively.morphic';
 import { ViewModel, part } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/src/helpers.js';
@@ -164,6 +163,7 @@ class DashboardCommon extends ViewModel {
     }
   }
 
+  // The current set of demo dashboards.  To load a demo,
   get demoDashboards () {
     if (this._demoDashboards) {
       const result = {};
