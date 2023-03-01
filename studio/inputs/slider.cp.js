@@ -2,7 +2,8 @@ import { Morph } from 'lively.morphic/morph.js';
 import { pt, rect, Color } from 'lively.graphics/index.js';
 import { signal, connect } from 'lively.bindings/index.js';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
-import { Label, TilingLayout, ShadowObject, InputLine, Icon } from 'lively.morphic';
+import { Label, TilingLayout, ShadowObject, Icon } from 'lively.morphic';
+import {InputLine } from 'lively.components/inputs.js';
 
 export class SliderModel extends ViewModel {
   /*
