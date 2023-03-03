@@ -1,7 +1,8 @@
 import { signal } from 'lively.bindings/index.js';
 import { component, ViewModel, part, ensureFont } from 'lively.morphic/components/core.js';
-import { InputLine, Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
+import { Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
 import { Color, rect, pt } from 'lively.graphics/index.js';
+import {InputLine } from 'lively.components/inputs.js';
 
 import { arr, date } from 'lively.lang/index.js';
 import { galyleoFont } from '../shared.cp.js';
