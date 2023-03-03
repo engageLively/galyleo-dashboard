@@ -1,12 +1,9 @@
 import { part } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
-import { GalyleoStudioWorld } from './ui.cp.js';
-
-// part(GalyleoDashboardStudio).openInWorld()
+import { GalyleoStudioWorld } from '../../ui.cp.js';
 
 export async function main () {
-  const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en');
-  // const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/jp/index.cp.js');
+  const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/en/index.js');
   const dashboard = part(GalyleoDashboardStudio);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);

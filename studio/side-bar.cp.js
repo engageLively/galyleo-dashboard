@@ -422,244 +422,271 @@ export class ViewControlModel extends EntityControlModel {
 }
 
 // GalyleoPropertiesPanel.get('clip mode selector').owner.master.auto.derivedMorph.ownerChain()
-// PropertiesPanel.openInWorld()
+// part(GalyleoPropertiesPanel).openInWorld()
 // GalyleoPropertiesPanel.edit()
 // m = GalyleoPropertiesPanel.get('background fill input')
 // m.master._overriddenProps.get(m)
 const GalyleoPropertiesPanel = component(PropertiesPanel, {
   name: 'galyleo/properties panel',
   fill: Color.rgb(215, 219, 221),
-  extent: pt(255.4, 917.3),
-  submorphs: [{
-    name: 'background control',
-    layout: new TilingLayout({
-      axis: 'column',
-      hugContentsVertically: true,
-      orderByIndex: true,
-      padding: rect(0, 10, 0, 0),
-      resizePolicies: [['h floater', {
-        height: 'fixed',
-        width: 'fill'
-      }], ['background fill input', {
-        height: 'fixed',
-        width: 'fill'
-      }]],
-      spacing: 10,
-      wrapSubmorphs: false
-    }),
-    extent: pt(250, 98),
-    master: GalyleoPropertySection,
-    submorphs: [
-      {
-        name: 'background fill input',
-        master: GalyleoColorInput,
-        viewModel: {
-          activeColor: Color.gray,
-          gradientEnabled: true,
-          colorPickerComponent: GalyleoColorPicker
-        }
-      }]
-  }, {
-    name: 'shape control',
-    master: GalyleoShapeControl,
-    visible: true,
-    // view model parametrizations are not carried over by the master yet... should they???
-    viewModel: {
-      propertyLabelComponent: GalyleoAddButtonDefault,
-      propertyLabelComponentHover: GalyleoAddButtonHovered,
-      propertyLabelComponentActive: GalyleoAddButtonActive
-    },
-    submorphs: [
-      {
-        name: 'clip mode selector',
-        viewModelClass: GalyleoDropDownListModel,
-        viewModel: {
-          listMaster: GalyleoDropDownList
-        }
-      }
-    ]
-  }, {
-    name: 'text control',
-    master: GalyleoRichTextControl,
-    visible: true,
-    viewModel: {
-      hoveredButtonComponent: GalyleoAddButtonHovered,
-      activeButtonComponent: GalyleoAddButton
-    },
-    submorphs: [
-      {
-        name: 'text controls',
-        submorphs: [
-          {
-            name: 'font family selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
-          },
-          {
-            name: 'font weight selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
+  extent: pt(267.9, 1000),
+  submorphs: [
+    {
+      name: 'background control',
+      layout: new TilingLayout({
+        axis: 'column',
+        hugContentsVertically: true,
+        orderByIndex: true,
+        padding: rect(0, 10, 0, 0),
+        resizePolicies: [['h floater', {
+          height: 'fixed',
+          width: 'fill'
+        }], ['background fill input', {
+          height: 'fixed',
+          width: 'fill'
+        }]],
+        spacing: 10,
+        wrapSubmorphs: false
+      }),
+      extent: pt(250, 98),
+      master: GalyleoPropertySection,
+      submorphs: [
+        {
+          name: 'background fill input',
+          master: GalyleoColorInput,
+          viewModel: {
+            activeColor: Color.gray,
+            gradientEnabled: true,
+            colorPickerComponent: GalyleoColorPicker
           }
-        ]
-      }, {
-        name: 'font color input',
-        viewModel: {
-          activeColor: Color.gray,
-          colorPickerComponent: GalyleoColorPicker
-        }
-      },
-      {
-        name: 'bottom wrapper',
-        submorphs: [
-          {
-            name: 'line wrapping selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
-          }
-        ]
-      }
-    ]
-  }, {
-    name: 'layout control',
-    visible: true,
-    master: GalyleoLayoutControl,
-    viewModel: {
-      activeSectionComponent: GalyleoLayoutControl,
-      hoverSectionComponent: GalyleoPropertySection,
-      inactiveSectionComponent: GalyleoPropertySectionInactive,
-      controlFlapComponent: GalyleoLayoutFlap,
-      buttonActiveComponent: GalyleoAddButtonHovered,
-      buttonInactiveComponent: GalyleoAddButton
-    },
-    submorphs: [
-      {
-        name: 'controls',
-        submorphs: [{
-          name: 'mini layout preview',
-          activeComponent: GalyleoMiniLayoutPreviewActive,
-          inactiveComponent: GalyleoMiniLayoutPreview
         }]
-      }
-    ]
-  }, {
-    name: 'alignment control',
-    visible: true,
-    master: GalyleoAlignmentControl,
-    submorphs: [
-      {
-        name: 'constraints',
-        viewModel: {
-          activeMarkerComponent: GalyleoConstraintMarkerActive,
-          defaultMarkerComponent: GalyleoConstraintMarker
+    },
+    {
+      name: 'shape control',
+      master: GalyleoShapeControl,
+      visible: true,
+      // view model parametrizations are not carried over by the master yet... should they???
+      viewModel: {
+        propertyLabelComponent: GalyleoAddButtonDefault,
+        propertyLabelComponentHover: GalyleoAddButtonHovered,
+        propertyLabelComponentActive: GalyleoAddButtonActive
+      },
+      submorphs: [
+        {
+          name: 'width mode selector',
+          viewModel: {
+            listMaster: GalyleoDropDownList
+          }
         },
-        submorphs: [
-          {
-            name: 'horizontal alignment selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
-          },
-          {
-            name: 'vertical alignment selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
+        {
+          name: 'height mode selector',
+          viewModel: {
+            listMaster: GalyleoDropDownList
           }
-        ]
-      }, {
-        name: 'resizing',
-        submorphs: [
-          {
-            name: 'horizontal alignment selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
-          },
-          {
-            name: 'vertical alignment selector',
-            viewModelClass: GalyleoDropDownListModel,
-            viewModel: {
-              listMaster: GalyleoDropDownList
-            }
+        },
+        {
+          name: 'clip mode selector',
+          viewModelClass: GalyleoDropDownListModel,
+          viewModel: {
+            listMaster: GalyleoDropDownList
           }
-        ]
-      }]
-  }, {
-    name: 'fill control',
-    visible: true,
-    master: GalyleoFillControl,
-    viewModel: {
-      placeholderImage
-    },
-    submorphs: [
-      {
-        name: 'fill color input',
-        viewModel: {
-          activeColor: Color.gray,
-          gradientEnabled: true,
-          colorPickerComponent: GalyleoColorPicker
         }
-      }
-    ]
-  }, {
-    name: 'border control',
-    visible: true,
-    master: GalyleoBorderControl,
-    viewModel: {
-      activeSectionComponent: GalyleoBorderControl,
-      hoverSectionComponent: GalyleoPropertySection,
-      inactiveSectionComponent: GalyleoPropertySectionInactive,
-      propertyLabelComponent: GalyleoAddButtonDefault,
-      propertyLabelComponentHover: GalyleoAddButtonHovered,
-      propertyLabelComponentActive: GalyleoAddButtonActive,
-      borderPopupComponent: GalyleoBorderPopup
+      ]
     },
-    submorphs: [
-      {
-        name: 'elements wrapper',
-        submorphs: [
-          {
-            name: 'border color input',
-            viewModel: {
-              activeColor: Color.gray,
-              colorPickerComponent: GalyleoColorPicker
-            } // fixme: this should be also hanlded by master application....
-          },
-          {
-            name: 'border width control',
-            submorphs: [{
-              name: 'border style selector',
+    {
+      name: 'text control',
+      master: GalyleoRichTextControl,
+      visible: true,
+      viewModel: {
+        activeButtonComponent: GalyleoAddButtonActive,
+        hoveredButtonComponent: GalyleoAddButtonHovered
+      },
+      submorphs: [
+        {
+          name: 'text controls',
+          submorphs: [
+            {
+              name: 'font family selector',
               viewModelClass: GalyleoDropDownListModel,
               viewModel: {
-                listMaster: GalyleoDropDownList // fixme: should also be handled by master application
+                listMaster: GalyleoDropDownList
               }
-            }]
+            },
+            {
+              name: 'font weight selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            }
+          ]
+        },
+        {
+          name: 'font color input',
+          viewModel: {
+            activeColor: Color.gray,
+            colorPickerComponent: GalyleoColorPicker
+          }
+        },
+        {
+          name: 'bottom wrapper',
+          submorphs: [
+            {
+              name: 'line wrapping selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            }
+          ]
+        }, {
+          name: 'padding controls',
+          viewModel: {
+            propertyLabelComponent: GalyleoAddButtonDefault,
+            propertyLabelComponentActive: GalyleoAddButtonActive,
+            propertyLabelComponentHover: GalyleoAddButtonHovered
+          }
+        }
+      ]
+    },
+    {
+      name: 'layout control',
+      visible: true,
+      master: GalyleoLayoutControl,
+      viewModel: {
+        activeSectionComponent: GalyleoLayoutControl,
+        hoverSectionComponent: GalyleoPropertySection,
+        inactiveSectionComponent: GalyleoPropertySectionInactive,
+        controlFlapComponent: GalyleoLayoutFlap,
+        buttonActiveComponent: GalyleoAddButtonHovered,
+        buttonInactiveComponent: GalyleoAddButton
+      },
+      submorphs: [
+        {
+          name: 'controls',
+          submorphs: [{
+            name: 'mini layout preview',
+            activeComponent: GalyleoMiniLayoutPreviewActive,
+            inactiveComponent: GalyleoMiniLayoutPreview
           }]
-      }]
-  }, {
-    name: 'effects control',
-    visible: true,
-    master: GalyleoPropertySection,
-    defaultViewModel: GalyleoBodyControlModel,
-    viewModel: {
-      activeSectionComponent: GalyleoPropertySection,
-      hoverSectionComponent: GalyleoPropertySection,
-      inactiveSectionComponent: GalyleoPropertySectionInactive,
-      dynamicPropertyComponent: GalyleoDynamicProperty
+        }
+      ]
+    },
+    {
+      name: 'constraints control',
+      visible: true,
+      master: GalyleoAlignmentControl,
+      submorphs: [
+        {
+          name: 'constraints',
+          viewModel: {
+            activeMarkerComponent: GalyleoConstraintMarkerActive,
+            defaultMarkerComponent: GalyleoConstraintMarker
+          },
+          submorphs: [
+            {
+              name: 'horizontal alignment selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            },
+            {
+              name: 'vertical alignment selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            }
+          ]
+        }, {
+          name: 'resizing',
+          submorphs: [
+            {
+              name: 'horizontal alignment selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            },
+            {
+              name: 'vertical alignment selector',
+              viewModelClass: GalyleoDropDownListModel,
+              viewModel: {
+                listMaster: GalyleoDropDownList
+              }
+            }
+          ]
+        }]
+    },
+    {
+      name: 'fill control',
+      visible: true,
+      master: GalyleoFillControl,
+      viewModel: {
+        placeholderImage
+      },
+      submorphs: [
+        {
+          name: 'fill color input',
+          viewModel: {
+            activeColor: Color.gray,
+            gradientEnabled: true,
+            colorPickerComponent: GalyleoColorPicker
+          }
+        }
+      ]
+    }, {
+      name: 'border control',
+      visible: true,
+      master: GalyleoBorderControl,
+      viewModel: {
+        activeSectionComponent: GalyleoBorderControl,
+        hoverSectionComponent: GalyleoPropertySection,
+        inactiveSectionComponent: GalyleoPropertySectionInactive,
+        propertyLabelComponent: GalyleoAddButtonDefault,
+        propertyLabelComponentHover: GalyleoAddButtonHovered,
+        propertyLabelComponentActive: GalyleoAddButtonActive,
+        borderPopupComponent: GalyleoBorderPopup
+      },
+      submorphs: [
+        {
+          name: 'elements wrapper',
+          submorphs: [
+            {
+              name: 'border color input',
+              viewModel: {
+                activeColor: Color.gray,
+                colorPickerComponent: GalyleoColorPicker
+              } // fixme: this should be also hanlded by master application....
+            },
+            {
+              name: 'border width control',
+              submorphs: [{
+                name: 'border style selector',
+                viewModelClass: GalyleoDropDownListModel,
+                viewModel: {
+                  listMaster: GalyleoDropDownList // fixme: should also be handled by master application
+                }
+              }]
+            }]
+        }]
+    },
+    {
+      name: 'effects control',
+      visible: true,
+      master: GalyleoPropertySection,
+      defaultViewModel: GalyleoBodyControlModel,
+      viewModel: {
+        activeSectionComponent: GalyleoPropertySection,
+        hoverSectionComponent: GalyleoPropertySection,
+        inactiveSectionComponent: GalyleoPropertySectionInactive,
+        dynamicPropertyComponent: GalyleoDynamicProperty
+      }
     }
-  }]
+  ]
 });
 
-// ControlPanel.edit()
 const ControlPanel = component({
   name: 'control panel',
   extent: pt(262.6, 238.8),
@@ -922,10 +949,12 @@ const GalyleoSideBarControls = component({
         width: 'fill'
       }], ['layout control', {
         width: 'fill'
-      }], ['alignment control', {
+      }],
+      ['constraints control', {
         height: 'fixed',
         width: 'fill'
-      }], ['fill control', {
+      }],
+      ['fill control', {
         height: 'fixed',
         width: 'fill'
       }], ['border control', {
@@ -953,8 +982,6 @@ const GalyleoSideBarControls = component({
   })]
 });
 
-// part(GalyleoSideBar).openInWindow()
-// GalyleoSideBar.get('background fill input').master._overriddenProps.get(GalyleoSideBar.get('background fill input'))
 const GalyleoSideBar = component({
   viewModelClass: DashboardControl,
   name: 'galyleo/side bar',

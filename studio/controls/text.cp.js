@@ -1,11 +1,44 @@
 import { RichTextControl } from 'lively.ide/studio/controls/text.cp.js';
 import { component } from 'lively.morphic/components/core.js';
-import { GalyleoAddButtonHovered, GalyleoColorInput, GalyleoNumberInput, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton } from '../shared.cp.js';
+import { GalyleoAddButtonHovered, GalyleoAddButtonActive, GalyleoAddButtonDefault, GalyleoColorInput, GalyleoNumberInput, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoAddButton } from '../shared.cp.js';
 import { Color } from 'lively.graphics';
-import { TilingLayout } from 'lively.morphic';
-import { rect } from 'lively.graphics/geometry-2d.js';
+import { TilingLayout, part } from 'lively.morphic';
+import { rect, pt } from 'lively.graphics/geometry-2d.js';
+import { PaddingControlsLight } from 'lively.ide/studio/controls/popups.cp.js';
 
-// GalyleoRichTextControl.openInWorld()
+const GalyleoPaddingControls = component(PaddingControlsLight, {
+  viewModel: {
+    propertyLabelComponent: GalyleoAddButtonDefault,
+    propertyLabelComponentActive: GalyleoAddButtonActive,
+    propertyLabelComponentHover: GalyleoAddButtonHovered
+  },
+  submorphs: [
+    { name: 'padding all', master: GalyleoNumberInput },
+    {
+      name: 'multi padding control',
+      submorphs: [{
+        name: 'padding left',
+        master: GalyleoNumberInput
+      }, {
+        name: 'padding top',
+        master: GalyleoNumberInput
+      }, {
+        name: 'padding right',
+        master: GalyleoNumberInput
+      }, {
+        name: 'padding bottom',
+        master: GalyleoNumberInput
+      }, {
+        name: 'centering wrapper',
+        submorphs: [{
+          name: 'padding indicator',
+          master: GalyleoAddButton
+        }]
+      }]
+    }
+  ]
+});
+
 const GalyleoRichTextControl = component(RichTextControl, {
   name: 'galyleo/rich text control',
   layout: new TilingLayout({
@@ -23,7 +56,6 @@ const GalyleoRichTextControl = component(RichTextControl, {
     spacing: 10,
     wrapSubmorphs: false
   }),
-  visible: true,
   // scoped components should be also carried over by master components
   viewModel: {
     hoveredButtonComponent: GalyleoAddButtonHovered,
@@ -80,7 +112,8 @@ const GalyleoRichTextControl = component(RichTextControl, {
           master: GalyleoNumberInput
         }
       ]
-    }, {
+    },
+    {
       name: 'font color input',
       master: GalyleoColorInput
     },
@@ -99,9 +132,9 @@ const GalyleoRichTextControl = component(RichTextControl, {
         {
           name: 'resizing controls',
           submorphs: [
-            { name: 'auto width', master: GalyleoAddButton },
-            { name: 'auto height', master: GalyleoAddButton },
-            { name: 'fixed extent', master: GalyleoAddButton }
+            { name: 'auto width', master: GalyleoAddButton, padding: rect(4, 2, 0, 0) },
+            { name: 'auto height', master: GalyleoAddButton, padding: rect(4, 4, 0, 0) },
+            { name: 'fixed extent', master: GalyleoAddButton, padding: rect(2, 4, 2, 0) }
           ]
         },
         {
@@ -113,6 +146,14 @@ const GalyleoRichTextControl = component(RichTextControl, {
           }
         }
       ]
+    }, {
+      name: 'padding controls',
+      viewModel: {
+        propertyLabelComponent: GalyleoAddButtonDefault,
+        propertyLabelComponentActive: GalyleoAddButtonActive,
+        propertyLabelComponentHover: GalyleoAddButtonHovered
+      },
+      master: GalyleoPaddingControls
     }
   ]
 });

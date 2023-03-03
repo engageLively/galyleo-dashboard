@@ -1,8 +1,10 @@
 import { component, part } from 'lively.morphic/components/core.js';
-import { ConstraintMarker, AlignmentControl, ResizingSimulator, ConstraintSizeSelectorDefault, ConstraintsSimulator, ConstraintMarkerActive } from 'lively.ide/studio/controls/constraints.cp.js';
+import { rect } from "lively.graphics/geometry-2d.js";
+import { ConstraintMarker, ConstraintsManager, AlignmentControl, ResizingSimulator, ConstraintSizeSelectorDefault, ConstraintsSimulator, ConstraintMarkerActive } from 'lively.ide/studio/controls/constraints.cp.js';
 import { Color } from 'lively.graphics';
 import { GalyleoDropDown, GalyleoDropDownList, GalyleoDropDownListModel } from '../shared.cp.js';
 import { GalyleoPropertySection } from './section.cp.js';
+import { TilingLayout } from "lively.morphic";
 // GalyleoConstraintMarker.openInWorld();
 const GalyleoConstraintMarker = component(ConstraintMarker, {
   name: 'galyleo/constraint marker',
@@ -63,8 +65,7 @@ const GalyleoResizingSimulator = component(ResizingSimulator, {
   }]
 });
 
-// part(GalyleoAlignmentControl).openInWorld()
-const GalyleoAlignmentControl = component(AlignmentControl, {
+const GalyleoAlignmentControl = component(ConstraintsManager, {
   name: 'galyleo/alignment control',
   master: GalyleoPropertySection,
   submorphs: [
@@ -78,6 +79,13 @@ const GalyleoAlignmentControl = component(AlignmentControl, {
       ]
     }, {
       name: 'constraints',
+layout: new TilingLayout({
+  align: "center",
+  axis: "column",
+  orderByIndex: true,
+  padding: rect(20,0,-20,10),
+  spacing: 10
+}),
       viewModel: {
         activeMarkerComponent: GalyleoConstraintMarkerActive,
         defaultMarkerComponent: GalyleoConstraintMarker
@@ -98,36 +106,6 @@ const GalyleoAlignmentControl = component(AlignmentControl, {
             name: 'interactive label',
             fontColor: Color.rgbHex('808080')
           }]
-        },
-        {
-          name: 'vertical alignment selector',
-          master: GalyleoDropDown,
-          viewModelClass: GalyleoDropDownListModel,
-          viewModel: {
-            listMaster: GalyleoDropDownList
-          },
-          submorphs: [{ name: 'interactive label', fontColor: Color.rgbHex('808080') }]
-        }
-      ]
-    }, {
-      name: 'resizing',
-      submorphs: [
-        {
-          name: 'resizing simulator',
-          master: GalyleoResizingSimulator,
-          submorphs: ['outer top', 'inner bottom', 'outer bottom', 'inner top', 'outer left', 'outer right', 'inner left', 'inner right'].map(name => ({
-            name: name + ' selector',
-            master: { auto: GalyleoConstraintSizeSelector, hover: GalyleoConstraintSizeSelectorHovered }
-          }))
-        },
-        {
-          name: 'horizontal alignment selector',
-          master: GalyleoDropDown,
-          viewModelClass: GalyleoDropDownListModel,
-          viewModel: {
-            listMaster: GalyleoDropDownList
-          },
-          submorphs: [{ name: 'interactive label', fontColor: Color.rgbHex('808080') }]
         },
         {
           name: 'vertical alignment selector',

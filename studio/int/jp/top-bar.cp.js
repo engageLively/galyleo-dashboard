@@ -5,7 +5,7 @@ import { Icon, component } from 'lively.morphic';
 const GalyleoTopBarJp = component(GalyleoTopBar, {
   name: 'galyleo/top bar/jp',
   submorphs: [{
-    name: 'horizontal layout',
+    name: 'tiling layout',
     submorphs: [{
       name: 'help button',
       textAndAttributes: [...Icon.textAttribute('life-ring'), '  ヘルプ', {

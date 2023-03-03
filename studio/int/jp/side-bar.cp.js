@@ -1,8 +1,7 @@
 import { GalyleoSideBar } from '../../side-bar.cp.js';
 import { pt } from 'lively.graphics';
-import { component, part } from 'lively.morphic';
+import { component } from 'lively.morphic';
 
-// part(GalyleoSideBarJp).openInWorld()
 const GalyleoSideBarJp = component(GalyleoSideBar, {
   name: 'galyleo/side bar/jp',
   extent: pt(324.8, 668),
@@ -84,7 +83,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'tables control',
+            name: 'table control',
             visible: true,
             submorphs: [
               {
@@ -102,7 +101,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'filters control',
+            name: 'filter control',
             submorphs: [
               {
                 name: 'v wrapper',
@@ -172,7 +171,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
             ]
           },
           {
-            name: 'alignment control',
+            name: 'constraints control',
             submorphs: [
               {
                 name: 'h floater',

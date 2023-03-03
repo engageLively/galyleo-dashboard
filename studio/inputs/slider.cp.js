@@ -767,11 +767,6 @@ const SliderInputLabel = component({
   ]
 });
 
-// turn this into a view model
-// const C = SliderInputLabel.getComponent();
-// connect(C.getSubmorphNamed('sliderValue'), 'onInput', SliderInputLabel, 'onInput');
-
-// part(Slider).openInWorld()
 const Slider = component({
   defaultViewModel: SliderModel,
   name: 'slider',
@@ -802,7 +797,6 @@ const Slider = component({
   }]
 });
 
-// part(DoubleSlider).openInWorld()
 const DoubleSlider = component({
   defaultViewModel: DoubleSliderModel,
   name: 'double slider',
@@ -848,7 +842,6 @@ const DoubleSlider = component({
   }]
 });
 
-// part(SliderWithValue).openInWorld()
 const SliderWithValue = component({
   name: 'slider with value',
   defaultViewModel: SliderWithValueModel,
@@ -873,8 +866,6 @@ const SliderWithValue = component({
   ]
 });
 
-// DoubleSliderWithValues.openInWorld()
-// part(DoubleSliderWithValues).openInWorld()
 const DoubleSliderWithValues = component({
   name: 'double slider with values',
   defaultViewModel: DoubleSliderWithValuesModel,
@@ -893,5 +884,4 @@ const DoubleSliderWithValues = component({
   ]
 });
 
-// SliderValueLabel.openInWorld()
 export { SliderInputLabel, Slider, DoubleSlider, SliderWithValue, DoubleSliderWithValues };

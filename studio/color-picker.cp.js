@@ -3,7 +3,6 @@ import { Color, pt, rect } from 'lively.graphics';
 import { TilingLayout, component, add } from 'lively.morphic';
 import { GalyleoDropDown, GalyleoTextInput, GalyleoNumberInput, GalyleoDropDownList, galyleoFont } from './shared.cp.js';
 
-// GalyleoColorPicker.edit()
 const GalyleoColorPicker = component(ColorPicker, {
   name: 'galyleo/color picker',
   borderRadius: { topLeft: 10, topRight: 10, bottomLeft: 3, bottomRight: 3 },

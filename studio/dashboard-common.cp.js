@@ -1,4 +1,3 @@
-import 'https://www.gstatic.com/charts/loader.js';
 import { Morph, morph, ShadowObject } from 'lively.morphic';
 import { ViewModel, part } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/src/helpers.js';
@@ -9,6 +8,7 @@ import { ExpressionSerializer } from 'lively.serializer2/index.js';
 import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from './filters.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
 import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
+import { loadViaScript } from 'lively.resources/index.js';
 
 class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
@@ -164,6 +164,7 @@ class DashboardCommon extends ViewModel {
     }
   }
 
+  // The current set of demo dashboards.  To load a demo,
   get demoDashboards () {
     if (this._demoDashboards) {
       const result = {};
@@ -1201,7 +1202,8 @@ class DashboardCommon extends ViewModel {
    * @param { string[] } packageList - The packages to be loaded. Default is the core chart package, the map package, and the chart editor..
    */
   async _loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor']) {
-    await promise.waitFor(20 * 1000, () => !!window.google);
+    // await promise.waitFor(20 * 1000, () => !!window.google);
+    await loadViaScript('https://www.gstatic.com/charts/loader.js');
     await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
   }
 
