@@ -210,7 +210,9 @@ class DashboardCommon extends ViewModel {
    */
   async loadDashboardFromURL (anURL = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/mtbf_mttr_dashboard.gd.json') {
     try {
-      const jsonForm = await resource(anURL).readJson();
+      const loadResource = resource(anURL);
+      loadResource.useCors = false;
+      const jsonForm = await loadResource.readJson();
       const check = this.checkIntermediateForm(jsonForm);
       if (check.valid) {
         await this._restoreFromSaved(jsonForm);
@@ -1189,7 +1191,6 @@ class DashboardCommon extends ViewModel {
       }
     });
     this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
-    this._initializeJupyterLabCallbacks();
     this.dirty = false;
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
