@@ -1,5 +1,5 @@
 import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
-import { Morph, TilingLayout } from 'lively.morphic';
+import { Morph, ViewModel, TilingLayout } from 'lively.morphic';
 import { component, without, part, add } from 'lively.morphic/components/core.js';
 import { createMorphSnapshot } from 'lively.morphic/serialization.js';
 import { resource } from 'lively.resources/src/helpers.js';
@@ -101,7 +101,7 @@ const SaveDialog = component(GalyleoWindow, {
   ]
 });
 
-class LoadDialogMorph extends Morph {
+class LoadDialogModel extends ViewModel {
   /**
    * Initialize with the file path passed to dashboard
    * @param { object } dashboard - the dashboard that invoked this, and which will be called back
@@ -110,6 +110,11 @@ class LoadDialogMorph extends Morph {
 
   static get properties () {
     return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
       bindings: {
         get () {
           return [
@@ -118,13 +123,14 @@ class LoadDialogMorph extends Morph {
           ];
         }
       }
+
     };
   }
 
   init (dashboard, path) {
     this.dashboard = dashboard;
     if (path && path.length > 0) {
-      this.getSubmorphNamed('file input').textString = path;
+      this.ui.fileInput.textString = path;
     }
   }
 
@@ -136,9 +142,9 @@ class LoadDialogMorph extends Morph {
    * shot.
    */
   async load () {
-    const filePath = this.getSubmorphNamed('file input').textString;
+    const filePath = this.ui.fileInput.textString;
     if (await this.dashboard.loadDashboardFromURL(filePath)) {
-      this.remove();
+      this.view.remove();
     }
   }
 
@@ -146,13 +152,13 @@ class LoadDialogMorph extends Morph {
    * Cancel.  This is called from the Cancel button
    */
   cancel () {
-    this.remove();
+    this.view.remove();
   }
 }
 
 // LoadDialog.openInWorld()
 const LoadDialog = component(GalyleoWindow, {
-  type: LoadDialogMorph,
+  defaultViewModel: LoadDialogModel,
   name: 'load dialog',
   layout: new TilingLayout({
     axis: 'column',

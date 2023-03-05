@@ -67,6 +67,8 @@ export class BugReporterModel extends ViewModel {
    * posted, close this dialog to prevent accidental spamming.
    */
   reportBug () {
+    console.log('Report called');
+    return;
     const { userNameInput, fileInput, message: messageInput } = this.ui;
     const user = userNameInput.textString;
     const filePath = fileInput.textString;
@@ -97,10 +99,8 @@ export class BugReporterModel extends ViewModel {
   }
 }
 
-// BugReporter.openInWorld()
+// part(BugReporter).openInWorld()
 const BugReporter = component(GalyleoWindow, {
-  defaultViewModel: BugReporterModel,
-  name: 'bug reporter',
   extent: pt(415, 459.2),
   submorphs: [{
     name: 'window title',
@@ -474,4 +474,116 @@ const DataLoader = component(GalyleoWindow, {
   })]
 });
 
-export { DataLoader, CloseButton, BugReporter };
+export class LoadURLDialogModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'cancel button', signal: 'fire', handler: 'cancelLoad' },
+            { model: 'load button', signal: 'fire', handler: 'loadURL' }
+          ];
+        }
+      }
+    };
+  }
+
+  init (dashboard, path) {
+    this.dashboard = dashboard;
+    this.originalPath = path;
+    if (path && path.length > 0 && this.ui && this.ui.urlInput) {
+      this.ui.urlInput.textString = path;
+    }
+  }
+
+  viewDidLoad () {
+    if (this.originalPath) {
+      this.ui.urlInput.textString = this.originalPath;
+    }
+  }
+
+  /**
+   * Load. This is called from the Load button. Just gets the path from
+   * the text string, and calls the dashboard back to check it and load it.
+   * If everything worked, dashboard returns true; if not, it took care of
+   * informing the user, and the dialog box stays up to give the user another
+   * shot.
+   */
+  async loadURL () {
+    const url = this.ui.urlInput.textString;
+    if (await this.dashboard.loadDashboardFromURL(url)) {
+      this.view.remove();
+    }
+  }
+
+  /**
+   * Cancel.  This is called from the Cancel button
+   */
+  cancelLoad () {
+    this.view.remove();
+  }
+}
+
+const LoadFromURLDialog = component(GalyleoWindow, {
+  defaultViewModel: LoadURLDialogModel,
+  name: 'load dialog',
+  layout: new TilingLayout({
+    axis: 'column',
+    axisAlign: 'center',
+    orderByIndex: true,
+    resizePolicies: [['window title', {
+      height: 'fixed',
+      width: 'fill'
+    }]],
+    spacing: 15,
+    wrapSubmorphs: false
+  }),
+  extent: pt(340.5, 155.8),
+  submorphs: [
+    {
+      name: 'window title',
+      textString: 'Load Dashboard from...'
+    },
+    add(part(GalyleoSearch, { name: 'urlInput', placeholder: 'url/to/dashboard' })),
+    add({
+      name: 'button wrapper',
+      layout: new TilingLayout({
+        align: 'center',
+        axisAlign: 'center',
+        justifySubmorphs: 'spaced',
+        orderByIndex: true,
+        padding: rect(26, 26, 0, 0)
+      }),
+      borderColor: Color.rgb(23, 160, 251),
+      borderWidth: 0,
+      extent: pt(310.9, 57.7),
+      fill: Color.rgba(0, 0, 0, 0),
+      submorphs: [part(PromptButton, {
+        name: 'load button',
+        extent: pt(81.7, 31.8),
+        master: PromptButton,
+        position: pt(9.6, 8.9),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Load', null]
+        }]
+      }), part(PromptButton, {
+        name: 'cancel button',
+        extent: pt(92.8, 34.2),
+        master: PromptButton,
+        position: pt(174.2, 44.5),
+        submorphs: [without('icon'), {
+          name: 'label',
+          textAndAttributes: ['Cancel', null]
+        }]
+      })]
+    })
+  ]
+});
+
+export { DataLoader, CloseButton, BugReporter, LoadFromURLDialog };

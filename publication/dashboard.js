@@ -11,6 +11,7 @@ import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilte
 import { GalyleoDataManager, GalyleoView } from 'galyleo-dashboard/galyleo-data/galyleo-data.js';
 import { GoogleChartHolder } from 'galyleo-dashboard/studio/chart-creator.cp.js';
 import { LoadDialog } from 'galyleo-dashboard/studio/dashboard.cp.js';
+import { LoadFromURLDialog } from 'galyleo-dashboard/studio/helpers.cp.js';
 import { DashboardCommon } from 'galyleo-dashboard/studio/dashboard-common.cp.js';
 
 export default class PublishedDashboard extends DashboardCommon {
@@ -68,9 +69,9 @@ export default class PublishedDashboard extends DashboardCommon {
     if (message) {
       $world.inform(message);
     }
-    const loadDialog = part(LoadDialog);
-    loadDialog.init(this, url);
+    const loadDialog = part(LoadFromURLDialog);
     loadDialog.openInWorld();
+    loadDialog.init(this, url);
   }
 
   // Restore from JSON form.  This involves parsing the JSON string and
