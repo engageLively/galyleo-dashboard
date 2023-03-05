@@ -9,6 +9,7 @@ import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilte
 import { GoogleChartHolder } from './chart-creator.cp.js';
 import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 import { loadViaScript } from 'lively.resources/index.js';
+import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 
 class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
@@ -201,6 +202,31 @@ class DashboardCommon extends ViewModel {
     if (dashboardUrl) { this.loadDashboardFromURL(dashboardUrl); }
   }
 
+  _normalizeURL (anURL) {
+    // make sure an URL really is an URL, and fix it if it isn't //anURL = 'foo.bar.com'
+    try {
+      const test = new URL(anURL);
+      // it passes!  just return it
+      return anURL;
+    } catch (anError) {
+      // OK, something to fix
+    }
+    // if the next attempt throws an error, we want the calling routine to catch it
+    const test1 = 'http://' + anURL;
+    const result = new URL(test1);
+
+    // if we get here, that fixed it.  Now the only question is http or https.
+    // IP addresses are http, names are https
+    const hostNames = result.host.split(':')[0].split('.');
+    const hostValues = hostNames.map(name => Number(name));
+    const ipAddress = hostValues.reduce((ipAddr, value) => ipAddr && !isNaN(value), true);
+    if (ipAddress) {
+      return result.href;
+    } else {
+      return 'https' + result.href.slice(4);
+    }
+  }
+
   /**
    * Load a dashboard from an URL.  Uses checkAndLoad to do the actual work.
    *  ATM, no parameters or options aside from the URL; if there are other
@@ -210,7 +236,8 @@ class DashboardCommon extends ViewModel {
    */
   async loadDashboardFromURL (anURL = 'https://raw.githubusercontent.com/engageLively/galyleo-test-dashboards/main/mtbf_mttr_dashboard.gd.json') {
     try {
-      const loadResource = resource(anURL);
+      const fixedUrl = this._normalizeURL(anURL);
+      const loadResource = resource(fixedUrl);
       loadResource.useCors = false;
       const jsonForm = await loadResource.readJson();
       const check = this.checkIntermediateForm(jsonForm);
