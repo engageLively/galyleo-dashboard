@@ -271,6 +271,7 @@ export default class Galyleo extends ViewModel {
    */
   async publishDashboard () {
     const publishMorph = part(Publisher);
+    publishMorph.name = 'Publish Window';
     const li = LoadingIndicator.open('loading reporting form...');
     await li.whenRendered();
     publishMorph.init(this.user, this.dashboardFilePath, this.models.dashboard);

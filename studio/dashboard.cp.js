@@ -502,7 +502,7 @@ export class Dashboard extends DashboardCommon {
    * options), extent, and postion of each morph.
    */
   prepareJSONForm () {
-    return JSON.stringify(this._prepareSerialization());
+    return JSON.stringify(this.prepareSerialization());
   }
 
   openDialog (componentObject) {
@@ -569,7 +569,7 @@ export class Dashboard extends DashboardCommon {
     const allMorphs = canvas.submorphs.filter(morph => !(morph.isFilter || morph.isChart));
 
     // inititalize the snapshot, or retrieve the last one we stored
-    const snap = arr.last(this._snapshots) || Immutable.fromJS(this._prepareSerialization());
+    const snap = arr.last(this._snapshots) || Immutable.fromJS(this.prepareSerialization());
     // derive the updated snapshot, making use of immutable.js datastructures for minimum memory impact
     const newSnap = snap.updateIn(['tables'], tables =>
       this.tableNames.reduce(
@@ -632,7 +632,7 @@ export class Dashboard extends DashboardCommon {
    * morphs for filters and charts, just the type (in the case of the chart, the
    * options), extent, and postion of each morph.
    */
-  _prepareSerialization () {
+  prepareSerialization () {
     const { canvas } = this;
     const resultObject = {
       fill: canvas.fill ? canvas.fill.toJSExpr() : null,

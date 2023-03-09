@@ -321,14 +321,14 @@ export class PublisherModel extends ViewModel {
       const r = resource(`${this.url}add_user_dashboard`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: this.filePath,
-        dashboard: this.dashboard.prepareJSONForm()
+        dashboard: this.dashboard.prepareSerialization()
       };
       if (this.userName) {
         body.user = this.userName;
       }
       r.contentType = 'application/json';
-      const response = await r.post(JSON.stringify).read();
-      $world.inform(`The URL is ${response}`);
+      const response = await r.post(JSON.stringify(body));
+      $world.inform(`The URL is ${response.read()}`);
       this.close();
     }
   }
@@ -341,6 +341,7 @@ export class PublisherModel extends ViewModel {
     this.view.remove();
   }
 }
+
 
 // part(Publisher).openInWorld()
 const Publisher = component(GalyleoWindow, {
