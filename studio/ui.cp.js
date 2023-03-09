@@ -9,6 +9,7 @@ import { GalyleoTopBar } from './top-bar.cp.js';
 import { Dashboard } from './dashboard.cp.js';
 import { GalyleoSideBar } from './side-bar.cp.js';
 import { BugReporter } from './helpers.cp.js';
+import { Publisher } from './helpers.cp.js';
 
 export class GalyleoStudioWorld extends LivelyWorld {
   static get properties () {
@@ -195,7 +196,8 @@ export default class Galyleo extends ViewModel {
             { signal: 'extent', handler: 'relayout' },
             { target: 'side bar', signal: 'position', handler: 'resizeDashboard' },
             { target: 'dashboard', signal: 'onHaloRemoved', handler: 'clearFocus' },
-            { model: 'top bar', signal: 'initiate bug report', handler: 'reportBug' }
+            { model: 'top bar', signal: 'initiate bug report', handler: 'reportBug' },
+            { model: 'top bar', signal: 'initiate publication', handler: 'publishDashboard' }
           ];
         }
       }
@@ -260,6 +262,19 @@ export default class Galyleo extends ViewModel {
     await li.whenRendered();
     reportMorph.init(this.user, this.dashboardFilePath);
     reportMorph.openInWorld();
+    li.remove();
+  }
+
+  /**
+   * Open up a publishing window and initialize it with the current
+   * user name and path to dashboard file
+   */
+  async publishDashboard () {
+    const publishMorph = part(Publisher);
+    const li = LoadingIndicator.open('loading reporting form...');
+    await li.whenRendered();
+    publishMorph.init(this.user, this.dashboardFilePath, this.models.dashboard);
+    publishMorph.openInWorld();
     li.remove();
   }
 

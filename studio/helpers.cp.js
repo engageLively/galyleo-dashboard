@@ -8,6 +8,8 @@ import { TilingLayout, Text, Label } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
+import { DefaultList } from 'lively.components/list.cp.js';
+import { List } from 'lively.components';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -16,7 +18,7 @@ import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
  * the protocol to report Lively bugs is in
  * https://gitlab.com/engageLively/ticketingsystem/-/blob/master/README.md
  * Sample cURL call is:
- * curl -H "Content-Type: application/json" -d '{"user": "foo@bar.com", "file_path":"/dev/null", "message":"First App Engine Test"}' https://engagelively.wl.r.appspot.com/ticket
+ * curl -H "Content-Type: application/json" -d '{"user": "foo@bar.com", "file_path":"/dev/null", "message":"First App Engine Test"}' https://galyleo-tickets.r.appspot.com/ticket
  */
 export class BugReporterModel extends ViewModel {
   static get properties () {
@@ -91,7 +93,7 @@ export class BugReporterModel extends ViewModel {
   }
 
   get url () {
-    return 'https://engagelively.wl.r.appspot.com/ticket';
+    return 'https://galyleo-tickets.uw.r.appspot.com/ticket';
   }
 
   close () {
@@ -101,6 +103,7 @@ export class BugReporterModel extends ViewModel {
 
 // part(BugReporter).openInWorld()
 const BugReporter = component(GalyleoWindow, {
+  defaultViewModel: BugReporterModel,
   extent: pt(415, 459.2),
   submorphs: [{
     name: 'window title',
@@ -222,6 +225,238 @@ const BugReporter = component(GalyleoWindow, {
   })]
 });
 
+/**
+ * A Publisher.  Very simple: just bundles up the  name  fields and uses
+ * a POST call to publish the dashboard .  No properties, just
+ * a read-only URL.
+ * The dashboard publisher is in
+ */
+export class PublisherModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'close' },
+            { model: 'report button', signal: 'fire', handler: 'publish' }
+          ];
+        }
+      }
+    };
+  }
+
+  /**
+   * initialize the user and file_path fields with the values from the
+   * environment, if provided (non-null and length > 0)
+   * @param { string } userName - The name of the current user.
+   * @param { string } filePath - The path to the dashboard file.
+   * @param { Dashboard } dashboard - The dashboard holding the dashboard to save.
+   */
+  init (userName, filePath, dashboard) {
+    if (filePath && filePath.length > 0) {
+      this.ui.fileInput.textString = filePath;
+    }
+    if (userName) {
+      resource(`${this.url}/list_user_dashboards/${userName}`).readJson().then(result => {
+        this.currentDashboards = result;
+        this.ui.dashboardList.items = result;
+      });
+    } else {
+      this.currentDashboards = [];
+    }
+    this.dashboard = dashboard;
+  }
+
+  /**
+   * Show the error string in the errorMessage field, making it disappear after a few seconds.  Return false,
+   * since this is the return from _sanityCheck
+   */
+
+  _showError (errorString) {
+    this.ui.errorMessage.textString = errorString;
+    setTimeout(_ => this.ui.errorMessage.textString = '', 5000);
+    return false;
+  }
+
+  async _sanityCheck (dashboardName) {
+    // rule 1: dashboardName must endWith '.gd.json'
+    if (dashboardName.length <= 0) {
+      return this._showError('dashboard name must not be empty');
+    }
+    if (!dashboardName.endsWith('.gd.json')) {
+      return this._showError(`dashboard name must end with .gd.json, not ${dashboardName}`);
+    }
+    const fileRegex = /^[^\\/:\*\?"<>\|]+$/;
+    if (!fileRegex.test(dashboardName)) {
+      return this._showError(`dashboard name ${dashboardName} cannot contain "\\/<>?:`);
+    }
+    if (this.currentDashboards.indexOf(dashboardName) >= 0) {
+      return await $world.confirm(`Action will overwrite ${dashboardName}.  OK?`);
+    }
+    return true;
+  }
+
+  _getDashboard () {
+
+  }
+
+  /**
+   * Publish a dashboard.  Just check the file name input for sanity; if it passes,
+   */
+  async publishDashboard () {
+    console.log('Publish called');
+    const { fileInput } = this.ui;
+    const filePath = fileInput.textString;
+    if (!this.dashboard) {
+      $world.inform('No Dashboard Present!');
+      this.close();
+    }
+
+    if (await this._sanityCheck(filePath)) {
+      const r = resource(`${this.url}add_user_dashboard`, { headers: { 'Content-Type': 'application/json' } });
+      const body = {
+        name: this.filePath,
+        dashboard: this.dashboard.prepareJSONForm()
+      };
+      if (this.userName) {
+        body.user = this.userName;
+      }
+      r.contentType = 'application/json';
+      const response = await r.post(JSON.stringify).read();
+      $world.inform(`The URL is ${response}`);
+      this.close();
+    }
+  }
+
+  get url () {
+    return 'http://127.0.0.1:5000/';
+  }
+
+  close () {
+    this.view.remove();
+  }
+}
+
+// part(Publisher).openInWorld()
+const Publisher = component(GalyleoWindow, {
+  defaultViewModel: PublisherModel,
+  extent: pt(415, 360.0),
+  submorphs: [{
+    name: 'window title',
+    textString: 'Publish A Dashboard'
+  }, add({
+    name: 'contents wrapper',
+    layout: new TilingLayout({
+      axis: 'column',
+      axisAlign: 'center',
+      orderByIndex: true,
+      padding: rect(15, 15, 0, 0),
+      resizePolicies: [['header', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard list', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard label', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['file input', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['error message', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['footer', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 13,
+      wrapSubmorphs: false
+    }),
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(414.3, 328.3),
+    fill: Color.rgba(215, 219, 221, 0),
+    submorphs: [
+      {
+        name: 'header',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(MenuBarButton, {
+            name: 'close button',
+            extent: pt(100, 35),
+            tooltip: 'Close this dialog without loading',
+            submorphs: [{
+              name: 'label', value: ['CLOSE', null]
+            }, {
+              name: 'icon',
+              extent: pt(14, 14),
+              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            }]
+          })
+        ]
+      },
+      part(DefaultList, {
+        name: 'dashboard list'
+      }),
+      {
+        type: Label,
+        name: 'error message',
+        fontColor: Color.rgb(255, 89, 89),
+        fontWeight: 700,
+        fontSize: 15,
+        textString: ''
+      },
+
+      part(GalyleoSearch, {
+        name: 'file input',
+        placeholder: 'Dashboard file',
+        submorphs: [{
+          name: 'placeholder',
+          extent: pt(114, 28.8),
+          textAndAttributes: ['Dashboard file', null]
+        }]
+      }),
+      {
+        type: Label,
+        name: 'dashboard label',
+        fontColor: Color.rgb(89, 89, 89),
+        fontWeight: 700,
+        fontSize: 15,
+        textString: 'Published Dashboards'
+      },
+      {
+        name: 'footer',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(PromptButton, {
+            name: 'report button',
+            extent: pt(106.5, 30.9),
+            submorphs: [without('icon'), {
+              name: 'label',
+              textAndAttributes: ['Publish', null]
+            }]
+          })
+        ]
+      }
+    ]
+  })]
+});
 /**
  * A utility to check and rewrite a string to be an URL.  Returns an object
  * with two fields: action and resultString.  The action is one of ok/rewritten/failed
@@ -529,6 +764,7 @@ export class LoadURLDialogModel extends ViewModel {
   }
 }
 
+// part('LoadFromURLDialog').openInWorld()
 const LoadFromURLDialog = component(GalyleoWindow, {
   defaultViewModel: LoadURLDialogModel,
   name: 'load dialog',
@@ -586,4 +822,4 @@ const LoadFromURLDialog = component(GalyleoWindow, {
   ]
 });
 
-export { DataLoader, CloseButton, BugReporter, LoadFromURLDialog };
+export { DataLoader, CloseButton, BugReporter, Publisher, LoadFromURLDialog };

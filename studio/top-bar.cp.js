@@ -59,7 +59,8 @@ class GalyleoTopBarModel extends TopBarModel {
       bindings: {
         get () {
           return super.prototype.bindings.concat([
-            { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' }
+            { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' },
+            { target: 'upload button', signal: 'onMouseDown', handler: 'publishDashboard' }
           ]);
         }
       }
@@ -68,6 +69,11 @@ class GalyleoTopBarModel extends TopBarModel {
 
   reportBug () {
     signal(this, 'initiate bug report');
+  }
+
+  publishDashboard () {
+    signal(this, 'initiate publication');
+    // window.alert('publish requested');
   }
 }
 
@@ -113,6 +119,20 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Report a bug'
+        }), add({
+          type: Label,
+          name: 'upload button',
+          fontColor: Color.rgb(102, 102, 102),
+          fontSize: 23.064,
+          nativeCursor: 'pointer',
+          scale: 1.1388694516782336,
+          textAndAttributes: [...Icon.textAttribute('cloud-upload'), '  Publish', {
+            fontFamily: galyleoFont,
+            fontSize: 15,
+            fontWeight: 'bold',
+            paddingTop: '2px'
+          }],
+          tooltip: 'Publish this dashboard'
         }), {
           name: 'shape mode button',
           extent: pt(47.9, 24.7)
