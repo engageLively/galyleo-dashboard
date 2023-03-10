@@ -4,7 +4,7 @@ import { MenuBarButton, galyleoFont, GalyleoNumberInput, GalyleoWindow, PromptBu
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
 import { Color, pt } from 'lively.graphics';
-import { TilingLayout, Text, Label } from 'lively.morphic';
+import { TilingLayout, HTMLMorph, Text, Label } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
@@ -243,7 +243,7 @@ export class PublisherModel extends ViewModel {
         get () {
           return [
             { model: 'close button', signal: 'fire', handler: 'close' },
-            { model: 'report button', signal: 'fire', handler: 'publish' }
+            { model: 'report button', signal: 'fire', handler: 'publishDashboard' }
           ];
         }
       }
@@ -262,7 +262,8 @@ export class PublisherModel extends ViewModel {
       this.ui.fileInput.textString = filePath;
     }
     if (userName) {
-      resource(`${this.url}/list_user_dashboards/${userName}`).readJson().then(result => {
+      const reader = resource(`${this.url}/list_user_dashboards/${userName}`);
+      reader.readJson().then(result => {
         this.currentDashboards = result;
         this.ui.dashboardList.items = result;
       });
@@ -318,9 +319,9 @@ export class PublisherModel extends ViewModel {
     }
 
     if (await this._sanityCheck(filePath)) {
-      const r = resource(`${this.url}add_user_dashboard`, { headers: { 'Content-Type': 'application/json' } });
+      const r = resource(`${this.url}add_dashboard`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
-        name: this.filePath,
+        name: filePath,
         dashboard: this.dashboard.prepareSerialization()
       };
       if (this.userName) {
@@ -328,20 +329,21 @@ export class PublisherModel extends ViewModel {
       }
       r.contentType = 'application/json';
       const response = await r.post(JSON.stringify(body));
-      $world.inform(`The URL is ${response.read()}`);
+      const urlDisplay = part(URLDisplay);
+      urlDisplay.init(response);
+      urlDisplay.openInWorld();
       this.close();
     }
   }
 
   get url () {
-    return 'http://127.0.0.1:5000/';
+    return 'https://publication-server-htztskumkq-uw.a.run.app/';
   }
 
   close () {
     this.view.remove();
   }
 }
-
 
 // part(Publisher).openInWorld()
 const Publisher = component(GalyleoWindow, {
@@ -454,6 +456,130 @@ const Publisher = component(GalyleoWindow, {
             }]
           })
         ]
+      }
+    ]
+  })]
+});
+
+class URLDisplayModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'close' }
+          ];
+        }
+      }
+    };
+  }
+
+  _setURL (htmlMorph, prefixString, url) {
+    htmlMorph.html = `
+    <div style="display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: rgb(215,219,221)">
+     <p style="font: bold 10pt Arial">${prefixString} <a href=${url} target=_blank>${url}</a></p></div>`;
+  }
+
+  /**
+   * initialize the URL fields with the values from the provided
+   * dashboard URL
+   * @param { string } dashboardURL - The URL of the dashboard to display
+   */
+  init (dashboardURL) {
+    this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', dashboardURL);
+    const viewString = `https://galyleo.app/publication/index.html?dashboard=${dashboardURL}`;
+    this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
+  }
+
+  close () {
+    this.view.remove();
+  }
+}
+
+/**
+ * A popup to inform the user of the dashboard and how to see it
+ */
+// part(URLDisplay).openInWorld();
+const URLDisplay = component(GalyleoWindow, {
+  defaultViewModel: URLDisplayModel,
+  name: 'Dashboard URLs',
+  extent: pt(415, 318.0),
+  submorphs: [{
+    name: 'window title',
+    textString: 'Dashboard URLs'
+  }, add({
+    name: 'contents wrapper',
+    layout: new TilingLayout({
+      axis: 'column',
+      axisAlign: 'center',
+      orderByIndex: true,
+      padding: rect(15, 15, 0, 0),
+      resizePolicies: [['header', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard url', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard view url', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['footer', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 13,
+      wrapSubmorphs: false
+    }),
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(414.3, 328.3),
+    fill: Color.rgba(215, 219, 221, 0),
+    submorphs: [
+      {
+        name: 'header',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(MenuBarButton, {
+            name: 'close button',
+            extent: pt(100, 35),
+            tooltip: 'Close this dialog',
+            submorphs: [{
+              name: 'label', value: ['CLOSE', null]
+            }, {
+              name: 'icon',
+              extent: pt(14, 14),
+              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            }]
+          })
+        ]
+      },
+      {
+        type: HTMLMorph,
+        name: 'dashboard url',
+        extent: pt(400, 60)
+      },
+      {
+        type: HTMLMorph,
+        name: 'dashboard view url',
+        extent: pt(400, 120)
+      },
+      {
+        name: 'footer',
+        fill: Color.transparent
       }
     ]
   })]
