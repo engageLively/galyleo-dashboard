@@ -13,6 +13,7 @@
     "rollup-plugin-polyfill-node": "0.9.0"
   },
   "scripts": {
+    "version": "node --version",
     "build": "./tools/build.sh",
     "build-japan": "./tools/build.sh --lang jp",
     "build-published": "./tools/build-published.sh",
