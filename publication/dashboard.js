@@ -1,16 +1,6 @@
 /* global URLSearchParams */
-import { Morph } from 'lively.morphic/morph.js';
-import { component, ViewModel, without, part, add } from 'lively.morphic/components/core.js';
-import { resource } from 'lively.resources/index.js';
-import { Color, pt, Rectangle, Point } from 'lively.graphics/index.js';
-import { ShadowObject, morph } from 'lively.morphic/index.js';
-import { connect } from 'lively.bindings/index.js';
-import { promise, obj } from 'lively.lang/index.js';
-import { ExpressionSerializer } from 'lively.serializer2/index.js';
-import { NamedFilter, SelectFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SliderFilter } from 'galyleo-dashboard/studio/filters.cp.js';
-import { GalyleoDataManager, GalyleoView } from 'galyleo-dashboard/galyleo-data/galyleo-data.js';
-import { GoogleChartHolder } from 'galyleo-dashboard/studio/chart-creator.cp.js';
-import { LoadDialog } from 'galyleo-dashboard/studio/dashboard.cp.js';
+import { part } from 'lively.morphic/components/core.js';
+import { pt } from 'lively.graphics/index.js';
 import { LoadFromURLDialog } from 'galyleo-dashboard/studio/helpers.cp.js';
 import { DashboardCommon } from 'galyleo-dashboard/studio/dashboard-common.cp.js';
 
@@ -121,6 +111,26 @@ export default class PublishedDashboard extends DashboardCommon {
   viewDidLoad () {
     this.init();
   }
+
+  // Get the dashboard name from the URL (just the end, none of the prefix)
+  _getDashboardName (dashboardURL) {
+    if (dashboardURL.length == 0) {
+      return '';
+    }
+    const elements = dashboardURL.split('/');
+    const nonEmpty = elements.filter(elt => elt.length > 0);
+    if (nonEmpty.length == 0) {
+      return '';
+    }
+    const dashboardName = nonEmpty[nonEmpty.length - 1];
+    if (dashboardName.endsWith('.gd.json')) {
+      return dashboardName.substring(0, dashboardName.length - 8);
+    }
+    if (dashboardName.endsWith('.json')) {
+      return dashboardName.substring(0, dashboardName.length - 5);
+    }
+    return dashboardName;
+  }
   // init.  First, reset the error log to empty, wait for rendering, load
   // the google chart packages and make sure that the dictionaries are
   // initialized
@@ -135,6 +145,10 @@ export default class PublishedDashboard extends DashboardCommon {
       const valid = await this.loadDashboardFromURL(url);
       if (!valid) {
         this._initURLPrompt_(url);
+      }
+      const name = this._getDashboardName(url);
+      if (name.length > 0) {
+        document.title = name;
       }
     } else {
       this._initURLPrompt_(null);

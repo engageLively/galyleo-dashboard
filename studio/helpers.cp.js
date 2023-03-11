@@ -9,7 +9,6 @@ import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
-import { List } from 'lively.components';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -69,8 +68,6 @@ export class BugReporterModel extends ViewModel {
    * posted, close this dialog to prevent accidental spamming.
    */
   reportBug () {
-    console.log('Report called');
-    return;
     const { userNameInput, fileInput, message: messageInput } = this.ui;
     const user = userNameInput.textString;
     const filePath = fileInput.textString;
@@ -225,6 +222,130 @@ const BugReporter = component(GalyleoWindow, {
   })]
 });
 
+class URLDisplayModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { model: 'close button', signal: 'fire', handler: 'close' }
+          ];
+        }
+      }
+    };
+  }
+
+  _setURL (htmlMorph, prefixString, url) {
+    htmlMorph.html = `
+    <div style="display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: rgb(215,219,221)">
+     <p style="font: bold 10pt Arial">${prefixString} <a href=${url} target=_blank>${url}</a></p></div>`;
+  }
+
+  /**
+   * initialize the URL fields with the values from the provided
+   * dashboard URL
+   * @param { string } dashboardURL - The URL of the dashboard to display
+   */
+  init (dashboardURL) {
+    this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', dashboardURL);
+    const viewString = `https://galyleo.app/published/index.html?dashboard=${dashboardURL}`;
+    this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
+  }
+
+  close () {
+    this.view.remove();
+  }
+}
+
+/**
+ * A popup to inform the user of the dashboard and how to see it
+ */
+// part(URLDisplay).openInWorld();
+const URLDisplay = component(GalyleoWindow, {
+  defaultViewModel: URLDisplayModel,
+  name: 'Dashboard URLs',
+  extent: pt(415, 318.0),
+  submorphs: [{
+    name: 'window title',
+    textString: 'Dashboard URLs'
+  }, add({
+    name: 'contents wrapper',
+    layout: new TilingLayout({
+      axis: 'column',
+      axisAlign: 'center',
+      orderByIndex: true,
+      padding: rect(15, 15, 0, 0),
+      resizePolicies: [['header', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard url', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['dashboard view url', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['footer', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 13,
+      wrapSubmorphs: false
+    }),
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(414.3, 328.3),
+    fill: Color.rgba(215, 219, 221, 0),
+    submorphs: [
+      {
+        name: 'header',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(MenuBarButton, {
+            name: 'close button',
+            extent: pt(100, 35),
+            tooltip: 'Close this dialog',
+            submorphs: [{
+              name: 'label', value: ['CLOSE', null]
+            }, {
+              name: 'icon',
+              extent: pt(14, 14),
+              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            }]
+          })
+        ]
+      },
+      {
+        type: HTMLMorph,
+        name: 'dashboard url',
+        extent: pt(400, 60)
+      },
+      {
+        type: HTMLMorph,
+        name: 'dashboard view url',
+        extent: pt(400, 120)
+      },
+      {
+        name: 'footer',
+        fill: Color.transparent
+      }
+    ]
+  })]
+});
+
 /**
  * A Publisher.  Very simple: just bundles up the  name  fields and uses
  * a POST call to publish the dashboard .  No properties, just
@@ -250,6 +371,18 @@ export class PublisherModel extends ViewModel {
     };
   }
 
+  // get out the filename without the leading directory path
+  _getFilename (path) {
+    if (path && path.length > 0) {
+      const elements = path.split('/');
+      const nonEmpty = elements.filter(elt => elt.length > 0);
+      const last = list => list[list.length - 1];
+      return nonEmpty.length > 0 ? last(nonEmpty) : '';
+    } else {
+      return '';
+    }
+  }
+
   /**
    * initialize the user and file_path fields with the values from the
    * environment, if provided (non-null and length > 0)
@@ -258,8 +391,9 @@ export class PublisherModel extends ViewModel {
    * @param { Dashboard } dashboard - The dashboard holding the dashboard to save.
    */
   init (userName, filePath, dashboard) {
-    if (filePath && filePath.length > 0) {
-      this.ui.fileInput.textString = filePath;
+    const fileName = this._getFilename(filePath);
+    if (fileName && fileName.length > 0) {
+      this.ui.fileInput.textString = fileName;
     }
     if (userName) {
       const reader = resource(`${this.url}/list_user_dashboards/${userName}`);
@@ -310,7 +444,6 @@ export class PublisherModel extends ViewModel {
    * Publish a dashboard.  Just check the file name input for sanity; if it passes,
    */
   async publishDashboard () {
-    console.log('Publish called');
     const { fileInput } = this.ui;
     const filePath = fileInput.textString;
     if (!this.dashboard) {
@@ -349,6 +482,7 @@ export class PublisherModel extends ViewModel {
 const Publisher = component(GalyleoWindow, {
   defaultViewModel: PublisherModel,
   extent: pt(415, 360.0),
+  name: 'Galyleo Publisher',
   submorphs: [{
     name: 'window title',
     textString: 'Publish A Dashboard'
@@ -461,129 +595,6 @@ const Publisher = component(GalyleoWindow, {
   })]
 });
 
-class URLDisplayModel extends ViewModel {
-  static get properties () {
-    return {
-      expose: {
-        get () {
-          return ['init'];
-        }
-      },
-      bindings: {
-        get () {
-          return [
-            { model: 'close button', signal: 'fire', handler: 'close' }
-          ];
-        }
-      }
-    };
-  }
-
-  _setURL (htmlMorph, prefixString, url) {
-    htmlMorph.html = `
-    <div style="display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            background: rgb(215,219,221)">
-     <p style="font: bold 10pt Arial">${prefixString} <a href=${url} target=_blank>${url}</a></p></div>`;
-  }
-
-  /**
-   * initialize the URL fields with the values from the provided
-   * dashboard URL
-   * @param { string } dashboardURL - The URL of the dashboard to display
-   */
-  init (dashboardURL) {
-    this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', dashboardURL);
-    const viewString = `https://galyleo.app/publication/index.html?dashboard=${dashboardURL}`;
-    this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
-  }
-
-  close () {
-    this.view.remove();
-  }
-}
-
-/**
- * A popup to inform the user of the dashboard and how to see it
- */
-// part(URLDisplay).openInWorld();
-const URLDisplay = component(GalyleoWindow, {
-  defaultViewModel: URLDisplayModel,
-  name: 'Dashboard URLs',
-  extent: pt(415, 318.0),
-  submorphs: [{
-    name: 'window title',
-    textString: 'Dashboard URLs'
-  }, add({
-    name: 'contents wrapper',
-    layout: new TilingLayout({
-      axis: 'column',
-      axisAlign: 'center',
-      orderByIndex: true,
-      padding: rect(15, 15, 0, 0),
-      resizePolicies: [['header', {
-        height: 'fixed',
-        width: 'fill'
-      }], ['dashboard url', {
-        height: 'fixed',
-        width: 'fill'
-      }], ['dashboard view url', {
-        height: 'fixed',
-        width: 'fill'
-      }], ['footer', {
-        height: 'fixed',
-        width: 'fill'
-      }]],
-      spacing: 13,
-      wrapSubmorphs: false
-    }),
-    borderColor: Color.rgb(127, 140, 141),
-    borderRadius: 10,
-    extent: pt(414.3, 328.3),
-    fill: Color.rgba(215, 219, 221, 0),
-    submorphs: [
-      {
-        name: 'header',
-        layout: new TilingLayout({
-          align: 'right',
-          orderByIndex: true,
-          wrapSubmorphs: false
-        }),
-        fill: Color.transparent,
-        submorphs: [
-          part(MenuBarButton, {
-            name: 'close button',
-            extent: pt(100, 35),
-            tooltip: 'Close this dialog',
-            submorphs: [{
-              name: 'label', value: ['CLOSE', null]
-            }, {
-              name: 'icon',
-              extent: pt(14, 14),
-              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
-            }]
-          })
-        ]
-      },
-      {
-        type: HTMLMorph,
-        name: 'dashboard url',
-        extent: pt(400, 60)
-      },
-      {
-        type: HTMLMorph,
-        name: 'dashboard view url',
-        extent: pt(400, 120)
-      },
-      {
-        name: 'footer',
-        fill: Color.transparent
-      }
-    ]
-  })]
-});
 /**
  * A utility to check and rewrite a string to be an URL.  Returns an object
  * with two fields: action and resultString.  The action is one of ok/rewritten/failed
