@@ -401,6 +401,7 @@ export class PublisherModel extends ViewModel {
         this.currentDashboards = result;
         this.ui.dashboardList.items = result;
       });
+      this.userName = userName;
     } else {
       this.currentDashboards = [];
     }
