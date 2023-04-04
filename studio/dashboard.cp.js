@@ -1171,7 +1171,7 @@ export class Dashboard extends DashboardCommon {
    * @param { boolean } [editChartStyle=true] - edit the chart immediately upon creation
    */
   async addChart (chartName, chartSpecification, editChartStyle = true) {
-    super.addChart(chartName, chartSpecification, editChartStyle);
+    await super.addChart(chartName, chartSpecification, editChartStyle);
 
     if (this.dashboardController) {
       this.dashboardController.update();
@@ -1239,5 +1239,6 @@ export class Dashboard extends DashboardCommon {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 export { LoadDialog, SaveDialog };
