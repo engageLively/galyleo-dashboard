@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "main": "studio/index.js",
   "type": "module",
+  "author": {
+    "name": "rickmcgeer"
+  },
+  "description": "Allows data scientists to craft interactive dashboards via the power of lively.next.",
+   "repository": {
+    "type": "git",
+    "url": "https://github.com/engageLively/galyleo-dashboard"
+  },
   "dependencies": {
     "@rollup/plugin-json": "4.1.0",
     "assert": "^2.0.0",
@@ -19,5 +27,9 @@
     "build-published": "./tools/build-published.sh",
     "clean": "./tools/clean.sh",
     "test": "mocha -r esm galyleo-data/galyleo-data-tests.js"
+  },
+  "lively": {
+    "projectDependencies": [ ],
+    "boundLivelyVersion": "b7cabbc9511e607fecc2b611ccaf88772bc84e69"
   }
 }
