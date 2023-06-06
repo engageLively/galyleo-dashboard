@@ -10,6 +10,7 @@ import { DarkNumberIconWidget, EnumSelector, TextInput, PropertyLabelHovered, Pr
 import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 const galyleoFont = 'Sans-Serif'; // formerly 'Barlow', changed due to failure to import
 
@@ -569,9 +570,6 @@ const GalyleoDropDownList = component(SystemList, {
   itemBorderRadius: 3
 });
 
-// part(GalyleoDropDown, { viewModel: { placeholder: 'select please...', listAlign: 'selection', listMaster: GalyleoDropDownList, openListInWorld: true, items: [1,2,3] }}).openInWorld()
-// GalyleoDropDown.openInWorld()
-
 export class GalyleoDropDownListModel extends DropDownListModel {
   static get properties () {
     return {
@@ -630,7 +628,6 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   }
 }
 
-// GalyleoDropDownAuto.openInWorld()
 const GalyleoDropDownAuto = component(DropDownList, {
   name: 'galyleo/drop down/auto',
   defaultViewModel: GalyleoDropDownListModel,
@@ -659,7 +656,7 @@ const GalyleoDropDownAuto = component(DropDownList, {
       name: 'down caret',
       extent: pt(20, 20),
       reactsToPointer: false,
-      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/list-icon.svg'
+      imageUrl: projectAsset('list-icon.svg')
     }), add({
       type: Label,
       name: 'error icon',
@@ -676,13 +673,11 @@ const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
   fill: Color.darkGray
 });
 
-// GalyleoDropDown.openInWorld()
 const GalyleoDropDown = component(GalyleoDropDownAuto, {
   name: 'galyleo/drop down',
   master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }
 });
 
-// GalyleoDropDownError.openInWorld()
 const GalyleoDropDownError = component(GalyleoDropDown, {
   name: 'galyleo/drop down/error',
   extent: pt(168, 34),
@@ -784,7 +779,7 @@ const MenuBarButtonDefault = component({
     type: Image,
     name: 'icon',
     extent: pt(19.8, 19.8),
-    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/add-icon.svg',
+    imageUrl: projectAsset('add-icon.svg'),
     naturalExtent: pt(150, 150),
     reactsToPointer: false
   }]
@@ -824,7 +819,7 @@ const PromptButtonAuto = component(MenuBarButtonDefault, {
     fontColor: Color.rgb(255, 255, 255)
   }, {
     name: 'icon',
-    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/add-icon-light.svg'
+    imageUrl: projectAsset('add-icon-light.svg')
   }]
 });
 
@@ -990,7 +985,7 @@ const TableEntry = component({
     type: Image,
     name: 'remove button',
     extent: pt(17.4, 27.9),
-    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/delete-icon.png',
+    imageUrl: projectAsset('delete-icon.png'),
     nativeCursor: 'pointer',
     naturalExtent: pt(226, 358),
     visible: true
@@ -1015,7 +1010,7 @@ const TableEntryEdit = component(TableEntry, {
       type: Image,
       name: 'edit data button',
       extent: pt(15.2, 15.2),
-      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/chart-gear.svg',
+      imageUrl: projectAsset('chart-gear.svg'),
       nativeCursor: 'pointer',
       naturalExtent: pt(133, 150)
     })
@@ -1030,7 +1025,7 @@ const TableEntryVisual = component(TableEntryEdit, {
       type: Image,
       name: 'edit config button',
       extent: pt(15.2, 15.2),
-      imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/preview-icon.svg',
+      imageUrl: projectAsset('preview-icon.svg'),
       nativeCursor: 'pointer',
       naturalExtent: pt(133, 150)
     }, 'edit data button')
@@ -1144,7 +1139,7 @@ const CloseButtonFloat = component({
       }, {
         name: 'icon',
         extent: pt(10, 10),
-        imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+        imageUrl: projectAsset('close-button-icon-2.svg')
       }]
     })
   ]
