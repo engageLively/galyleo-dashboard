@@ -497,6 +497,15 @@ export class DoubleSliderFilterMorph extends Morph {
 const DoubleSliderFilter = component(VisualFilter, {
   name: 'double slider filter',
   type: DoubleSliderFilterMorph,
+  layout: new TilingLayout({
+    align: 'center',
+    axis: 'column',
+    axisAlign: 'center',
+    hugContentsHorizontally: true,
+    hugContentsVertically: true,
+    orderByIndex: true,
+    padding: rect(10, 0, 0, 0)
+  }),
   submorphs: [
     add(part(DoubleSliderWithValues, { name: 'double slider' }))
   ]
@@ -1370,8 +1379,34 @@ export class SliderFilterMorph extends Morph {
 const SliderFilter = component(VisualFilter, {
   name: 'slider filter',
   type: SliderFilterMorph,
+  extent: pt(265, 127),
+  layout: new TilingLayout({
+    align: 'top',
+    axis: 'column',
+    axisAlign: 'center',
+    hugContentsHorizontally: true,
+    hugContentsVertically: true,
+    orderByIndex: true
+  }),
   submorphs: [
-    add(part(SliderWithValue, { name: 'slider' }))
+    add(part(SliderWithValue, {
+      name: 'slider',
+      layout: new TilingLayout({
+        align: 'center',
+        axisAlign: 'center',
+        hugContentsHorizontally: true,
+        hugContentsVertically: true,
+        orderByIndex: true,
+        padding: rect(10, 0, 0, 0),
+        spacing: 5
+      }),
+      submorphs: [{
+        name: 'value input',
+        submorphs: [{
+          name: 'increment button'
+        }]
+      }]
+    }))
   ]
 });
 
