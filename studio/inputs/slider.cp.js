@@ -3,7 +3,7 @@ import { pt, rect, Color } from 'lively.graphics/index.js';
 import { signal, connect } from 'lively.bindings/index.js';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { Label, TilingLayout, ShadowObject, Icon } from 'lively.morphic';
-import {InputLine } from 'lively.components/inputs.js';
+import { InputLine } from 'lively.components/inputs.js';
 
 export class SliderModel extends ViewModel {
   /*
@@ -706,6 +706,7 @@ class DoubleSliderWithValuesModel extends ViewModel {
 const IncrementButton = component({
   type: Label,
   name: 'increment button',
+  lineHeight: 1,
   fontColor: Color.rgb(151, 154, 154),
   fontSize: 35,
   nativeCursor: 'pointer',
