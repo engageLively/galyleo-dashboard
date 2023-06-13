@@ -5,6 +5,7 @@ import { component, ViewModel, without, part, add } from 'lively.morphic/compone
 import { rect, pt } from 'lively.graphics/geometry-2d.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { SelectFilter, DateFilter, BooleanFilter, SliderFilter, DoubleSliderFilter, RangeFilter, ListFilter } from './filters.cp.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 const FilterSettings = component({
   name: 'filter settings',
@@ -51,7 +52,7 @@ const FilterSettings = component({
         }, {
           name: 'icon',
           extent: pt(14, 14),
-          imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+          imageUrl: projectAsset('close-button-icon-2.svg')
         }]
       })]
     },

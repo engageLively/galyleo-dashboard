@@ -9,6 +9,7 @@ import { Canvas } from 'lively.components/canvas.js';
 import { copy } from 'lively.serializer2/index.js';
 import { obj } from 'lively.lang/index.js';
 import { GalyleoFillControl } from './controls/fill.cp.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 /**
  * The second generation of chart builder.  Very simple.  Consists of two
@@ -298,7 +299,7 @@ const ChartBuilder = component(GalyleoWindow, {
             }, {
               name: 'icon',
               extent: pt(14, 14),
-              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+              imageUrl: projectAsset('close-button-icon-2.svg')
             }]
           })]
         },
@@ -1106,7 +1107,7 @@ const ChartJSEditor = component(GalyleoWindow, {
           }, {
             name: 'icon',
             extent: pt(14, 14),
-            imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            imageUrl: projectAsset('close-button-icon-2.svg')
           }]
 
         }),
