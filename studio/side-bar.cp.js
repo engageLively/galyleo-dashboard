@@ -21,6 +21,7 @@ import { GalyleoShapeControl } from './controls/shape.cp.js';
 import { GalyleoRichTextControl } from './controls/text.cp.js';
 import { GalyleoFillControl } from './controls/fill.cp.js';
 import { GalyleoColorPicker } from './color-picker.cp.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 // GalyleoColorInput.openInWorld()
 // GalyleoSideBar.openInWorld()
@@ -731,7 +732,7 @@ const ControlPanel = component({
         name: 'edit button',
         autoResize: false,
         extent: pt(20.2, 19.3),
-        imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/edit-icon.svg',
+        imageUrl: projectAsset('edit-icon.svg'),
         nativeCursor: 'pointer'
       }]
     },
@@ -1040,7 +1041,7 @@ const GalyleoSideBar = component({
           }, {
             name: 'icon',
             extent: pt(14, 14),
-            imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            imageUrl: projectAsset('close-button-icon-2.svg')
           }]
         })
       ]

@@ -7,6 +7,7 @@ import { Color } from 'lively.graphics/color.js';
 import { GalyleoSearch } from './inputs/search.cp.js';
 import { signal } from 'lively.bindings';
 import { arr } from 'lively.lang/index.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 /**
  * A View Editor.  This permits dashboard designers to edit
@@ -263,7 +264,7 @@ const ViewBuilder = component(GalyleoWindow, {
           }, {
             name: 'icon',
             extent: pt(14, 14),
-            imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+            imageUrl: projectAsset('close-button-icon-2.svg')
           }]
         })]
       }, {
@@ -306,7 +307,7 @@ const ViewBuilder = component(GalyleoWindow, {
           extent: pt(27.9, 25.6),
           submorphs: [without('label'), {
             name: 'icon',
-            imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/edit-icon.svg'
+            imageUrl: projectAsset('edit-icon.svg')
           }]
         })]
       },
@@ -514,7 +515,7 @@ const ViewCreator = component({
         }, {
           name: 'icon',
           extent: pt(14, 14),
-          imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+          imageUrl: projectAsset('close-button-icon-2.svg')
         }]
       })]
     },

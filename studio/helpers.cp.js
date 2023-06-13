@@ -9,6 +9,7 @@ import { rect } from 'lively.graphics/geometry-2d.js';
 import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
+import { projectAsset } from 'lively.project/helpers.js';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -154,7 +155,7 @@ const BugReporter = component(GalyleoWindow, {
             }, {
               name: 'icon',
               extent: pt(14, 14),
-              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+              imageUrl: projectAsset('close-button-icon-2.svg')
             }]
           })
         ]
@@ -323,7 +324,7 @@ const URLDisplay = component(GalyleoWindow, {
             }, {
               name: 'icon',
               extent: pt(14, 14),
-              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+              imageUrl: projectAsset('close-button-icon-2.svg')
             }]
           })
         ]
@@ -539,7 +540,7 @@ const Publisher = component(GalyleoWindow, {
             }, {
               name: 'icon',
               extent: pt(14, 14),
-              imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+              imageUrl: projectAsset('close-button-icon-2.svg')
             }]
           })
         ]
@@ -723,7 +724,7 @@ const CloseButton = component(MenuBarButton, {
   }, {
     name: 'icon',
     extent: pt(14, 18),
-    imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+    imageUrl: projectAsset('close-button-icon-2.svg')
   }]
 });
 
@@ -768,7 +769,7 @@ const DataLoader = component(GalyleoWindow, {
         }, {
           name: 'icon',
           extent: pt(14, 14),
-          imageUrl: 'https://fra1.digitaloceanspaces.com/typeshift/engage-lively/galyleo/close-button-icon-2.svg'
+          imageUrl: projectAsset('close-button-icon-2.svg')
         }]
       }),
       part(GalyleoSearch, {
