@@ -12,6 +12,9 @@ export default class SpreadsheetMorph extends HTMLMorph {
       data: {
         after: ['html'],
         before: ['extent'],
+        initialize (val) {
+          this.data = val || [['hello', 'world'], [1, 2], [4, 5]];
+        },
         set (data) {
           this.setProperty('data', data);
           this.update();
@@ -125,13 +128,11 @@ export default class SpreadsheetMorph extends HTMLMorph {
   }
 
   async update () {
-    await this.whenRendered();
     this.ensureTable();
-    this.jexcel.setData(this.data.slice(1));
+    if (!this.jexcel) return;
+    this.jexcel.setData(this.data?.slice(1));
     this.relayout();
   }
-
-  // this.relayout()
 
   relayout () {
     if (this._active || !this.jexcel) return;
@@ -155,10 +156,10 @@ export default class SpreadsheetMorph extends HTMLMorph {
   // this.jexcel.getColumnData(1)
 
   ensureTable () {
-    if (this.domNode.getElementsByClassName('jexcel').length > 0) return;
+    if (!this.spreadsheetNode || this.domNode.getElementsByClassName('jexcel').length > 0) return;
     this.jexcel = jexcel(this.spreadsheetNode, {
       lazyLoading: true,
-      data: this.data.slice(1),
+      data: this.data?.slice(1),
       oninsertcolumn: () => this.onTableChange(),
       ondeletecolumn: () => this.onTableChange(),
       onbeforechange: (el, cell, x, y, value) => this.onEdit(el, cell, x, y, value),
@@ -176,7 +177,7 @@ export default class SpreadsheetMorph extends HTMLMorph {
   }
 }
 
-const Spreadsheet = component({
+export const Spreadsheet = component({
   type: SpreadsheetMorph,
   name: 'spreadsheet',
   fill: Color.rgb(127, 140, 141)
