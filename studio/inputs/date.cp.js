@@ -1,8 +1,8 @@
 import { signal } from 'lively.bindings/index.js';
-import { component, ViewModel, part, ensureFont } from 'lively.morphic/components/core.js';
-import { Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
+import { component, ViewModel, part } from "lively.morphic/components/core.js";
+import { Morph, add, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
 import { Color, rect, pt } from 'lively.graphics/index.js';
-import {InputLine } from 'lively.components/inputs.js';
+import { InputLine } from 'lively.components/inputs.js';
 
 import { arr, date } from 'lively.lang/index.js';
 import { galyleoFont } from '../shared.cp.js';
@@ -902,7 +902,8 @@ const DatePicker = component({
     layout: new TilingLayout({
       orderByIndex: true,
       padding: rect(3, 0, 0, 0),
-      spacing: 2
+      spacing: 2,
+      wrapSubmorphs: true
     }),
     selectedDates: [],
     submorphs: arr.range(1, 41).map(i => part(DateDefault, {
@@ -987,4 +988,12 @@ const DoubleDatePicker = component({
   ]
 });
 
-export { DateDefault, DateInput, CalendarNavButton, DayOfWeek, DatePicker, DoubleDatePicker };
+export {
+  DateDefault,
+  DateInput,
+  CalendarNavButton,
+  DayOfWeek,
+  DatePicker,
+  DoubleDatePicker,
+  DateActive,
+};
