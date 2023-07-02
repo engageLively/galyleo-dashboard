@@ -8,8 +8,8 @@ import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user';
 import { signal, connect } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
-import { config, part } from 'lively.morphic';
-import { TopBarButton } from 'lively.ide/studio/top-bar-buttons.cp.js';
+import { projectAsset } from 'lively.project/helpers.js';
+import { part } from 'lively.morphic';
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -157,29 +157,9 @@ const GalyleoTopBar = component(TopBar, {
       name: 'tiling layout',
       submorphs: [
         add({
-          type: Image,
-          name: 'galyleo logo',
-          borderColor: Color.rgb(23, 160, 251),
-          extent: pt(245.4, 116.6),
-          imageUrl: 'https://i0.wp.com/engagelively.com/wp-content/uploads/2019/12/galyleo-logo.png?fit=700%2C320&ssl=1',
-          naturalExtent: pt(700, 320),
-          reactsToPointer: false,
-          scale: 0.2505891168205277
-        }, 'halo mode button'),
-        without('open component browser'),
-        without('comment browser button'),
-        without('load world button'),
-        without('undo button'),
-        without('redo button'),
-        without('save button'),
-        without('canvas mode button'),
-        /* {
-          name: 'text mode button',
-          visible: true
-        }, */
-        add({
           type: Label,
           name: 'help button',
+          lineHeight: 1,
           fontColor: Color.rgb(102, 102, 102),
           fontSize: 23.064,
           nativeCursor: 'pointer',
@@ -191,9 +171,11 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Report a bug'
-        }), add({
+        }),
+        add({
           type: Label,
           name: 'upload button',
+          lineHeight: 1,
           fontColor: Color.rgb(102, 102, 102),
           fontSize: 23.064,
           nativeCursor: 'pointer',
@@ -205,13 +187,21 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Publish this dashboard'
-        }), {
-          name: 'shape mode button',
-          extent: pt(47.9, 24.7)
-        }, without('mini map button')
+        }), without('save button'), without('undo button'), without('redo button'), without('open component browser'), without('load world button'), without('comment browser button'), without('canvas mode button'), add({
+          type: Image,
+          name: 'galyleo logo',
+          borderColor: Color.rgb(23, 160, 251),
+          extent: pt(245.4, 116.6),
+          imageUrl: '/local_projects/engageLively-galyleo-dashboard/assets/galyleo-logo.webp',
+          naturalExtent: pt(700, 320),
+          position: pt(181, 13),
+          reactsToPointer: false,
+          scale: 0.2505891168205277
+        }, 'hand or halo mode button')
       ]
     },
-    without('user flap')]
+    without('user flap')
+  ]
 });
 
 export { GalyleoTopBar };
