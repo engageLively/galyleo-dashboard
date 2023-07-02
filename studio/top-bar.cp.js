@@ -6,7 +6,7 @@ import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
 import { UserFlap } from 'lively.user';
-import { signal } from 'lively.bindings/index.js';
+import { signal, connect } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
 import { part } from 'lively.morphic';
@@ -51,9 +51,9 @@ class GalyleoTopBarModel extends TopBarModel {
           return {
             Rectangle: { shortcut: 'R', args: ['square', { textStyleClasses: ['fas'] }] },
             Ellipse: { shortcut: 'E', args: ['circle', { textStyleClasses: ['fas'] }] },
-            Image: { shortcut: 'I', args: ['image', { textStyleClasses: ['fas'], paddingTop: '1px' }] },
-            Path: { shortcut: 'P', args: ['bezier-curve', { fontSize: 13, paddingTop: '3px' }] },
-            Polygon: { shortcut: 'Q', args: ['draw-polygon', { fontSize: 17 }] } /*,
+            Image: { shortcut: 'I', args: ['image', { textStyleClasses: ['fas'], paddingTop: '1px' }] }
+            /* Path: { shortcut: 'P', args: ['bezier-curve', { fontSize: 13, paddingTop: '3px' }] },
+            Polygon: { shortcut: 'Q', args: ['draw-polygon', { fontSize: 17 }] },
             HTML: { shortcut: 'H', args: ['code', { paddingTop: '1px' }] } */
           };
         }
@@ -67,6 +67,75 @@ class GalyleoTopBarModel extends TopBarModel {
         }
       }
     };
+  }
+
+  viewDidLoad () {
+    /* if (config.ide.studio.worldMenuInTopBar) {
+      const worldMenuButton = part(TopBarButton, {
+        name: 'world menu button',
+        textAndAttributes: Icon.textAttribute('burger'),
+        tooltip: 'Open World Menu'
+      });
+      this.ui.tilingLayout.addMorphAt(worldMenuButton, 0);
+      connect(worldMenuButton, 'onMouseDown', () => {
+        $world.openMenu($world.menuItems());
+      });
+    }
+
+    if ($world.playgroundsMode) {
+      this.ui.saveButton.removeDropdown();
+    } */
+  }
+
+  onMouseDown (evt) {
+    const shapeSelector = this.ui.shapeModeButton.get('dropdown');
+    const handHaloSelector = this.ui.handOrHaloModeButton.get('dropdown');
+    const handOrHaloModeButton = this.ui.handOrHaloModeButton;
+    const shapeModeButton = this.ui.shapeModeButton;
+
+    const target = this.primaryTarget || this.world();
+
+    if (evt.targetMorph === shapeSelector) {
+      const menu = $world.openWorldMenu(evt, this.getShapeMenuItems());
+      menu.position = shapeModeButton.globalBounds().bottomLeft().subPt($world.scroll);
+    }
+    if (evt.targetMorph === handHaloSelector) {
+      const menu = $world.openWorldMenu(evt, this.getHandAndHaloModeItems());
+      menu.position = handOrHaloModeButton.globalBounds().bottomLeft().subPt($world.scroll);
+    }
+
+    if (evt.targetMorph.name === 'undo button') {
+      target.execCommand('undo');
+    }
+
+    if (evt.targetMorph.name === 'redo button') {
+      target.execCommand('redo');
+    }
+
+    if (evt.targetMorph === shapeModeButton) {
+      this.setEditMode('Shape');
+    }
+
+    if (evt.targetMorph === handOrHaloModeButton) {
+      const currentlyShowingHaloIcon = this.ui.handOrHaloModeButton.getIcon()[0] === Icon.textAttribute('arrow-pointer')[0];
+      this.setEditMode(currentlyShowingHaloIcon ? 'Halo' : 'Hand');
+    }
+
+    if (evt.targetMorph.name === 'text mode button') {
+      this.setEditMode('Text');
+    }
+
+    if (evt.targetMorph.name === 'open component browser') {
+      this.interactivelyLoadComponent();
+    }
+
+    if (evt.targetMorph.name === 'load world button') {
+      $world.execCommand('load world');
+    }
+
+    if (evt.targetMorph.name === 'comment browser button') {
+      this.toggleCommentBrowser();
+    }
   }
 
   reportBug () {

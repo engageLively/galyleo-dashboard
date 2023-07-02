@@ -27,13 +27,13 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
           name: 'filters tab',
           submorphs: [{
             name: 'tab label',
-            textAndAttributes: ['フィルル', null]
+            textAndAttributes: ['フィルタ', null]
           }]
         }, {
           name: 'views tab',
           submorphs: [{
             name: 'tab label',
-            textAndAttributes: ['ビュウー', null]
+            textAndAttributes: ['ビュー', null]
           }]
         }, {
           name: 'charts tab',
