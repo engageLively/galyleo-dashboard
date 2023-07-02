@@ -11,6 +11,8 @@ import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
 
+const STUDIO_SECRET = 'g4lyl30-studio';
+
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
  * a POST call to report the bug and file a ticket.  No properties, just
@@ -457,7 +459,8 @@ export class PublisherModel extends ViewModel {
       const r = resource(`${this.url}add_dashboard`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: filePath,
-        dashboard: this.dashboard.prepareSerialization()
+        dashboard: this.dashboard.prepareSerialization(),
+        studio_secret: STUDIO_SECRET
       };
       if (this.userName) {
         body.user = this.userName;
