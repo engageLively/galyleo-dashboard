@@ -1,3 +1,4 @@
+// component-browser skip
 import 'esm://cache/jsuites@3.8.3';
 import jexcel from 'esm://cache/jspreadsheet-ce@4.10.1';
 import { addOrChangeLinkedCSS, HTMLMorph } from 'lively.morphic';
