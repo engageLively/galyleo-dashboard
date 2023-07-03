@@ -192,7 +192,7 @@ const GalyleoTopBar = component(TopBar, {
           name: 'galyleo logo',
           borderColor: Color.rgb(23, 160, 251),
           extent: pt(245.4, 116.6),
-          imageUrl: '/local_projects/engageLively-galyleo-dashboard/assets/galyleo-logo.webp',
+          imageUrl: projectAsset('galyleo-logo.webp'),
           naturalExtent: pt(700, 320),
           position: pt(181, 13),
           reactsToPointer: false,
