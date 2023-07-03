@@ -23,8 +23,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: local_projects/engageLively--galyleo-dashboard
-      - name: Build Dashboard
+      - name: Build English Dashboard
         run: npm run build --prefix local_projects/engageLively--galyleo-dashboard
+      - name: Build Japanese Dashboard
+        run: npm run build-japan --prefix local_projects/engageLively--galyleo-dashboard
+      - name: Build Published Dashboard
+        run: npm run build-published --prefix local_projects/engageLively--galyleo-dashboard
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
