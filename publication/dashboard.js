@@ -1,8 +1,8 @@
 /* global URLSearchParams */
 import { part } from 'lively.morphic/components/core.js';
 import { pt } from 'lively.graphics/index.js';
-import { LoadFromURLDialog } from 'galyleo-dashboard/studio/helpers.cp.js';
-import { DashboardCommon } from 'galyleo-dashboard/studio/dashboard-common.cp.js';
+import { LoadFromURLDialog } from 'engageLively--galyleo-dashboard/studio/helpers.cp.js';
+import { DashboardCommon } from 'engageLively--galyleo-dashboard/studio/dashboard-common.cp.js';
 
 export default class PublishedDashboard extends DashboardCommon {
   static get properties () {

@@ -5,7 +5,7 @@ import { LivelyWorld } from 'lively.ide/world.js';
 
 export async function main () {
   config.ide.studio.canvasModeEnabled = false;
-  const { GalyleoDashboardPublication } = await System.import('galyleo-dashboard/publication/int/en');
+  const { GalyleoDashboardPublication } = await System.import('engageLively--galyleo-dashboard/publication/int/en');
   const dashboard = part(GalyleoDashboardPublication);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
