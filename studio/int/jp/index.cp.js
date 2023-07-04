@@ -4,10 +4,15 @@ import { pt, Color } from 'lively.graphics';
 import { GalyleoTopBarJp } from './top-bar.cp.js';
 import { Dashboard } from '../../dashboard.cp.js';
 import { GalyleoSideBarJp } from './side-bar.cp.js';
+import { PublisherJP, BugReporterJP } from './helpers.cp.js';
 
 const GalyleoDashboardStudioJP = component({
   name: 'galyleo dashboard studio',
   defaultViewModel: Galyleo,
+  viewModel: {
+    publishPromptComponent: PublisherJP,
+    bugReporterComponent: BugReporterJP
+  },
   extent: pt(800, 800),
   fill: Color.darkGray,
   clipMode: 'hidden',

@@ -156,6 +156,16 @@ export default class Galyleo extends ViewModel {
       _redoButton: {},
       _saveButton: {},
       _topBarNetworkIndicator: {},
+      bugReporterComponent: {
+        get () {
+          return this.getProperty('bugReporterComponent') || BugReporter;
+        }
+      },
+      publishPromptComponent: {
+        get () {
+          return this.getProperty('publishPromptComponent') || Publisher;
+        }
+      },
       dashboardFilePath: {
         serialize: false,
         initialize () {
@@ -257,7 +267,7 @@ export default class Galyleo extends ViewModel {
    * user name and path to dashboard file
    */
   async reportBug () {
-    const reportMorph = part(BugReporter);
+    const reportMorph = part(this.bugReporterComponent);
     const li = LoadingIndicator.open('loading reporting form...');
     await li.whenRendered();
     reportMorph.init(this.user, this.dashboardFilePath);
@@ -270,7 +280,7 @@ export default class Galyleo extends ViewModel {
    * user name and path to dashboard file
    */
   async publishDashboard () {
-    const publishMorph = part(Publisher);
+    const publishMorph = part(this.publishPromptComponent);
     publishMorph.name = 'Publish Window';
     const li = LoadingIndicator.open('loading reporting form...');
     await li.whenRendered();
