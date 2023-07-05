@@ -106,7 +106,7 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
               {
                 name: 'v wrapper',
                 submorphs: [
-                  { name: 'control label', textAndAttributes: ['フィルタとウィジェット', null] }
+                  { name: 'control label', textAndAttributes: ['フィルタ', null] }
                 ]
               }, {
                 name: 'add button',
