@@ -233,8 +233,8 @@ export class Dashboard extends DashboardCommon {
    *  https://developers.google.com/chart/interactive/docs/customizing_charts
    *    d. viewName: the name of the table or view with the data this chart is
    *        showing.  It must be one of the keys in this.tables or this.views
-   *  4. gViz: just a handle for the Google Visualization library.
-   *  5. gCharts: a handle for the Google Charts Library.  Rarely used.
+   *  4. gViz: just a handle for the Google Visualization library. (inherited)
+   *  5. gCharts: a handle for the Google Charts Library.  Rarely used. (inherited)
    *  6. l2lRoomName: a lively2lively room name for communicating with the
    *     JupyterNotebook. This is hardcoded for now; should be set with an input
    *     widget.
@@ -1239,6 +1239,5 @@ export class Dashboard extends DashboardCommon {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };

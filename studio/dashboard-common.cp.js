@@ -47,13 +47,13 @@ class DashboardCommon extends ViewModel {
       gViz: {
         derived: true,
         get () {
-          return window.google.visualization;
+          return window.google ? window.google.visualization : null;
         }
       },
       gCharts: {
         derived: true,
         get () {
-          return window.google.charts;
+          return window.google ? window.google.charts : null;
         }
       },
       expose: {
@@ -965,6 +965,9 @@ class DashboardCommon extends ViewModel {
    * @returns { DataView|DataTable } - The prepared table/view.
    */
   async prepareData (viewOrTable) {
+    if (!this.gViz) {
+      return null;
+    }
     if (this.dataManager.tableNames.indexOf(viewOrTable) >= 0) {
       const table = this.dataManager.tables[viewOrTable];
       const columns = table.columns.map(column => this._createGVizColumn(column));
@@ -1217,7 +1220,9 @@ class DashboardCommon extends ViewModel {
         this[prop] = {};
       }
     });
-    this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
+    if (this.gCharts) {
+      this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
+    }
     this.dirty = false;
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
@@ -1233,7 +1238,9 @@ class DashboardCommon extends ViewModel {
     // await promise.waitFor(20 * 1000, () => !!window.google);
     while (!window.google) {
       await loadViaScript('https://www.gstatic.com/charts/loader.js');
-      await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
+      if (this.gCharts) {
+        await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
+      }
     }
   }
 
