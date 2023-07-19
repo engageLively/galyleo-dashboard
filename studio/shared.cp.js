@@ -12,7 +12,7 @@ import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
 import { projectAsset } from 'lively.project/helpers.js';
 
-const galyleoFont = 'Sans-Serif'; // formerly 'Barlow', changed due to failure to import
+const galyleoFont = 'Noto Sans';
 
 export class SelectableEntryModel extends ViewModel {
   static wrap (entryName, opts) {

@@ -20,7 +20,7 @@ export default class DashboardUserFlap extends UserFlap {
         type: 'label',
         name: 'room-name',
         fontSize: 8,
-        fontFamliy: 'Helvetica Neue, Verdana, Sans Serif',
+        fontFamliy: 'Noto Sans',
         fontWeight: 'bold',
         padding: Rectangle.inset(4),
         reactsToPointer: false

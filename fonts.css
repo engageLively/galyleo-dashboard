@@ -1,0 +1,14 @@
+/*
+DO NOT CHANGE THE CONTENTS OF THIS FILE!
+Its contend is managed automatically by lively.next. It will automatically be loaded/bundled together with this project!
+*/
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url('./assets/NotoSansJP-Regular.woff2');
+  font-weight: 400;
+  font-style: normal;
+  unicode-range: '';
+  font-display: swap;
+}
+
