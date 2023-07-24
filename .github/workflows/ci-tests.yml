@@ -1,0 +1,36 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout lively.next
+        uses: actions/checkout@v3
+        with:
+          repository: LivelyKernel/lively.next
+          ref: 7423f33405ec27b047b0d21c9178fbc55106f885
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.12.1'
+      - name: Install lively.next
+        run: |
+          chmod a+x ./install.sh
+          ./install.sh
+      - name: Checkout Project Repository
+        uses: actions/checkout@v3
+        with:
+          path: local_projects/engageLively--galyleo-dashboard
+      - name: Start lively.next
+        run: |
+          ./start-server.sh > /dev/null 2>&1 &
+          # wait until server is guaranteed to be running
+          sleep 30
+      - name: Run CI Test Script 
+        run:  ./scripts/test.sh engageLively--galyleo-dashboard
