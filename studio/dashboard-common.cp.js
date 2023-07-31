@@ -344,7 +344,7 @@ class DashboardCommon extends ViewModel {
     return [
       { name: 'fixedHeight', validCheck: value => typeof value === 'boolean', default: false },
       { name: 'fixedWidth', validCheck: value => typeof value === 'boolean', default: false },
-      { name: 'fontFamily', validCheck: family => typeof family === 'string', default: 'Sans-serif' }, // need a better check here
+      { name: 'fontFamily', validCheck: family => typeof family === 'string', default: 'Noto Sans' }, // need a better check here
       { name: 'fontSize', validCheck: fontSize => !isNaN(fontSize) && fontSize > 0, default: 11 },
       { name: 'fontStyle', validCheck: style => styles.indexOf(style) >= 0, default: 'normal' },
       { name: 'fontWeight', validCheck: weight => weights.indexOf(weight) >= 0, default: 'normal' },

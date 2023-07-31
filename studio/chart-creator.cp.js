@@ -1118,7 +1118,7 @@ const ChartJSEditor = component(GalyleoWindow, {
           name: 'Fill Label',
           textAndAttributes: ['Fill', null],
           fontColor: Color.rgb(0, 0, 0),
-          fontFamily: 'Sans-Serif',
+          fontFamily: 'Noto Sans',
           fontSize: 14,
           fontWeight: 'bold',
           position: pt(490, 170)
@@ -1129,7 +1129,7 @@ const ChartJSEditor = component(GalyleoWindow, {
           name: 'Stroke Label',
           textAndAttributes: ['Stroke', null],
           fontColor: Color.rgb(0, 0, 0),
-          fontFamily: 'Sans-Serif',
+          fontFamily: 'Noto Sans',
           fontSize: 14,
           fontWeight: 'bold',
           position: pt(490, 200)

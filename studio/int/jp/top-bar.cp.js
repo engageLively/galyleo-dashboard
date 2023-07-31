@@ -8,7 +8,7 @@ const GalyleoTopBarJp = component(GalyleoTopBar, {
     submorphs: [{
       name: 'help button',
       textAndAttributes: [...Icon.textAttribute('life-ring'), '  ヘルプ', {
-        fontFamily: 'Barlow',
+        fontFamily: 'Noto Sans',
         fontSize: 15,
         fontWeight: 'bold',
         paddingTop: '2px'
@@ -20,7 +20,7 @@ const GalyleoTopBarJp = component(GalyleoTopBar, {
         fontFamily: '"Font Awesome 6 Free", "Font Awesome 6 Brands"',
         fontWeight: '900'
       }, ' 公開する', {
-        fontFamily: 'Sans-Serif',
+        fontFamily: 'Noto Sans',
         fontSize: 15,
         fontWeight: 'bold',
         paddingTop: '2px'
