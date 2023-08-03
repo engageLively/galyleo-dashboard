@@ -1,4 +1,4 @@
-/* global describe */
+/* global it, describe */
 /*
 BSD 3-Clause License
   Copyright (c) 2019-2022, engageLively
@@ -29,9 +29,8 @@ BSD 3-Clause License
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-/* global declare, it, describe, beforeEach, afterEach */
-import { expect, done } from 'mocha-es6';
-import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView, GalyleoDataManager } from './galyleo-data.js';
+import { expect } from 'mocha-es6';
+import { Filter, constructFilter, constructGalyleoTable, ExplicitGalyleoTable, GalyleoView, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 import { resource } from 'lively.resources';
 import { assert } from 'https://jspm.dev/npm:@jspm/core@2.0.0-beta.19/nodelibs/process';
 import { connect } from 'lively.bindings';
