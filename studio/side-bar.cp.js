@@ -6,7 +6,7 @@ import {
 } from 'lively.morphic';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
 import { arr } from 'lively.lang';
-import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry, galyleoFont } from './shared.cp.js';
+import { GalyleoColorInput, TableEntryMorph, MenuBarButton, GalyleoDropDownList, GalyleoAddButtonActive, GalyleoDropDownListModel, PromptButton, GalyleoList, GalyleoAddButtonHovered, GalyleoAddButtonDefault, GalyleoAddButton, TableEntry, galyleoFont, GalyleoCheckboxChecked, GalyleoCheckboxUnchecked } from './shared.cp.js';
 import { ViewCreatorPrompt } from './view-creator.cp.js';
 import { ChartBuilder } from './chart-creator.cp.js';
 import { FilterBuilder, FilterEditor } from './filter-creator.cp.js';
@@ -570,6 +570,23 @@ const GalyleoPropertiesPanel = component(PropertiesPanel, {
             activeComponent: GalyleoMiniLayoutPreviewActive,
             inactiveComponent: GalyleoMiniLayoutPreview
           }]
+        },
+        {
+          name: 'wrap checkbox wrapper',
+          submorphs: [
+            {
+              name: 'wrap submorphs checkbox',
+              submorphs: [
+                {
+                  name: 'checkbox',
+                  viewModel: {
+                    checkedCheckboxComponent: GalyleoCheckboxChecked,
+                    uncheckedCheckboxComponent: GalyleoCheckboxUnchecked
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },

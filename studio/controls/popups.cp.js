@@ -3,7 +3,7 @@ import { component, part, add, without } from 'lively.morphic/components/core.js
 import { Color } from 'lively.graphics';
 import { TilingLayout } from 'lively.morphic';
 import { rect } from 'lively.graphics/geometry-2d.js';
-import { GalyleoNumberInput, CloseButtonFloat, WindowHeader, GalyleoDropDown, GalyleoColorInput } from '../shared.cp.js';
+import { GalyleoNumberInput, CloseButtonFloat, WindowHeader, GalyleoDropDown, GalyleoColorInput, GalyleoCheckboxChecked, GalyleoCheckboxUnchecked } from '../shared.cp.js';
 
 // part(GalyleoShadowPopup).openInWorld()
 const GalyleoShadowPopup = component(ShadowPopup, {
@@ -41,8 +41,18 @@ const GalyleoShadowPopup = component(ShadowPopup, {
         {
           name: 'h wrapper',
           submorphs: [
-            { name: 'fast shadow checkbox', fill: Color.orange },
-            { name: 'prop label', fontColor: Color.rgb(68, 68, 68) }
+            {
+              name: 'fast shadow checkbox',
+              submorphs: [
+                {name: 'checkbox',
+                viewModel: {
+                checkedCheckboxComponent: GalyleoCheckboxChecked,
+                uncheckedCheckboxComponent: GalyleoCheckboxUnchecked
+              }
+            }, {
+              name: 'label', fontColor: Color.rgb(68, 68, 68)
+            }]
+            },
           ]
         }
       ]
