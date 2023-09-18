@@ -163,9 +163,14 @@ const GalyleoSideBarJp = component(GalyleoSideBar, {
                 ]
               },
               {
-                name: 'wrap submorphs checkbox',
+                name: 'wrap checkbox wrapper',
                 submorphs: [
-                  { name: 'prop label', textAndAttributes: ['副要素の折り返し', null] }
+                  {
+                    name: 'wrap submorphs checkbox',
+                    viewModel: {
+                      label: '副要素の折り返し'
+                    }
+                  } 
                 ]
               }
             ]

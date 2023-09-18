@@ -11,8 +11,19 @@ import { ColorInput } from 'lively.ide/styling/color-picker.cp.js';
 import { ConfirmPromptModel } from 'lively.components/prompts.cp.js';
 import { ButtonModel } from 'lively.components/buttons.js';
 import { projectAsset } from 'lively.project/helpers.js';
+import { CheckboxChecked, CheckboxUnchecked } from 'lively.components/checkbox.cp.js';
 
 const galyleoFont = 'Noto Sans';
+
+const GalyleoCheckboxChecked = component(CheckboxChecked, {
+  name: 'galyleo/checkbox/active',
+  fill: Color.rgb(245, 127, 23)
+});
+
+const GalyleoCheckboxUnchecked = component(CheckboxUnchecked, {
+  name: 'galyleo/checkbox/inactive',
+  borderColor: Color.black
+});
 
 export class SelectableEntryModel extends ViewModel {
   static wrap (entryName, opts) {
@@ -100,7 +111,7 @@ export class SelectableEntryModel extends ViewModel {
       : SelectableEntry; // eslint-disable-line no-use-before-define
     entryName.value = this.entryName;
     // dragControl.draggable = this.orderMode;
-    checkbox.master = this.isSelected ? CheckboxChecked : CheckboxUnchecked; // eslint-disable-line no-use-before-define
+    checkbox.master = this.isSelected ? GalyleoEntryCheckboxChecked : GalyleoEntryCheckboxUnchecked; // eslint-disable-line no-use-before-define
     const updateElements = () => {
       if (checkbox.visible !== !this.orderMode) {
         checkbox.visible = !this.orderMode;
@@ -823,7 +834,7 @@ const PromptButton = component(PromptButtonAuto, {
   master: { auto: PromptButtonAuto, click: PromptButtonClick }
 });
 
-const CheckboxChecked = component({
+const GalyleoEntryCheckboxChecked = component({
   name: 'checkbox/checked',
   borderColor: Color.rgb(127, 140, 141),
   borderRadius: 2,
@@ -860,7 +871,7 @@ const CheckboxChecked = component({
 });
 
 // CheckboxUnchecked.openInWorld()
-const CheckboxUnchecked = component({
+const GalyleoEntryCheckboxUnchecked = component({
   name: 'checkbox/unchecked',
   borderColor: Color.rgb(127, 140, 141),
   borderRadius: 2,
@@ -932,7 +943,7 @@ const SelectableEntry = component({
     reactsToPointer: false,
     padding: rect(3, 5, 0, 0),
     textAndAttributes: Icon.textAttribute('bars')
-  }, part(CheckboxChecked, { name: 'checkbox' }), {
+  }, part(GalyleoEntryCheckboxChecked, { name: 'checkbox' }), {
     type: Label,
     name: 'entry name',
     reactsToPointer: false,
@@ -1135,8 +1146,8 @@ const CloseButtonFloat = component({
 });
 
 export {
-  GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, CheckboxChecked,
-  CheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
+  GalyleoWindow, GalyleoList, MenuBarButton, PromptButton, GalyleoCheckboxChecked,
+  GalyleoCheckboxUnchecked, SelectableEntry, SelectableEntryDragged, GalyleoDropDownList, GalyleoDropDownError, GalyleoTextInput,
   TableEntry, TableEntryEdit, TableEntryVisual, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButtonActive, GalyleoDropDownAuto,
   GalyleoAddButton, GalyleoPropertyLabel, GalyleoPropertyLabelActive, GalyleoPropertyLabelHovered, GalyleoAddButtonDefault, GalyleoAddButtonHovered, GalyleoConfirmPrompt, WindowHeader, CloseButtonFloat, galyleoFont, GalyleoEnumSelector
 };
