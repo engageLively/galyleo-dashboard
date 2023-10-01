@@ -1163,8 +1163,8 @@ export class SelectFilterMorph extends Morph {
 
   get dataManagerFilter () {
     const valueField = this.valueList.selection;
-    const valueValue = this.isString ? `"${valueField}"` : valueField;
-    return { operator: 'IN_LIST', column: this.columnName, values: [valueValue] };
+    // const valueValue = this.isString ? `"${valueField}"` : valueField;
+    return { operator: 'IN_LIST', column: this.columnName, values: [valueField] };
   }
 
   /**
