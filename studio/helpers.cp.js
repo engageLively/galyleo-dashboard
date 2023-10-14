@@ -10,8 +10,7 @@ import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
-
-const STUDIO_SECRET = 'g4lyl30-studio';
+import { dashboardStoreServer } from '../config.js';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -399,7 +398,7 @@ export class PublisherModel extends ViewModel {
       this.ui.fileInput.textString = fileName;
     }
     if (userName) {
-      const reader = resource(`${this.url}/list_user_dashboards/${userName}`);
+      const reader = resource(`${dashboardStoreServer.url}/list_user_dashboards/${userName}`);
       reader.readJson().then(result => {
         this.currentDashboards = result;
         this.ui.dashboardList.items = result;
@@ -456,11 +455,11 @@ export class PublisherModel extends ViewModel {
     }
 
     if (await this._sanityCheck(filePath)) {
-      const r = resource(`${this.url}add_dashboard`, { headers: { 'Content-Type': 'application/json' } });
+      const r = resource(`${dashboardStoreServer.url}add_dashboard`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: filePath,
         dashboard: this.dashboard.prepareSerialization(),
-        studio_secret: STUDIO_SECRET
+        studio_secret: dashboardStoreServer.secret
       };
       if (this.userName) {
         body.user = this.userName;
@@ -472,10 +471,6 @@ export class PublisherModel extends ViewModel {
       urlDisplay.openInWorld();
       this.close();
     }
-  }
-
-  get url () {
-    return 'https://publication-server-htztskumkq-uw.a.run.app/';
   }
 
   close () {

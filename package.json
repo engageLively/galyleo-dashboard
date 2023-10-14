@@ -29,8 +29,13 @@
     "test": "mocha -r esm galyleo-data/galyleo-data-tests.js"
   },
   "lively": {
-    "projectDependencies": [],
-    "boundLivelyVersion": "4019eb8763648fe55f6bbb9f3f6d3ca9fddcd413",
+    "projectDependencies": [
+      {
+        "name": "LivelyKernel--partsbin",
+        "version": "0.6.3"
+      }
+    ],
+    "boundLivelyVersion": "6a89749513b773c0e01c023d221cc8a9cab7e931",
     "canUsePages": true
   }
 }
