@@ -672,22 +672,19 @@ class URLFetcher {
   constructor (url, tableName) {
     this.url = url;
     this.tableName = tableName;
-    this.headers = { 'Table-Name': tableName };
+    this.headers = {};
     this.body = null;
   }
 
   set tableName (tableName) {
     this.table_name = tableName;
-    this.headers = { 'Table-Name': tableName };
   }
 
   set dashboardName (dashboardName = null) {
     if (dashboardName) {
       this.dashboard_name = dashboardName;
-      this.headers = { 'Dashboard-Name': dashboardName };
     } else {
       this.dashboard_name = dashboardName;
-      delete this.headers['Dashboard-Name'];
     }
   }
 
@@ -732,11 +729,11 @@ class URLFetcher {
   /**
    * Post the request,
    */
-  post () {
+  async post () {
     if (!this.webResource) {
       this.makeResource();
     }
-    return this.webResource.post();
+    return await this.webResource.post(this.body);
   }
 
   /**
@@ -796,7 +793,7 @@ class RemoteGalyleoTable extends GalyleoTable {
     super(columns, tableName, async () => await this._getRowsFromURL_());
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
-    this.headers = { 'Table-Name': tableName };
+    this.headers = { };
     if (connector.dashboardName != null) {
       this.dashboardName = connector.dashboardName;
       this.headers['Dashboard-Name'] = connector.dashboardName;
@@ -859,11 +856,17 @@ class RemoteGalyleoTable extends GalyleoTable {
 
   async getFilteredRows (filterSpec = null) {
     const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, 'get_filtered_rows'));
+    const body = { table: this.tableName };
+
     if (filterSpec) {
-      urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
+      body.filter = filterSpec;
     }
+    urlFetcher.addBody(JSON.stringify(body));
+    urlFetcher.addHeader('Accept', 'application/json');
+    urlFetcher.addHeader('Content-Type', 'application/json');
     try {
-      return await urlFetcher.readJson();
+      const result = await urlFetcher.post();
+      return result;
     } catch (error) {
       return [];
     }
@@ -876,7 +879,7 @@ class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName -- the name of the column to make the request for
      */
   async _executeGetRequest_ (request, columnName) {
-    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, `${request}?column_name=${columnName}`));
+    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, `${request}?column_name=${columnName}&table_name=${this.tableName}`));
     return await urlFetcher.readJson();
   }
 
@@ -902,7 +905,7 @@ class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getNumericSpec (columnName) {
-    return await this._executeGetRequest_('get_numeric_spec', columnName);
+    return await this._executeGetRequest_('get_range_spec', columnName);
   }
 }
 
