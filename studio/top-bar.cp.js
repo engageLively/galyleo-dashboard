@@ -187,7 +187,7 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Publish this dashboard'
-        }), without('save button'), without('undo button'), without('redo button'), without('open component browser'), without('load world button'), without('comment browser button'), without('canvas mode button'), add({
+        }), without('save button'), without('undo button'), without('redo button'), without('open component browser'), without('load world button'), without('open asset browser'), without('comment browser button'), without('canvas mode button'), add({
           type: Image,
           name: 'galyleo logo',
           borderColor: Color.rgb(23, 160, 251),
@@ -200,7 +200,7 @@ const GalyleoTopBar = component(TopBar, {
         }, 'hand or halo mode button')
       ]
     },
-    without('user flap')
+    without('right UI wrapper')
   ]
 });
 
