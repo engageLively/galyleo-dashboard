@@ -104,14 +104,6 @@ class GalyleoTopBarModel extends TopBarModel {
       menu.position = handOrHaloModeButton.globalBounds().bottomLeft().subPt($world.scroll);
     }
 
-    if (evt.targetMorph.name === 'undo button') {
-      target.execCommand('undo');
-    }
-
-    if (evt.targetMorph.name === 'redo button') {
-      target.execCommand('redo');
-    }
-
     if (evt.targetMorph === shapeModeButton) {
       this.setEditMode('Shape');
     }
@@ -133,9 +125,6 @@ class GalyleoTopBarModel extends TopBarModel {
       $world.execCommand('load world');
     }
 
-    if (evt.targetMorph.name === 'comment browser button') {
-      this.toggleCommentBrowser();
-    }
   }
 
   reportBug () {
@@ -187,7 +176,7 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Publish this dashboard'
-        }), without('save button'), without('undo button'), without('redo button'), without('open component browser'), without('load world button'), without('open asset browser'), without('comment browser button'), without('canvas mode button'), add({
+        }), without('save button'), without('open component browser'), without('load world button'), without('open asset browser'), without('canvas mode button'), add({
           type: Image,
           name: 'galyleo logo',
           borderColor: Color.rgb(23, 160, 251),
