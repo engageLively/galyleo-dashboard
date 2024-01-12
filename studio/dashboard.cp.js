@@ -514,7 +514,7 @@ export class Dashboard extends DashboardCommon {
 
   async confirm (ask) {
     const confirmDialog = this.openDialog(GalyleoConfirmPrompt);
-    confirmDialog.label = ask;
+    confirmDialog.title = ask;
     return await confirmDialog.activate();
   }
 
