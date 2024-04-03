@@ -1042,6 +1042,7 @@ class GalyleoView {
     const actualFilter = this._getFilter_(filterSpecs, table);
 
     const rows = await table.getFilteredRows(actualFilter);
+
     // const rowsToSend = rows.map(row => getSelectedColumns(row));
     const rowsToSend = rows.map(row => reorderRow(row));
     return rowsToSend;

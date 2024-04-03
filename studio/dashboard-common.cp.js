@@ -537,6 +537,21 @@ class DashboardCommon extends ViewModel {
   }
 
   /**
+   * Restore from a JSON string OR (equivalently) a JavaScript object.
+   * Just checks to see if the argument  is a string; if it is, parses the string
+   * into an object and restores from that.  Otherwise, just restores from
+   * the object.
+   * @param { string or object} storedForm
+   */
+  async restoreFromSavedForm (storedForm) {
+    if (typeof storedForm === 'string') {
+      await this.restoreFromJSONForm(storedForm);
+    } else if (typeof storedForm === 'object') {
+      await this._restoreFromSaved(storedForm);
+    }
+  }
+
+  /**
    * Restore from JSON form.  This involves parsing the JSON string and
    * restoring the tables, views, filters, and charts from the saved description
    * created in _prepareSerialization.
@@ -1414,7 +1429,11 @@ class DashboardCommon extends ViewModel {
   async drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
-    if (!this.gViz) return;
+    while (!this.gViz) {
+      await this._loadGoogleChartPackages();
+      console.log('Loading Google Chart Packages...');
+    }
+    console.log(`Finished loading, this.gViz = ${this.gViz}`);
     this._makeTitle(chart);
     const wrapper = await this._makeWrapper(chart, chartName);
     if (wrapper) {

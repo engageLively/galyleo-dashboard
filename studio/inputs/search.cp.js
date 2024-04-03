@@ -1,10 +1,10 @@
 import { InputLineDefault } from 'lively.components/inputs.cp.js';
 import { component } from 'lively.morphic/components/core.js';
-import { ShadowObject } from 'lively.morphic';
+import { ShadowObject, part } from 'lively.morphic';
 import { pt, Color } from 'lively.graphics';
 import { galyleoFont } from '../shared.cp.js';
 
-// GalyleoSearch.openInWorld()
+// part(GalyleoSearch).openInWorld()
 const GalyleoSearch = component(InputLineDefault, {
   name: 'galyleo search',
   borderRadius: 50,
@@ -12,7 +12,7 @@ const GalyleoSearch = component(InputLineDefault, {
   extent: pt(318.1, 28.8),
   fontFamily: galyleoFont,
   fontSize: 15,
-  renderOnGPU: true,
+  /* renderOnGPU: true, */
   submorphs: [{
     name: 'placeholder',
     extent: pt(59, 28.8),
