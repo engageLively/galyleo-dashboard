@@ -32,8 +32,8 @@ export class BugReporterModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'close' },
-            { model: 'report button', signal: 'fire', handler: 'reportBug' }
+            { target: 'close button', signal: 'fire', handler: 'close' },
+            { target: 'report button', signal: 'fire', handler: 'reportBug' }
           ];
         }
       }
@@ -199,7 +199,8 @@ const BugReporter = component(GalyleoWindow, {
         padding: rect(10, 10, 0, 0),
         extent: pt(318, 58.4),
         fixedWidth: true,
-        fixedHeight: true
+        fixedHeight: true,
+        readOnly: false
       },
       {
         name: 'footer',
@@ -478,7 +479,6 @@ export class PublisherModel extends ViewModel {
     this.view.remove();
   }
 }
-
 
 // part(Publisher).openInWorld()
 const Publisher = component(GalyleoWindow, {
