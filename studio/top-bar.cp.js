@@ -10,6 +10,7 @@ import { signal, connect } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
 import { part } from 'lively.morphic';
+import { BugReporter, Publisher } from './helpers.cp.js';
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -124,15 +125,16 @@ class GalyleoTopBarModel extends TopBarModel {
     if (evt.targetMorph.name === 'load world button') {
       $world.execCommand('load world');
     }
-
   }
 
   reportBug () {
-    signal(this, 'initiate bug report');
+    // signal(this, 'initiate bug report');
+    part(BugReporter).openInWorld();
   }
 
   publishDashboard () {
-    signal(this, 'initiate publication');
+    part(Publisher).openInWorld();
+    // signal(this, 'initiate publication');
     // window.alert('publish requested');
   }
 }

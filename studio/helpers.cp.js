@@ -366,8 +366,8 @@ export class PublisherModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'close' },
-            { model: 'report button', signal: 'fire', handler: 'publishDashboard' }
+            { target: 'close button', signal: 'fire', handler: 'close' },
+            { target: 'report button', signal: 'fire', handler: 'publishDashboard' }
           ];
         }
       }
