@@ -20,7 +20,8 @@ const GalyleoPropertySection = component(PropertySection, {
         },
         {
           name: 'remove button',
-          master: GalyleoAddButton
+          master: GalyleoAddButton,
+          visible: false
         }
       ]
     }

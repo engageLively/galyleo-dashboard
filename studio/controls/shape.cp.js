@@ -6,7 +6,6 @@ import { GalyleoPropertySection } from './section.cp.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { TilingLayout } from 'lively.morphic';
 
-// GalyleoShapeControl.openInWorld()
 const GalyleoShapeControl = component(ShapeControl, {
   name: 'galyleo/shape control',
   layout: new TilingLayout({
@@ -66,7 +65,11 @@ const GalyleoShapeControl = component(ShapeControl, {
     },
     { name: 'rotation input', master: GalyleoNumberInput },
     { name: 'radius input', master: GalyleoNumberInput },
-    { name: 'independent corner toggle', master: GalyleoAddButton },
+    {
+      name: 'independent corner toggle',
+      fontSize: 16,
+      master: GalyleoAddButton
+    },
     {
       name: 'multi radius container',
       submorphs: [{

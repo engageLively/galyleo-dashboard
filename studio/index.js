@@ -6,9 +6,10 @@ import { GalyleoStudioWorld } from './ui.cp.js';
 
 export async function main () {
   config.ide.studio.canvasModeEnabled = false;
-  const { GalyleoDashboardStudio } = await System.import('engageLively--galyleo-dashboard/studio/int/en');
+  const { GalyleoDashboardStudio } = await System.import('engageLively--galyleo-dashboard/studio/int/en/index.js');
   // const { GalyleoDashboardStudio } = await System.import('galyleo-dashboard/studio/int/jp/index.cp.js');
   const dashboard = part(GalyleoDashboardStudio);
+  // dashboard.openInWorld()
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
   dashboard.relayout();

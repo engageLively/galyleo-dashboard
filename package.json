@@ -1,6 +1,6 @@
 {
   "name": "engageLively--galyleo-dashboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "studio/index.js",
   "type": "module",
   "author": {
@@ -30,7 +30,7 @@
   },
   "lively": {
     "projectDependencies": [],
-    "boundLivelyVersion": "01f5e02578f4d3aaa9f5f4d9bab4bfd6523f06df",
+    "boundLivelyVersion": "acaf0fc025a77f874d9c036b7827cdcaf624afee",
     "canUsePages": true
   }
 }

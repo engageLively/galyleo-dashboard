@@ -1,11 +1,11 @@
 import { component, part } from 'lively.morphic/components/core.js';
-import { rect } from "lively.graphics/geometry-2d.js";
+import { rect, pt } from 'lively.graphics/geometry-2d.js';
 import { ConstraintMarker, ConstraintsManager, AlignmentControl, ResizingSimulator, ConstraintSizeSelectorDefault, ConstraintsSimulator, ConstraintMarkerActive } from 'lively.ide/studio/controls/constraints.cp.js';
 import { Color } from 'lively.graphics';
 import { GalyleoDropDown, GalyleoDropDownList, GalyleoDropDownListModel } from '../shared.cp.js';
 import { GalyleoPropertySection } from './section.cp.js';
-import { TilingLayout } from "lively.morphic";
-// GalyleoConstraintMarker.openInWorld();
+import { TilingLayout } from 'lively.morphic';
+
 const GalyleoConstraintMarker = component(ConstraintMarker, {
   name: 'galyleo/constraint marker',
   submorphs: [{
@@ -14,7 +14,6 @@ const GalyleoConstraintMarker = component(ConstraintMarker, {
   }]
 });
 
-// GalyleoConstraintMarkerActive.openInWorld();
 const GalyleoConstraintMarkerActive = component(ConstraintMarkerActive, {
   name: 'galyleo/constraint marker/active',
   submorphs: [{
@@ -24,7 +23,6 @@ const GalyleoConstraintMarkerActive = component(ConstraintMarkerActive, {
   }]
 });
 
-// GalyleoConstraintsSimulator.openInWorld()
 const GalyleoConstraintsSimulator = component(ConstraintsSimulator, {
   name: 'galyleo/constraints simulator',
   submorphs: [
@@ -42,7 +40,6 @@ const GalyleoConstraintsSimulator = component(ConstraintsSimulator, {
     }]
 });
 
-// GalyleoConstraintSizeSelector.openInWorld()
 const GalyleoConstraintSizeSelector = component(ConstraintSizeSelectorDefault, {
   name: 'galyleo/constraint size selector',
   submorphs: [{
@@ -56,7 +53,6 @@ const GalyleoConstraintSizeSelectorHovered = component(GalyleoConstraintSizeSele
   fill: Color.orange.withA(.5)
 });
 
-// part(GalyleoResizingSimulator).openInWorld()
 const GalyleoResizingSimulator = component(ResizingSimulator, {
   name: 'galyleo/resizing simulator',
   submorphs: [{
@@ -79,13 +75,7 @@ const GalyleoAlignmentControl = component(ConstraintsManager, {
       ]
     }, {
       name: 'constraints',
-layout: new TilingLayout({
-  align: "center",
-  axis: "column",
-  orderByIndex: true,
-  padding: rect(20,0,-20,10),
-  spacing: 10
-}),
+      extent: pt(243.4, 84.9),
       viewModel: {
         activeMarkerComponent: GalyleoConstraintMarkerActive,
         defaultMarkerComponent: GalyleoConstraintMarker
