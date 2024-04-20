@@ -60,7 +60,7 @@ class GalyleoTopBarModel extends TopBarModel {
         }
       },
       bindings: {
-        get () {
+        /* get () {
           return [
             { target: 'save button', signal: 'onMouseDown', handler: (evt) => { if (this.ui.saveButton === evt.targetMorphs[0]) $world.execCommand('save world or project'); } },
             { target: 'text mode button', signal: 'onMouseDown', handler: 'setEditMode', converter: () => 'Text' },
@@ -86,14 +86,14 @@ class GalyleoTopBarModel extends TopBarModel {
             { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' },
             { target: 'upload button', signal: 'onMouseDown', handler: 'publishDashboard' }
           ];
-        }
+        } */
 
-        /* get () {
+        get () {
           return super.prototype.bindings.concat([
             { target: 'help button', signal: 'onMouseDown', handler: 'reportBug' },
             { target: 'upload button', signal: 'onMouseDown', handler: 'publishDashboard' }
           ]);
-        } */
+        }
       }
     };
   }
