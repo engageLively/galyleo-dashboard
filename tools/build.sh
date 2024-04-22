@@ -1,5 +1,5 @@
 #!/bin/bash
-. ../../scripts/lively-next-flatn-env.sh
+. ../../../scripts/lively-next-flatn-env.sh
 lively_next_flatn_env "$(dirname "$(dirname "$(pwd)")")"
 export FLATN_DEV_PACKAGE_DIRS=$FLATN_DEV_PACKAGE_DIRS:$(pwd);
 
@@ -42,4 +42,4 @@ esac
 echo "Selected language: $lang"
 echo "Path: $path"
 
-node --no-warnings --experimental-import-meta-resolve --experimental-loader ../../flatn/resolver.mjs ${path}
+node --no-warnings --experimental-import-meta-resolve --experimental-loader ../../../flatn/resolver.mjs ${path}
