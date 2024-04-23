@@ -94,9 +94,7 @@ export const PublisherJP = component(Publisher, {
       },
       {
         name: 'dashboard label',
-        textAndAttributes: ['公開してったダッシュボード', {
-          textDecoration: 'none'
-        }]
+        textAndAttributes: ['公開されたダッシュボード', null]
       }, {
         name: 'footer',
         submorphs: [{

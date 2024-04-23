@@ -1,14 +1,14 @@
-name: Run Tests
+name: Build Project
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: "test"
+  group: "build-and-upload"
   cancel-in-progress: true
 
 jobs:
-  tests:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Setup `node`
@@ -16,30 +16,30 @@ jobs:
         with:
           node-version: '20.10'
       - name: Restore `lively.next` installation
-        id: cache-lively-with-build
+        id: cache-lively
         uses: actions/cache/restore@v3
         env:
-          cache-name: lively-repo-with-build
+          cache-name: lively-repo
           ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
         with:
           path: .            
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ env.ref }}
       - name: Checkout `lively.next`
-        if: ${{ steps.cache-lively-with-build.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-lively.outputs.cache-hit != 'true' }}
         uses: actions/checkout@v4
         with:
           repository: LivelyKernel/lively.next
           ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
       - name: Install `lively.next`
-        if: ${{ steps.cache-lively-with-build.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-lively.outputs.cache-hit != 'true' }}
         run: |
           chmod a+x ./install.sh
-          ./install.sh
+          ./install.sh --freezer-only
       - name: Save `lively` installation in cache
-        if: ${{ steps.cache-lively-with-build.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-lively.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v3
         env:
-          cache-name: lively-repo-with-build
+          cache-name: lively-repo
           ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
         with:
           path: .            
@@ -49,10 +49,10 @@ jobs:
         with:
           ref: ${{ github.ref }}
           path: local_projects/engageLively--galyleo-dashboard
-      - name: Start `lively.next`
-        run: |
-          ./start-server.sh > /dev/null 2>&1 &
-          # wait until server is guaranteed to be running
-          sleep 30
-      - name: Run CI Test Script 
-        run:  ./scripts/test.sh engageLively--galyleo-dashboard
+      - name: Build Project
+        run: npm run build-minified --prefix local_projects/engageLively--galyleo-dashboard
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: local_projects/engageLively--galyleo-dashboard/build
