@@ -15,11 +15,7 @@ const GalyleoTopBarJp = component(GalyleoTopBar, {
       }]
     }, {
       name: 'upload button',
-      nativeCursor: 'text',
-      value: ['', {
-        fontFamily: '"Font Awesome 6 Free", "Font Awesome 6 Brands"',
-        fontWeight: '900'
-      }, ' 公開する', {
+      value: [...Icon.textAttribute('cloud-arrow-up'), ' 公開する', {
         fontFamily: 'Noto Sans',
         fontSize: 15,
         fontWeight: 'bold',
