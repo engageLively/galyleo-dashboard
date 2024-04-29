@@ -598,6 +598,136 @@ const Publisher = component(GalyleoWindow, {
 });
 
 /**
+ * A bare-bones widget to display a GalyleoTable as an HTML Table.
+ * For reasons of space, only displays the first 10 rows.
+ * Very simple, just turns the table into an HTML table using the
+ * obvious markup
+ */
+
+export class TableViewMorph extends HTMLMorph {
+  init (tableName, table) {
+    // tableName = 'crime by year'
+    // table = this.get('dashboard').viewModel.dataManager.tables[tableName]
+    const columnHeaders = table.columns.map(column => `<th>${column.name}</th>`);
+    const caption = `<caption>${tableName}</caption>`;
+    const header = `<tr>${columnHeaders.join('')}</tr>`;
+
+    if (table.rows) {
+      const numRows = Math.min(table.rows.length, 10);
+      const values = table.rows.slice(0, numRows);
+      const valueRow = row => row.map(val => `<td>${val}</td>`).join('');
+      const valueRows = values.map(row => `<tr>${valueRow(row)}</tr>`).join('\n');
+      this.html = `<table>\n${caption}\n${header}\n${valueRows}\n</table>`;
+    } else {
+      this.html = `<table>\n${caption}\n${header}\n</table>`;
+    }
+  }
+}
+
+/**
+ * A ViewModel for a TableViewer.  This really just has a CloseButton
+ * to close the Viewer and a method to tell the enclosed TableViewMorph
+ * to initialize itself
+ */
+export class TableViewModel extends ViewModel {
+  static get properties () {
+    return {
+      expose: {
+        get () {
+          return ['init'];
+        }
+      },
+      bindings: {
+        get () {
+          return [
+            { target: 'close button', signal: 'fire', handler: 'close' }
+          ];
+        }
+      }
+    };
+  }
+
+  /**
+   * initialize the viewer with the tableName and table.  Very simple,
+   * just called the init method
+   * on TableViewMorph
+   * @param { string } tableName - The name of the table
+   * @param { GalyleoTable } table - The table
+   */
+  init (tableName, table) {
+    this.ui.tableViewer.init(tableName, table);
+    this.ui.windowTitle.textString = `Galyleo Table ${tableName}`;
+  }
+
+  close () {
+    this.view.remove();
+  }
+}
+
+// part(TableViewer).openInWorld()
+export const TableViewer = component(GalyleoWindow, {
+  defaultViewModel: TableViewModel,
+  extent: pt(415, 360.0),
+  name: 'Galyleo Table Viewer',
+  submorphs: [{
+    name: 'windowTitle',
+    textString: 'Galyleo Table'
+  }, add({
+    name: 'contents wrapper',
+    layout: new TilingLayout({
+      axis: 'column',
+      axisAlign: 'center',
+      orderByIndex: true,
+      padding: rect(5, 5, 0, 0),
+      resizePolicies: [['header', {
+        height: 'fixed',
+        width: 'fill'
+      }], ['tableViewer', {
+        height: 'fixed',
+        width: 'fill'
+      }]],
+      spacing: 5,
+      wrapSubmorphs: false
+    }),
+    borderColor: Color.rgb(127, 140, 141),
+    borderRadius: 10,
+    extent: pt(414.3, 328.3),
+    fill: Color.rgba(215, 219, 221, 0),
+    submorphs: [
+      {
+        name: 'header',
+        layout: new TilingLayout({
+          align: 'right',
+          orderByIndex: true,
+          wrapSubmorphs: false
+        }),
+        fill: Color.transparent,
+        submorphs: [
+          part(MenuBarButton, {
+            name: 'close button',
+            extent: pt(100, 35),
+            tooltip: 'Close this dialog without loading',
+            submorphs: [{
+              name: 'label', value: ['CLOSE', null]
+            }, {
+              name: 'icon',
+              extent: pt(14, 14),
+              imageUrl: projectAsset('close-button-icon-2.svg')
+            }]
+          })
+        ]
+      },
+
+      {
+        type: TableViewMorph,
+        name: 'tableViewer'
+      }
+
+    ]
+  })]
+});
+
+/**
  * A utility to check and rewrite a string to be an URL.  Returns an object
  * with two fields: action and resultString.  The action is one of ok/rewritten/failed
  * and the resultString, if present, is a valid URL.

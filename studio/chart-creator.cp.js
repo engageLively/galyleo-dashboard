@@ -31,8 +31,8 @@ export class ChartBuilderModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'create chart button', signal: 'fire', handler: 'createChart' }
+            { target: 'close button', signal: 'fire', handler: 'cancel' },
+            { target: 'create chart button', signal: 'fire', handler: 'createChart' }
           ];
         }
       }
@@ -232,6 +232,7 @@ export class ChartBuilderModel extends ViewModel {
     }
   }
 }
+
 
 // ChartBuilder.openInWorld()
 const ChartBuilder = component(GalyleoWindow, {

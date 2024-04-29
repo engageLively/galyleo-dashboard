@@ -158,6 +158,13 @@ export class TableEntryMorph extends Morph {
     };
   }
 
+  static wrapVisualOnlyEntry (visualOnlyEntryName, opts = {}) {
+    const entry = part(TableEntryVisualOnly, opts); // eslint-disable-line no-use-before-define
+    entry.value = visualOnlyEntryName;
+    entry.relayout();
+    return { isListItem: true, morph: entry, value: visualOnlyEntryName };
+  }
+
   static wrapVisualDataEntry (visualDataEntryName, opts = {}) {
     const entry = part(TableEntryVisual, opts); // eslint-disable-line no-use-before-define
     entry.value = visualDataEntryName;
@@ -1002,6 +1009,20 @@ const TableEntry = component({
   }]
 });
 
+// TableEntryVisualOnly.openInWorld()
+const TableEntryVisualOnly = component(TableEntry, {
+  name: 'table entry/edit',
+  submorphs: [
+    add({
+      type: Image,
+      name: 'edit config button',
+      extent: pt(15.2, 15.2),
+      imageUrl: projectAsset('preview-icon.svg'),
+      nativeCursor: 'pointer',
+      naturalExtent: pt(133, 150)
+    })
+  ]
+});
 // TableEntryEdit.openInWorld()
 const TableEntryEdit = component(TableEntry, {
   name: 'table entry/edit',
