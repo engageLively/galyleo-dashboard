@@ -254,7 +254,7 @@ export class DashboardControl extends ViewModel {
   update () {
     const { tableControl, chartControl, viewControl, filterControl } = this.models;
     const tables = this.dashboard.tableNames.map(tableName => {
-      return TableEntryMorph.wrapDataEntry(tableName, {
+      return TableEntryMorph.wrapVisualOnlyEntry(tableName, {
         onDelete: () => tableControl.removeTable(tableName),
         onConfig: () => tableControl.previewTable(tableName)
       });
@@ -356,7 +356,7 @@ export class TableControlModel extends EntityControlModel {
   }
 
   previewTable (table) {
-    this.dashboard.displayPreview(table);
+    this.dashboard.viewModel.displayPreview(table);
   }
 }
 

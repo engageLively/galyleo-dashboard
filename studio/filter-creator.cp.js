@@ -90,9 +90,9 @@ export class FilterBuilderModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'confirm button', signal: 'fire', handler: 'createFilter' },
-            { model: 'filter selector', signal: 'selection', handler: 'updateColumns' }
+            { target: 'close button', signal: 'fire', handler: 'cancel' },
+            { target: 'confirm button', signal: 'fire', handler: 'createFilter' },
+            { target: 'filter selector', signal: 'selection', handler: 'updateColumns' }
           ];
         }
       }
@@ -304,6 +304,7 @@ export class FilterBuilderModel extends ViewModel {
     this.view.remove();
   }
 }
+
 
 export class FilterEditorModel extends FilterBuilderModel {
   static get properties () {

@@ -399,8 +399,8 @@ export class ViewCreatorPromptModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'view creator', signal: 'canceled', handler: 'close' },
-            { model: 'view creator', signal: 'viewCreated', handler: 'close' }
+            { target: 'view creator', signal: 'canceled', handler: 'close' },
+            { target: 'view creator', signal: 'viewCreated', handler: 'close' }
           ];
         }
       }
@@ -416,14 +416,15 @@ export class ViewCreatorPromptModel extends ViewModel {
   }
 }
 
+
 export class ViewCreatorModel extends ViewModel {
   static get properties () {
     return {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'create view button', signal: 'fire', handler: 'createView' }
+            { target: 'close button', signal: 'fire', handler: 'cancel' },
+            { target: 'create view button', signal: 'fire', handler: 'createView' }
           ];
         }
       }
@@ -470,6 +471,7 @@ export class ViewCreatorModel extends ViewModel {
     }
   }
 }
+
 
 // ViewCreator.openInWorld()
 const ViewCreator = component({
