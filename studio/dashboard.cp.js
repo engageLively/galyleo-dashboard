@@ -834,7 +834,7 @@ export class Dashboard extends DashboardCommon {
    * chart to show the data.
    * @param { string } viewOrTable - The name of the view or table to show the data for.
    */
-  async displayPreview (viewOrTable) {
+  /* async displayPreview (viewOrTable) {
     const dataTable = await this.prepareData(viewOrTable);
     if (dataTable === null) {
       return;
@@ -849,7 +849,7 @@ export class Dashboard extends DashboardCommon {
     tableMorph.init(viewOrTable, this);
     tableMorph.openInWindow();
     tableMorph.drawChart(wrapper);
-  }
+  } */
 
   /* -- Code that deals with Charts.  This takes care of prepping chart titles,
        calling the View code to get the data, and displaying the char  -- */

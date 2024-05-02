@@ -132,6 +132,12 @@ const GalyleoLayoutControl = component(LayoutControl, {
         submorphs: [
           {
             name: 'checkbox',
+            master: {
+              auto: GalyleoCheckboxUnchecked,
+              states: {
+                active: GalyleoCheckboxChecked
+              }
+            },
             viewModel: {
               checkedCheckboxComponent: GalyleoCheckboxChecked,
               uncheckedCheckboxComponent: GalyleoCheckboxUnchecked

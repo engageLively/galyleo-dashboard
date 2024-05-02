@@ -93,6 +93,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   onLoad () {
     super.onLoad();
     // document.getElementById('loading-screen').remove();
+    this.opacity = 1;
   }
 
   defaultMenuItems (morph, evt) {
@@ -459,7 +460,6 @@ export default class Galyleo extends ViewModel {
   }
 }
 
-// part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({
   name: 'galyleo dashboard studio',
   defaultViewModel: Galyleo,

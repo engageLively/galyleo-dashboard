@@ -99,6 +99,7 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 
   viewDidLoad () {
+    super.viewDidLoad();
     /* if (config.ide.studio.worldMenuInTopBar) {
       const worldMenuButton = part(TopBarButton, {
         name: 'world menu button',
@@ -206,7 +207,13 @@ const GalyleoTopBar = component(TopBar, {
             paddingTop: '2px'
           }],
           tooltip: 'Publish this dashboard'
-        }), without('save button'), without('open component browser'), without('load world button'), without('open asset browser'), without('canvas mode button'), add({
+        }),
+        without('save button'),
+        without('open component browser'),
+        without('load world button'),
+        without('open asset browser'),
+        without('canvas mode button'),
+        add({
           type: Image,
           name: 'galyleo logo',
           borderColor: Color.rgb(23, 160, 251),

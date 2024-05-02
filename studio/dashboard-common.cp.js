@@ -10,6 +10,7 @@ import { GoogleChartHolder } from './chart-creator.cp.js';
 import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 import { loadViaScript } from 'lively.resources/index.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
+import { TableViewer } from './helpers.cp.js';
 
 class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
@@ -60,7 +61,7 @@ class DashboardCommon extends ViewModel {
         get () {
           return [
             'clear', 'checkAndLoad', 'checkPossibleRenameFromBrowser',
-            'checkPossibleRename', 'dependencyGraph', 'testDashboards',
+            'checkPossibleRename', 'displayPreview', 'dependencyGraph', 'testDashboards',
             'loadTestDashboard', 'loadDashboardFromFile', 'checkAndSave',
             'saveDashboardToFile', 'prepareJSONForm', 'restoreFromJSONForm', 'getColumnsOfType',
             'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
@@ -1277,6 +1278,19 @@ class DashboardCommon extends ViewModel {
     }
     this.dataManager.addTable(tableSpec.name, tableSpec.table);
     // this.tables[tableSpec.name] = tableSpec.table;
+  }
+
+  /**
+   * Display a preview of a table.  This just creates a TableViewer and
+   * initializes it
+   * @param tableName: the GalyleoTable to be previewed
+   */
+  displayPreview (tableName) {
+    if (!this.tables[tableName]) {
+      return;
+    }
+    const tableViewer = part(TableViewer).openInWorld();
+    tableViewer.init(tableName, this.tables[tableName]);
   }
 
   /**
