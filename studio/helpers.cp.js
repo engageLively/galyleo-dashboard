@@ -990,8 +990,8 @@ export class LoadURLDialogModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'cancel button', signal: 'fire', handler: 'cancelLoad' },
-            { model: 'load button', signal: 'fire', handler: 'loadURL' }
+            { target: 'cancel button', signal: 'fire', handler: 'cancelLoad' },
+            { target: 'load button', signal: 'fire', handler: 'loadURL' }
           ];
         }
       }

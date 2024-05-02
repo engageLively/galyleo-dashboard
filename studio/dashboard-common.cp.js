@@ -674,7 +674,7 @@ class DashboardCommon extends ViewModel {
     descriptors.sort(desc_sort);
     // chartName = descriptors[0].chartName; storedChart = descriptors[0].descriptor
     // descriptor = descriptors[0]
-    const morphs = await Promise.all(descriptors.map(async descriptor => {
+    /* const morphs = await Promise.all(descriptors.map(async descriptor => {
       if (descriptor.type === 'chart') {
         return await this._restoreChartFromSaved(descriptor.chartName, descriptor.descriptor);
       } else if (descriptor.type === 'filter') {
@@ -682,7 +682,19 @@ class DashboardCommon extends ViewModel {
       } else {
         return this._restoreMorphFromSaved(descriptor.descriptor);
       }
-    }));
+    })); */
+    const morphs = [];
+    debugger;
+    for (let i = 0; i < descriptors.length; i++) {
+      let descriptor = descriptors[i];
+      if (descriptor.type === 'chart') {
+        morphs.push(await this._restoreChartFromSaved(descriptor.chartName, descriptor.descriptor));
+      } else if (descriptor.type === 'filter') {
+        morphs.push(await this._restoreFilterFromSaved(descriptor.filterName, descriptor.descriptor));
+      } else {
+        morphs.push(this._restoreMorphFromSaved(descriptor.descriptor));
+      }
+    }
     this.dirty = false;
     return morphs;
   }
@@ -1535,5 +1547,6 @@ class DashboardCommon extends ViewModel {
     return chartMorph;
   }
 }
+
 
 export { DashboardCommon };
