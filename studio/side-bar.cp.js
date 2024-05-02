@@ -1,4 +1,4 @@
-import { PropertiesPanel } from 'lively.ide/studio/properties-panel.cp.js';
+import { PropertiesPanel, PropertiesPanelModel } from 'lively.ide/studio/properties-panel.cp.js';
 import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Color } from 'lively.graphics/color.js';
 import {
@@ -422,12 +422,17 @@ export class ViewControlModel extends EntityControlModel {
   }
 }
 
-// GalyleoPropertiesPanel.get('clip mode selector').owner.master.auto.derivedMorph.ownerChain()
-// part(GalyleoPropertiesPanel).openInWorld()
-// GalyleoPropertiesPanel.edit()
-// m = GalyleoPropertiesPanel.get('background fill input')
-// m.master._overriddenProps.get(m)
+class GalyleoPropertiesPanelModel extends PropertiesPanelModel {
+  focusOn (aMorph) {
+    super.focusOn(aMorph);
+    this.ui.componentControl.visible = false;
+    this.ui.responsiveControl.visible = false;
+    this.ui.componentStatesControl.visible = false;
+  }
+}
+
 const GalyleoPropertiesPanel = component(PropertiesPanel, {
+  defaultViewModel: GalyleoPropertiesPanelModel,
   name: 'galyleo/properties panel',
   fill: Color.rgb(215, 219, 221),
   extent: pt(267.9, 1000),
@@ -771,7 +776,6 @@ const ControlPanel = component({
   ]
 });
 
-// part(GalyleoSideBarControls)
 const GalyleoSideBarControls = component({
   name: 'galyleo/side bar controls',
   clipMode: 'hidden',
@@ -1046,10 +1050,10 @@ const GalyleoSideBar = component({
           name: 'close button',
           extent: pt(84.3, 28),
           layout: new TilingLayout({
-            align: 'row',
+            align: 'center',
             axisAlign: 'center',
-            align: 'right',
-            spacing: 4
+            padding: rect(0, 0, 5, 0),
+            spacing: 8
           }),
           submorphs: [{
             name: 'label',

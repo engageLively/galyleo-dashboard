@@ -460,7 +460,6 @@ export default class Galyleo extends ViewModel {
   }
 }
 
-// part(GalyleoDashboardStudio).openInWorld()
 const GalyleoDashboardStudio = component({
   name: 'galyleo dashboard studio',
   defaultViewModel: Galyleo,

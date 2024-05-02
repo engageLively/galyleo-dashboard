@@ -2,12 +2,17 @@ import { component, part, add, without } from 'lively.morphic/components/core.js
 import { BorderPopup, BorderControl } from 'lively.ide/studio/controls/border.cp.js';
 import { Color, pt, rect } from 'lively.graphics';
 import { GalyleoAddButtonDefault, CloseButtonFloat, WindowHeader, GalyleoDropDownList, GalyleoDropDownListModel, GalyleoDropDown, GalyleoNumberInput, GalyleoColorInput, GalyleoAddButton, GalyleoAddButtonActive, GalyleoAddButtonHovered } from '../shared.cp.js';
-import { TilingLayout } from 'lively.morphic';
+import { TilingLayout, Morph } from 'lively.morphic';
 import { GalyleoPropertySection, GalyleoPropertySectionInactive } from './section.cp.js';
 
-// part(GalyleoBorderPopup).openInWorld()
 const GalyleoBorderPopup = component(BorderPopup, {
   name: 'galyleo/border popup',
+  layout: new TilingLayout({
+    axis: 'column',
+    axisAlign: 'right',
+    hugContentsHorizontally: true,
+    hugContentsVertically: true
+  }),
   fill: Color.rgb(215, 219, 221),
   viewModel: {
     propertyLabelComponent: GalyleoAddButtonDefault,
@@ -16,6 +21,7 @@ const GalyleoBorderPopup = component(BorderPopup, {
   },
   submorphs: [{
     name: 'header menu',
+    reactsToPointer: false,
     master: WindowHeader,
     submorphs: [without('close button')]
   },
@@ -35,19 +41,46 @@ const GalyleoBorderPopup = component(BorderPopup, {
         submorphs: [
           {
             name: 'left border',
-            master: GalyleoAddButton
+            fontSize: 16,
+            master: GalyleoAddButton,
+            master: {
+              auto: GalyleoAddButton,
+              states: {
+                active: GalyleoAddButtonActive
+              }
+            }
           },
           {
             name: 'top border',
-            master: GalyleoAddButton
+            fontSize: 16,
+            master: GalyleoAddButton,
+            master: {
+              auto: GalyleoAddButton,
+              states: {
+                active: GalyleoAddButtonActive
+              }
+            }
           },
           {
             name: 'right border',
-            master: GalyleoAddButton
+            fontSize: 16,
+            master: GalyleoAddButton,
+            master: {
+              auto: GalyleoAddButton,
+              states: {
+                active: GalyleoAddButtonActive
+              }
+            }
           },
           {
             name: 'bottom border',
-            master: GalyleoAddButton
+            fontSize: 16,
+            master: {
+              auto: GalyleoAddButton,
+              states: {
+                active: GalyleoAddButtonActive
+              }
+            }
           }
         ]
       },
@@ -78,9 +111,6 @@ const GalyleoBorderPopup = component(BorderPopup, {
             {
               name: 'border style selector',
               master: GalyleoDropDown,
-              viewModel: {
-                listMaster: GalyleoDropDownList
-              },
               submorphs: [{
                 name: 'interactive label',
                 fontColor: Color.rgb(128, 128, 128)
@@ -92,7 +122,6 @@ const GalyleoBorderPopup = component(BorderPopup, {
   }]
 });
 
-// part(GalyleoBorderControl).openInWorld()
 const GalyleoBorderControl = component(BorderControl, {
   name: 'galyleo/border control',
   layout: new TilingLayout({
@@ -143,7 +172,12 @@ const GalyleoBorderControl = component(BorderControl, {
           name: 'border style selector',
           master: GalyleoDropDown,
           viewModelClass: GalyleoDropDownListModel,
+          extent: pt(101.9, 22),
           viewModel: {
+            listAlign: 'selection',
+            openListInWorld: true,
+            listHeight: 500,
+            items: Morph.prototype.borderOptions,
             listMaster: GalyleoDropDownList
           },
           submorphs: [{
@@ -153,6 +187,7 @@ const GalyleoBorderControl = component(BorderControl, {
         }]
       }, {
         name: 'more button',
+        fontSize: 16,
         master: GalyleoAddButton
       }]
     }]

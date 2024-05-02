@@ -69,6 +69,9 @@ const GalyleoRichTextControl = component(RichTextControl, {
         {
           name: 'section headline',
           fontColor: Color.rgb(66, 73, 73)
+        }, {
+          name: 'add button',
+          visible: false
         }
       ]
     },
@@ -84,20 +87,24 @@ const GalyleoRichTextControl = component(RichTextControl, {
           }
         },
         {
-          name: 'font weight selector',
-          viewModelClass: GalyleoDropDownListModel,
-          master: GalyleoDropDown,
-          viewModel: {
-            listMaster: GalyleoDropDownList
-          }
-        },
-        {
-          name: 'styling controls',
-          submorphs: [
-            { name: 'italic style', master: GalyleoAddButton },
-            { name: 'underline style', master: GalyleoAddButton },
-            { name: 'inline link', master: GalyleoAddButton }
-          ]
+          name: 'weight and styles',
+          submorphs: [{
+            name: 'font weight selector',
+            viewModelClass: GalyleoDropDownListModel,
+            master: GalyleoDropDown,
+            viewModel: {
+              listMaster: GalyleoDropDownList
+            }
+          },
+          {
+            name: 'styling controls',
+            submorphs: [
+              { name: 'italic style', master: GalyleoAddButton },
+              { name: 'underline style', master: GalyleoAddButton },
+              { name: 'inline link', master: GalyleoAddButton },
+              { name: 'quote', master: GalyleoAddButton }
+            ]
+          }]
         },
         {
           name: 'font size input',
@@ -127,14 +134,6 @@ const GalyleoRichTextControl = component(RichTextControl, {
             { name: 'center align', master: GalyleoAddButton },
             { name: 'right align', master: GalyleoAddButton },
             { name: 'block align', master: GalyleoAddButton }
-          ]
-        },
-        {
-          name: 'resizing controls',
-          submorphs: [
-            { name: 'auto width', master: GalyleoAddButton, padding: rect(4, 2, 0, 0) },
-            { name: 'auto height', master: GalyleoAddButton, padding: rect(4, 4, 0, 0) },
-            { name: 'fixed extent', master: GalyleoAddButton, padding: rect(2, 4, 2, 0) }
           ]
         },
         {
