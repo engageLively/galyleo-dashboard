@@ -93,6 +93,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   onLoad () {
     super.onLoad();
     // document.getElementById('loading-screen').remove();
+    this.opacity = 1;
   }
 
   defaultMenuItems (morph, evt) {
