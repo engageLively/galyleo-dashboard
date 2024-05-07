@@ -99,7 +99,7 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 
   viewDidLoad () {
-    super.viewDidLoad();
+    // super.viewDidLoad();
     /* if (config.ide.studio.worldMenuInTopBar) {
       const worldMenuButton = part(TopBarButton, {
         name: 'world menu button',
@@ -157,13 +157,14 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 
   reportBug () {
-    // signal(this, 'initiate bug report');
-    part(BugReporter).openInWorld();
+    signal(this.view, 'initiate bug report');
+    // part(BugReporter).openInWorld();
   }
 
   publishDashboard () {
-    part(Publisher).openInWorld();
-    // signal(this, 'initiate publication');
+    // part(Publisher).openInWorld();
+    // foo
+    signal(this.view, 'initiate publication');
     // window.alert('publish requested');
   }
 }

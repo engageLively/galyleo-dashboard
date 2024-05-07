@@ -57,19 +57,6 @@ export class GalyleoStudioWorld extends LivelyWorld {
     } else {
       return super.keybindings;
     }
-    /* return [
-      ...lively.FreezerRuntime
-        ? [
-            {
-              command: 'galyleo save',
-              keys: {
-                mac: 'Meta-S',
-                win: 'Ctrl-S'
-              }
-            }
-          ]
-        : [], ...super.keybindings
-    ]; */
   }
 
   requestSave () {
@@ -205,8 +192,8 @@ export default class Galyleo extends ViewModel {
             { signal: 'extent', handler: 'relayout' },
             { target: 'side bar', signal: 'position', handler: 'resizeDashboard' },
             { target: 'dashboard', signal: 'onHaloRemoved', handler: 'clearFocus' },
-            { model: 'top bar', signal: 'initiate bug report', handler: 'reportBug' },
-            { model: 'top bar', signal: 'initiate publication', handler: 'publishDashboard' }
+            { target: 'top bar', signal: 'initiate bug report', handler: 'reportBug' },
+            { target: 'top bar', signal: 'initiate publication', handler: 'publishDashboard' }
           ];
         }
       }
