@@ -47,6 +47,9 @@ class GalyleoTopBarModel extends TopBarModel {
           return m => m.owner === this.primaryTarget || m === this.primaryTarget;
         }
       },
+      publisherComponent: {
+        defaultValue: Publisher
+      },
       shapeToIcon: {
         get () {
           return {
@@ -162,7 +165,7 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 
   publishDashboard () {
-    part(Publisher).openInWorld();
+    part(this.publisherComponent).openInWorld();
     // signal(this, 'initiate publication');
     // window.alert('publish requested');
   }

@@ -1,8 +1,12 @@
 import { GalyleoTopBar } from '../../top-bar.cp.js';
 import { Icon, component } from 'lively.morphic';
+import { PublisherJP } from './helpers.cp.js';
 
 const GalyleoTopBarJp = component(GalyleoTopBar, {
   name: 'galyleo/top bar/jp',
+  viewModel: {
+    publisherComponent: PublisherJP
+  },
   submorphs: [{
     name: 'tiling layout',
     submorphs: [{
