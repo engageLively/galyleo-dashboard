@@ -169,6 +169,7 @@ class GalyleoTopBarModel extends TopBarModel {
   }
 }
 
+
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',
   fill: Color.rgb(208, 211, 212),
