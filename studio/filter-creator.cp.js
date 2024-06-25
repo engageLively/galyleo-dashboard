@@ -319,9 +319,9 @@ export class FilterEditorModel extends FilterBuilderModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'cancel' },
-            { model: 'confirm button', signal: 'fire', handler: 'applyChanges' },
-            { model: 'filter selector', signal: 'selection', handler: 'updateColumns' }
+            { target: 'close button', signal: 'fire', handler: 'cancel' },
+            { target: 'confirm button', signal: 'fire', handler: 'applyChanges' },
+            { targer: 'filter selector', signal: 'selection', handler: 'updateColumns' }
           ];
         }
       }
@@ -351,6 +351,7 @@ export class FilterEditorModel extends FilterBuilderModel {
     this.view.remove();
   }
 }
+
 
 // FilterEditor.openInWorld()
 const FilterEditor = component(GalyleoWindow, {

@@ -905,7 +905,7 @@ class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getNumericSpec (columnName) {
-    return await this._executeGetRequest_('get_range_spec', columnName);
+    return await this._executeGetRequest_('get_numeric_spec', columnName);
   }
 }
 

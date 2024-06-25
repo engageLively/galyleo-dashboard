@@ -194,6 +194,9 @@ export class ViewBuilderModel extends ViewModel {
 }
 
 
+
+// ViewBuilder.openInWorld();
+
 const ViewBuilder = component(GalyleoWindow, {
   name: 'view builder',
   defaultViewModel: ViewBuilderModel,

@@ -124,6 +124,7 @@ export class SelectableEntryModel extends ViewModel {
   }
 }
 
+
 export class TableEntryMorph extends Morph {
   static get properties () {
     return {
