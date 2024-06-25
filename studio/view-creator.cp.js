@@ -34,11 +34,11 @@ export class ViewBuilderModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'closeViewBuilder' },
-            { model: 'update button', signal: 'fire', handler: 'updateView' },
-            { model: 'select all columns button', signal: 'fire', handler: 'selectAllColumns' },
-            { model: 'select all widgets button', signal: 'fire', handler: 'selectAllWidgets' },
-            { model: 'edit columns button', signal: 'fire', handler: 'orderColumns' }
+            { target: 'close button', signal: 'fire', handler: 'closeViewBuilder' },
+            { target: 'update button', signal: 'fire', handler: 'updateView' },
+            { target: 'select all columns button', signal: 'fire', handler: 'selectAllColumns' },
+            { target: 'select all widgets button', signal: 'fire', handler: 'selectAllWidgets' },
+            { target: 'edit columns button', signal: 'fire', handler: 'orderColumns' }
           ];
         }
       }
@@ -192,6 +192,7 @@ export class ViewBuilderModel extends ViewModel {
     this.ui.columnList.toggleOrderMode();
   }
 }
+
 
 // ViewBuilder.openInWorld();
 const ViewBuilder = component(GalyleoWindow, {
