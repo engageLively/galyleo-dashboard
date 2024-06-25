@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache/restore@v3
         env:
           cache-name: lively-repo
-          ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
+          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
         with:
           path: .            
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ env.ref }}
@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: LivelyKernel/lively.next
-          ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
+          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
       - name: Install `lively.next`
         if: ${{ steps.cache-lively.outputs.cache-hit != 'true' }}
         run: |
@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache/save@v3
         env:
           cache-name: lively-repo
-          ref: c776d0f511d09064c6e27e0e76efbcfcdd5a2364
+          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
         with:
           path: .            
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ env.ref }}     
