@@ -89,11 +89,11 @@ export class SelectableEntryModel extends ViewModel {
 
   startShifting () {
     this.entryList.startShiftingEntry(this.view);
-    this.master = SelectableEntryDragged; // eslint-disable-line no-use-before-define
+    this.view.master.setState('dragged');
   }
 
   stopShifting () {
-    this.master = SelectableEntry; // eslint-disable-line no-use-before-define
+    this.view.master.setState(null);
     this.entryList.stopShifting();
   }
 
@@ -104,14 +104,10 @@ export class SelectableEntryModel extends ViewModel {
   onRefresh () {
     const { view, ui: { checkbox, entryName, dragControl } } = this;
     view.draggable = this.orderMode;
-    view.master = this.orderMode
-      ? {
-          auto: SelectableEntry, click: SelectableEntryDragged // eslint-disable-line no-use-before-define
-        }
-      : SelectableEntry; // eslint-disable-line no-use-before-define
+    view.master.setState(this.orderMode ? 'orderMode' : null);
     entryName.value = this.entryName;
     // dragControl.draggable = this.orderMode;
-    checkbox.master = this.isSelected ? GalyleoEntryCheckboxChecked : GalyleoEntryCheckboxUnchecked; // eslint-disable-line no-use-before-define
+    checkbox.master.setState(this.isSelected ? 'selected' : null);
     const updateElements = () => {
       if (checkbox.visible !== !this.orderMode) {
         checkbox.visible = !this.orderMode;
@@ -604,7 +600,7 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   }
 
   toggleError () {
-    this.view.master = GalyleoDropDownError; // eslint-disable-line no-use-before-define
+    this.view.master.setState('error');
   }
 
   adjustLableFor (item) {
@@ -615,9 +611,7 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   async toggleList () {
     await super.toggleList();
     this.listMorph.update();
-    if (this.view.master.auto === GalyleoDropDownError) { // eslint-disable-line no-use-before-define
-      this.view.master = GalyleoDropDown; // eslint-disable-line no-use-before-define
-    }
+    this.view.master.setState(null);
   }
 }
 
@@ -666,12 +660,7 @@ const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
   fill: Color.darkGray
 });
 
-const GalyleoDropDown = component(GalyleoDropDownAuto, {
-  name: 'galyleo/drop down',
-  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }
-});
-
-const GalyleoDropDownError = component(GalyleoDropDown, {
+const GalyleoDropDownError = component(GalyleoDropDownAuto, {
   name: 'galyleo/drop down/error',
   extent: pt(168, 34),
   borderColor: Color.rgb(205, 0, 0),
@@ -687,6 +676,11 @@ const GalyleoDropDownError = component(GalyleoDropDown, {
     }, {
       name: 'error icon', visible: true
     }]
+});
+
+const GalyleoDropDown = component(GalyleoDropDownAuto, {
+  name: 'galyleo/drop down',
+  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked, states: { error: GalyleoDropDownError } }
 });
 
 const GalyleoList = component({
@@ -892,7 +886,15 @@ const GalyleoEntryCheckboxUnchecked = component({
   }]
 });
 
-const SelectableEntry = component({
+const GalyleoEntryCheckbox = component(GalyleoEntryCheckboxUnchecked, {
+  master: {
+    states: {
+      selected: GalyleoEntryCheckboxChecked
+    }
+  }
+});
+
+const SelectableEntryDefault = component({
   defaultViewModel: SelectableEntryModel,
   name: 'selectable entry',
   nativeCursor: 'grab',
@@ -902,20 +904,8 @@ const SelectableEntry = component({
   fill: Color.rgba(0, 0, 0, 0),
   isSelected: false,
   layout: new TilingLayout({
-    align: 'left',
-    axis: 'row',
-    autoResize: false,
-    direction: 'leftToRight',
-    orderByIndex: true,
-    padding: {
-      height: 0,
-      width: 0,
-      x: 10,
-      y: 10
-    },
+    padding: rect(10, 8, 0, 2),
     reactToSubmorphAnimations: true,
-    renderViaCSS: true,
-    resizeSubmorphs: false,
     spacing: 10
   }),
   position: pt(344.3, 280.5),
@@ -926,9 +916,9 @@ const SelectableEntry = component({
     nativeCursor: 'grab',
     fill: Color.transparent,
     reactsToPointer: false,
-    padding: rect(3, 5, 0, 0),
+    padding: rect(3, 0, 0, 5),
     textAndAttributes: Icon.textAttribute('bars')
-  }, part(GalyleoEntryCheckboxChecked, { name: 'checkbox' }), {
+  }, part(GalyleoEntryCheckbox, { name: 'checkbox' }), {
     type: Label,
     name: 'entry name',
     reactsToPointer: false,
@@ -937,11 +927,28 @@ const SelectableEntry = component({
   }]
 });
 
-const SelectableEntryDragged = component(SelectableEntry, {
+const SelectableEntryDragged = component(SelectableEntryDefault, {
   name: 'selectable entry/dragged',
   nativeCursor: 'grabbing',
   borderRadius: 5,
-  fill: Color.rgba(0, 0, 0, 0.15)
+  fill: Color.rgba(0, 0, 0, 0.15),
+  submorphs: [{
+    name: 'drag control',
+    padding: rect(3, 0, 0, 5)
+  }]
+});
+
+const SelectableEntry = component(SelectableEntryDefault, {
+  master: {
+    states: {
+      dragged: SelectableEntryDragged,
+      orderMode: component(SelectableEntryDefault, {
+        master: {
+          click: SelectableEntryDragged
+        }
+      })
+    }
+  }
 });
 
 const TableEntry = component({
