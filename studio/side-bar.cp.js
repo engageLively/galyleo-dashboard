@@ -23,12 +23,8 @@ import { GalyleoFillControl } from './controls/fill.cp.js';
 import { GalyleoColorPicker } from './color-picker.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
 
-// GalyleoColorInput.openInWorld()
-// GalyleoSideBar.openInWorld()
-
 const placeholderImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAbZJREFUaEPtmT0vBUEUhp/rIyJBJKKQaCQahUKjpVFoFEqVSBCtPyD+gFZC4Rf4bBX+gMRnr6KhIxEhIScZyWays8a9O7M7nCnvvTvnfc77nrnZ3QaJr0bi+lGAqh1UB+ruQC8wA4wAPZHFvgB3wCnw7KpdFCERvwZ0RxZul3sFtl0QRQDzwHjF4r/L3wAHeVqKANYBcaEOSyK09VuADeuCzcgkXvWLHPDaICCUV30FUAfcHdAIeXVAI6QRarEDGqEWG6h/ZP8xQl3Amwe41zEeO0JjwDSwC3z8AFE7gAFgGRAHLoCTOgEMAW3AvUNUpxE/mPn+ELgugIjmgNwzrwDtJhp5N+B5t6fvwA7w5ICIAiAztACMGhEPwJ6V70lg1iHy0UALjL2iAMhATlmVb4F989kwsGjccaXlEjiuAkC6Lt3PO8nOgHNgFejzODKPgCvrd0Ed6De5dz0z+jTZzg5tEUfePAQD6ACWADl5ylz2PAQDmAMmylSe2Ss7D8EAAmmv5hQKCaMOeHUgoAVe9f/0w93kH68n/4JD4p30K6aA81ne1vqatbxeNreTOtBc38q7KnkHvgAu0nMxVZqzQwAAAABJRU5ErkJggg==';
 
-// SideBarTab.openInWorld()
 const SideBarTab = component({
   name: 'side bar/tab',
   borderColor: Color.rgb(128, 128, 128),
@@ -58,11 +54,11 @@ const SideBarTab = component({
   }]
 });
 
-// SideBarTabSelected.openInWorld()
 const SideBarTabSelected = component(SideBarTab, {
   name: 'side bar/tab/selected',
+  fill: Color.rgb(241, 90, 36),
   submorphs: [
-    { name: 'tab label', fontColor: Color.rgb(241, 90, 36) }
+    { name: 'tab label', fontColor: Color.rgb(255, 255, 255) }
   ]
 });
 
@@ -72,18 +68,6 @@ export class DashboardControl extends ViewModel {
       isHaloItem: { defaultValue: true },
       dashboard: {},
       topBar: {},
-      tabComponent: {
-        isComponent: true,
-        get () {
-          return this.getProperty('tabComponent') || SideBarTab;
-        }
-      },
-      tabComponentSelected: {
-        isComponent: true,
-        get () {
-          return this.getProperty('tabComponentSelected') || SideBarTabSelected;
-        }
-      },
       isToggled: {
         defaultValue: false
       },
@@ -142,8 +126,8 @@ export class DashboardControl extends ViewModel {
       charts: 'chartControl',
       views: 'viewControl'
     };
-    this.ui.tabSwitcher.submorphs.forEach(m => m.master = this.tabComponent);
-    this.ui[tabName + 'Tab'].master = this.tabComponentSelected;
+    this.ui.tabSwitcher.submorphs.forEach(m => m.master.setState(null));
+    this.ui[tabName + 'Tab'].master.setState('selected');
     const controlFrame = this.ui.controlContainer;
     const selectedControl = this.ui[tabToControl[tabName]];
     controlFrame.submorphs.forEach(m => {
@@ -815,6 +799,7 @@ const GalyleoSideBarControls = component({
     }),
     submorphs: [
       part(SideBarTab, {
+        master: { states: { selected: SideBarTabSelected } },
         name: 'tables tab',
         submorphs: [{
           name: 'tab label',
@@ -822,6 +807,7 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(SideBarTab, {
+        master: { states: { selected: SideBarTabSelected } },
         name: 'filters tab',
         submorphs: [{
           name: 'tab label',
@@ -829,6 +815,7 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(SideBarTab, {
+        master: { states: { selected: SideBarTabSelected } },
         name: 'views tab',
         submorphs: [{
           name: 'tab label',
@@ -836,6 +823,7 @@ const GalyleoSideBarControls = component({
         }]
       }),
       part(SideBarTab, {
+        master: { states: { selected: SideBarTabSelected } },
         name: 'charts tab',
         submorphs: [{
           name: 'tab label',
