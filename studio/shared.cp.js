@@ -89,11 +89,11 @@ export class SelectableEntryModel extends ViewModel {
 
   startShifting () {
     this.entryList.startShiftingEntry(this.view);
-    this.master = SelectableEntryDragged; // eslint-disable-line no-use-before-define
+    this.view.master.setState('dragged');
   }
 
   stopShifting () {
-    this.master = SelectableEntry; // eslint-disable-line no-use-before-define
+    this.view.master.setState(null);
     this.entryList.stopShifting();
   }
 
@@ -104,14 +104,10 @@ export class SelectableEntryModel extends ViewModel {
   onRefresh () {
     const { view, ui: { checkbox, entryName, dragControl } } = this;
     view.draggable = this.orderMode;
-    view.master = this.orderMode
-      ? {
-          auto: SelectableEntry, click: SelectableEntryDragged // eslint-disable-line no-use-before-define
-        }
-      : SelectableEntry; // eslint-disable-line no-use-before-define
+    view.master.setState(this.orderMode ? 'orderMode' : null);
     entryName.value = this.entryName;
     // dragControl.draggable = this.orderMode;
-    checkbox.master = this.isSelected ? GalyleoEntryCheckboxChecked : GalyleoEntryCheckboxUnchecked; // eslint-disable-line no-use-before-define
+    checkbox.master.setState(this.isSelected ? 'selected' : null);
     const updateElements = () => {
       if (checkbox.visible !== !this.orderMode) {
         checkbox.visible = !this.orderMode;
@@ -385,7 +381,6 @@ export class GalyleoListMorph extends Morph {
   _positionScrollbar (scrollY) {
     const list = this.getSubmorphNamed('item list');
     const scrollBar = this.getSubmorphNamed('scroll bar');
-    // scrollY = list.scroll.y;
     const padding = 8;
     this.withMetaDo({ skipReconciliation: true }, () => {
       scrollBar.top = num.interpolate(num.clamp(scrollY / (list.scrollExtent.y - list.height), 0, 1), padding, list.height - scrollBar.height - 3 * padding);
@@ -427,8 +422,6 @@ const GalyleoTextInput = component(TextInput, {
   fontColor: Color.black
 });
 
-// m = part(DarkNumberIconWidget).openInWorld()
-// m.master = GalyleoNumberInput
 const GalyleoNumberInput = component(DarkNumberIconWidget, {
   name: 'galyleo/number input',
   borderColor: Color.rgbHex('8E9B9B'),
@@ -465,27 +458,23 @@ const GalyleoAddButtonHovered = component(AddButton, {
   fill: Color.black.withA(.1)
 });
 
-// GalyleoAddButtonActive.openInWorld()
 const GalyleoAddButtonActive = component(GalyleoAddButtonHovered, {
   name: 'galyleo/add button/active',
   fontColor: Color.white,
   fill: Color.rgbHex('F57F17')
 });
 
-// GalyleoAddButton.openInWorld()
 const GalyleoAddButton = component(AddButton, {
   name: 'galyleo/add button',
   master: { auto: GalyleoAddButtonDefault, hover: GalyleoAddButtonHovered },
   fontColor: Color.rgb(66, 73, 73)
 });
 
-// GalyleoPropertyLabel.openInWorld();
 const GalyleoPropertyLabel = component(PropertyLabel, {
   name: 'galyleo/property label',
   fontColor: Color.rgb(66, 73, 73)
 });
 
-// GalyleoPropertyLabelActive.openInWorld();
 const GalyleoPropertyLabelActive = component(PropertyLabelActive, {
   name: 'galyleo/property label/active',
   fontColor: Color.rgb(255, 255, 255),
@@ -493,17 +482,12 @@ const GalyleoPropertyLabelActive = component(PropertyLabelActive, {
   extent: pt(31.2, 34)
 });
 
-// GalyleoPropertyLabelHovered.openInWorld();
 const GalyleoPropertyLabelHovered = component(PropertyLabelHovered, {
   name: 'galyleo/property label/hovered',
   fill: Color.rgb(172, 172, 172),
   fontColor: Color.rgb(66, 73, 73)
 });
 
-// ColorInput.openInWorld()
-// part(GalyleoTextInput, { readOnly: true, needsDocument: false })
-// part(GalyleoNumberInput).openInWorld()
-// part(GalyleoColorInput).openInWorld()
 const GalyleoColorInput = component(ColorInput, {
   name: 'galyleo/color input',
   layout: new TilingLayout({
@@ -531,7 +515,6 @@ const GalyleoColorInput = component(ColorInput, {
   }]
 });
 
-// GalyleoWindow.openInWorld()
 const GalyleoWindow = component({
   name: 'galyleo/window',
   dropShadow: new ShadowObject({ color: Color.rgba(0, 0, 0, 0.4086), blur: 20 }),
@@ -574,7 +557,6 @@ const GalyleoWindow = component({
   }]
 });
 
-// part(GalyleoDropDownList, { items: ['hello', 'world', 'there']}).openInWorld()
 const GalyleoDropDownList = component(SystemList, {
   name: 'galyleo/drop down list',
   fontFamily: galyleoFont,
@@ -619,7 +601,7 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   }
 
   toggleError () {
-    this.view.master = GalyleoDropDownError; // eslint-disable-line no-use-before-define
+    this.view.master.setState('error');
   }
 
   adjustLableFor (item) {
@@ -630,9 +612,7 @@ export class GalyleoDropDownListModel extends DropDownListModel {
   async toggleList () {
     await super.toggleList();
     this.listMorph.update();
-    if (this.view.master.auto === GalyleoDropDownError) { // eslint-disable-line no-use-before-define
-      this.view.master = GalyleoDropDown; // eslint-disable-line no-use-before-define
-    }
+    this.view.master.setState(null);
   }
 }
 
@@ -681,12 +661,7 @@ const GalyleoDropDownClicked = component(GalyleoDropDownAuto, {
   fill: Color.darkGray
 });
 
-const GalyleoDropDown = component(GalyleoDropDownAuto, {
-  name: 'galyleo/drop down',
-  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked }
-});
-
-const GalyleoDropDownError = component(GalyleoDropDown, {
+const GalyleoDropDownError = component(GalyleoDropDownAuto, {
   name: 'galyleo/drop down/error',
   extent: pt(168, 34),
   borderColor: Color.rgb(205, 0, 0),
@@ -704,7 +679,11 @@ const GalyleoDropDownError = component(GalyleoDropDown, {
     }]
 });
 
-// GalyleoList.openInWorld()
+const GalyleoDropDown = component(GalyleoDropDownAuto, {
+  name: 'galyleo/drop down',
+  master: { auto: GalyleoDropDownAuto, click: GalyleoDropDownClicked, states: { error: GalyleoDropDownError } }
+});
+
 const GalyleoList = component({
   type: GalyleoListMorph,
   name: 'galyleo list',
@@ -803,7 +782,6 @@ const MenuBarButtonClicked = component(MenuBarButtonDefault, {
   fill: Color.rgba(0, 0, 0, 0.25)
 });
 
-// part(MenuBarButton).openInWorld()
 const MenuBarButton = component(MenuBarButtonDefault, {
   name: 'menu bar button',
   master: {
@@ -813,7 +791,6 @@ const MenuBarButton = component(MenuBarButtonDefault, {
   }
 });
 
-// PromptButtonAuto.openInWorld()
 const PromptButtonAuto = component(MenuBarButtonDefault, {
   name: 'prompt button auto',
   fill: new LinearGradient({
@@ -836,7 +813,6 @@ const PromptButtonClick = component(PromptButtonAuto, {
   fill: new LinearGradient({ stops: [{ offset: 0, color: Color.rgb(190, 22, 28) }, { offset: 1, color: Color.rgb(193, 72, 28) }], vector: rect(0.0007483204642836916, 0.4726547905335063, 0.9985033590714326, 0.05469041893298742) })
 });
 
-// part(PromptButton).openInWorld()
 const PromptButton = component(PromptButtonAuto, {
   name: 'prompt button',
   master: { auto: PromptButtonAuto, click: PromptButtonClick }
@@ -855,7 +831,6 @@ const GalyleoEntryCheckboxChecked = component({
     align: 'center',
     axisAlign: 'center',
     hugsContentsVertically: true,
-    // direction: 'topToBottom',
     orderByIndex: true,
     padding: rect(0, 2, 0, 0),
     resizePolicies: [['h floater', {
@@ -878,7 +853,6 @@ const GalyleoEntryCheckboxChecked = component({
   }]
 });
 
-// CheckboxUnchecked.openInWorld()
 const GalyleoEntryCheckboxUnchecked = component({
   name: 'checkbox/unchecked',
   borderColor: Color.rgb(127, 140, 141),
@@ -890,7 +864,6 @@ const GalyleoEntryCheckboxUnchecked = component({
     autoResize: true,
     axis: 'column',
     hugsContentsVertically: true,
-    // direction: 'topToBottom',
     orderByIndex: true,
     padding: rect(0, 2, 0, 0),
     resizePolicies: [['h floater', {
@@ -914,8 +887,15 @@ const GalyleoEntryCheckboxUnchecked = component({
   }]
 });
 
-// part(SelectableEntry).openInWorld()
-const SelectableEntry = component({
+const GalyleoEntryCheckbox = component(GalyleoEntryCheckboxUnchecked, {
+  master: {
+    states: {
+      selected: GalyleoEntryCheckboxChecked
+    }
+  }
+});
+
+const SelectableEntryDefault = component({
   defaultViewModel: SelectableEntryModel,
   name: 'selectable entry',
   nativeCursor: 'grab',
@@ -925,20 +905,8 @@ const SelectableEntry = component({
   fill: Color.rgba(0, 0, 0, 0),
   isSelected: false,
   layout: new TilingLayout({
-    align: 'left',
-    axis: 'row',
-    autoResize: false,
-    direction: 'leftToRight',
-    orderByIndex: true,
-    padding: {
-      height: 0,
-      width: 0,
-      x: 10,
-      y: 10
-    },
+    padding: rect(10, 8, 0, 2),
     reactToSubmorphAnimations: true,
-    renderViaCSS: true,
-    resizeSubmorphs: false,
     spacing: 10
   }),
   position: pt(344.3, 280.5),
@@ -949,9 +917,9 @@ const SelectableEntry = component({
     nativeCursor: 'grab',
     fill: Color.transparent,
     reactsToPointer: false,
-    padding: rect(3, 5, 0, 0),
+    padding: rect(3, 0, 0, 5),
     textAndAttributes: Icon.textAttribute('bars')
-  }, part(GalyleoEntryCheckboxChecked, { name: 'checkbox' }), {
+  }, part(GalyleoEntryCheckbox, { name: 'checkbox' }), {
     type: Label,
     name: 'entry name',
     reactsToPointer: false,
@@ -960,15 +928,30 @@ const SelectableEntry = component({
   }]
 });
 
-// SelectableEntryDragged.openInWorld()
-const SelectableEntryDragged = component(SelectableEntry, {
+const SelectableEntryDragged = component(SelectableEntryDefault, {
   name: 'selectable entry/dragged',
   nativeCursor: 'grabbing',
   borderRadius: 5,
-  fill: Color.rgba(0, 0, 0, 0.15)
+  fill: Color.rgba(0, 0, 0, 0.15),
+  submorphs: [{
+    name: 'drag control',
+    padding: rect(3, 0, 0, 5)
+  }]
 });
 
-// TableEntry.openInWorld()
+const SelectableEntry = component(SelectableEntryDefault, {
+  master: {
+    states: {
+      dragged: SelectableEntryDragged,
+      orderMode: component(SelectableEntryDefault, {
+        master: {
+          click: SelectableEntryDragged
+        }
+      })
+    }
+  }
+});
+
 const TableEntry = component({
   type: TableEntryMorph,
   name: 'table entry',
@@ -1010,7 +993,6 @@ const TableEntry = component({
   }]
 });
 
-// TableEntryVisualOnly.openInWorld()
 const TableEntryVisualOnly = component(TableEntry, {
   name: 'table entry/edit',
   submorphs: [
@@ -1024,7 +1006,7 @@ const TableEntryVisualOnly = component(TableEntry, {
     })
   ]
 });
-// TableEntryEdit.openInWorld()
+
 const TableEntryEdit = component(TableEntry, {
   name: 'table entry/edit',
   submorphs: [
@@ -1039,7 +1021,6 @@ const TableEntryEdit = component(TableEntry, {
   ]
 });
 
-// TableEntryVisual.openInWorld()
 const TableEntryVisual = component(TableEntryEdit, {
   name: 'table entry/visual',
   submorphs: [
@@ -1054,7 +1035,6 @@ const TableEntryVisual = component(TableEntryEdit, {
   ]
 });
 
-// part(GalyleoConfirmPrompt).openInWorld().activate()
 const GalyleoConfirmPrompt = component(GalyleoWindow, {
   name: 'galyleo/confirm prompt',
   defaultViewModel: ConfirmPromptModel,

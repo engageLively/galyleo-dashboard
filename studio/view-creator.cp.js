@@ -194,7 +194,9 @@ export class ViewBuilderModel extends ViewModel {
 }
 
 
+
 // ViewBuilder.openInWorld();
+
 const ViewBuilder = component(GalyleoWindow, {
   name: 'view builder',
   defaultViewModel: ViewBuilderModel,
@@ -417,7 +419,6 @@ export class ViewCreatorPromptModel extends ViewModel {
   }
 }
 
-
 export class ViewCreatorModel extends ViewModel {
   static get properties () {
     return {
@@ -472,7 +473,6 @@ export class ViewCreatorModel extends ViewModel {
     }
   }
 }
-
 
 // ViewCreator.openInWorld()
 const ViewCreator = component({
