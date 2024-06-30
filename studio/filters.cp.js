@@ -575,6 +575,7 @@ export class ListFilterMorph extends Morph {
     this.tableName = tableName;
     this.valueList.items = choices;
     this.valueList.multiSelect = true;
+    this.valueList.multiSelectWithSimpleClick = true;
     this.isString = isString;
     this.valueList.selection = choices[0];
     connect(this.valueList, 'selection', this, 'signalFilterChanged');
@@ -648,6 +649,7 @@ export class ListFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
+
 
 // part(ListFilter).openInWorld()
 const ListFilter = component(VisualFilter, {

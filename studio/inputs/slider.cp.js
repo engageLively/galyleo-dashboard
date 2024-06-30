@@ -488,8 +488,6 @@ class DoubleSliderModel extends ViewModel {
   }
 }
 
-
-
 class DoubleSliderKnob extends Morph {
   // A DoubleSlider knob.  This is freely dragged along the x-axis between the
   // bounds given by this.owner.positionRanges, and its y position is always 0.
@@ -629,7 +627,6 @@ class DoubleSliderWithValuesModel extends ViewModel {
         get () {
           return [
             { target: 'double slider', signal: 'rangeChanged', handler: 'signalRangeChanged' },
-            { target: 'double slider', signal: 'rangeChanged', handler: 'displayRange' },
             {
               target: 'min input',
               signal: 'decrement',
@@ -717,9 +714,6 @@ class DoubleSliderWithValuesModel extends ViewModel {
     this.models.doubleSlider.range = range;
   }
 }
-
-
-
 
 const IncrementButton = component({
   type: Label,
