@@ -684,7 +684,6 @@ class DashboardCommon extends ViewModel {
       }
     })); */
     const morphs = [];
-    debugger;
     for (let i = 0; i < descriptors.length; i++) {
       let descriptor = descriptors[i];
       if (descriptor.type === 'chart') {
@@ -1547,6 +1546,5 @@ class DashboardCommon extends ViewModel {
     return chartMorph;
   }
 }
-
 
 export { DashboardCommon };

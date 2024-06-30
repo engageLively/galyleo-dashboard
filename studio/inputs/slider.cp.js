@@ -337,12 +337,12 @@ class DoubleSliderModel extends ViewModel {
         // read the range values from the positions of the knobs.  Make sure
         // that the minKnob exists (i.e., is rendered) before calling.
       },
-      expose: { get () { return ['positionRanges', 'updateConnector', 'minValue', 'maxValue', 'increment']; } },
+      expose: { get () { return ['rangeChanged', 'positionRanges', 'updateConnector', 'minValue', 'maxValue', 'increment']; } },
       bindings: {
         get () {
           return [
-            { target: 'max knob', signal: 'position', handler: 'signalRangeChanged' },
-            { target: 'min knob', signal: 'position', handler: 'signalRangeChanged' },
+            { model: 'max knob', signal: 'position', handler: 'signalRangeChanged' },
+            { model: 'min knob', signal: 'position', handler: 'signalRangeChanged' },
             { signal: 'onDragStart', handler: '_startDraggingClosestHandle', override: true },
             { signal: 'onDragEnd', handler: '_stopDraggingHandle', override: true },
             { signal: 'onDrag', handler: '_dragSelectedKnob', override: true }
@@ -363,6 +363,7 @@ class DoubleSliderModel extends ViewModel {
     conn.width = maxKnob.center.subPt(minKnob.center).x;
     conn.left = minKnob.center.x;
     conn.position.y = sliderCenter.position.y;
+    this.signalRangeChanged();
   }
 
   confirm () {
@@ -380,6 +381,9 @@ class DoubleSliderModel extends ViewModel {
   signalRangeChanged () {
     signal(this, 'rangeChanged');
     signal(this.view, 'rangeChanged');
+    /* if (this.view.owner) {
+      this.view.owner.viewModel.signalRangeChanged();
+    } */
   }
 
   // The maximum position of the right-hand knob.  The value of the knob
@@ -484,6 +488,8 @@ class DoubleSliderModel extends ViewModel {
   }
 }
 
+
+
 class DoubleSliderKnob extends Morph {
   // A DoubleSlider knob.  This is freely dragged along the x-axis between the
   // bounds given by this.owner.positionRanges, and its y position is always 0.
@@ -544,8 +550,8 @@ class SliderWithValueModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'slider', signal: 'valueChanged', handler: 'signalValueChanged' },
-            { model: 'slider', signal: 'valueChanged', handler: 'updateValue' },
+            { target: 'slider', signal: 'valueChanged', handler: 'signalValueChanged' },
+            { target: 'slider', signal: 'valueChanged', handler: 'updateValue' },
             {
               target: 'value input',
               signal: 'onInput',
@@ -614,14 +620,16 @@ class DoubleSliderWithValuesModel extends ViewModel {
             ['minValue', { model: 'double slider' }],
             ['maxValue', { model: 'double slider' }],
             ['increment', { model: 'double slider' }],
-            ['range', { model: 'double slider' }]];
+            ['range', { model: 'double slider' }],
+            'rangeChanged'
+          ];
         }
       },
       bindings: {
         get () {
           return [
-            { model: 'double slider', signal: 'rangeChanged', handler: 'signalRangeChanged' },
-            { model: 'double slider', signal: 'rangeChanged', handler: 'displayRange' },
+            { target: 'double slider', signal: 'rangeChanged', handler: 'signalRangeChanged' },
+            { target: 'double slider', signal: 'rangeChanged', handler: 'displayRange' },
             {
               target: 'min input',
               signal: 'decrement',
@@ -671,6 +679,7 @@ class DoubleSliderWithValuesModel extends ViewModel {
   signalRangeChanged () {
     signal(this, 'rangeChanged');
     signal(this.view, 'rangeChanged');
+    this.displayRange();
   }
 
   viewDidLoad () {
@@ -690,6 +699,12 @@ class DoubleSliderWithValuesModel extends ViewModel {
     maxInput.value = range.max;
   }
 
+  /* handleRangeChanged () {
+    // window.alert('foo');
+    this.displayRange();
+    this.signalRangeChanged();
+  } */
+
   // setRange.  This is called when one of the two inputs is accepted.
   // onInput from each input morph is hardcoded to this.  Sets the range
   // of the underlying doubleSlider.
@@ -702,6 +717,9 @@ class DoubleSliderWithValuesModel extends ViewModel {
     this.models.doubleSlider.range = range;
   }
 }
+
+
+
 
 const IncrementButton = component({
   type: Label,

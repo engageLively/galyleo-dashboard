@@ -856,17 +856,28 @@ class RemoteGalyleoTable extends GalyleoTable {
 
   async getFilteredRows (filterSpec = null) {
     const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, 'get_filtered_rows'));
-    const body = { table: this.tableName };
+    /* const body = { table: this.tableName };
 
     if (filterSpec) {
       body.filter = filterSpec;
     }
-    urlFetcher.addBody(JSON.stringify(body));
+    */
+
+    // urlFetcher.addBody(JSON.stringify(body));
     urlFetcher.addHeader('Accept', 'application/json');
     urlFetcher.addHeader('Content-Type', 'application/json');
-    try {
+    urlFetcher.addHeader('Table-Name', this.tableName);
+    if (filterSpec) {
+      urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
+    }
+    /* try {
       const result = await urlFetcher.post();
       return result;
+    } catch (error) {
+      return [];
+    } */
+    try {
+      return await urlFetcher.readJson();
     } catch (error) {
       return [];
     }
