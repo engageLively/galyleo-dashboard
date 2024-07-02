@@ -396,13 +396,13 @@ export class ViewCreatorPromptModel extends ViewModel {
     return {
       expose: {
         get () {
-          return ['init'];
+          return ['init', 'close'];
         }
       },
       bindings: {
         get () {
           return [
-            { target: 'view creator', signal: 'canceled', handler: 'close' },
+            { target: 'close button', signal: 'fire', handler: 'close' },
             { target: 'view creator', signal: 'viewCreated', handler: 'close' }
           ];
         }
@@ -419,13 +419,20 @@ export class ViewCreatorPromptModel extends ViewModel {
   }
 }
 
+
+
+
 export class ViewCreatorModel extends ViewModel {
   static get properties () {
     return {
+      viewCreated: { derived: true, isSignal: true, readOnly: true },
+      expose: {
+        get () { return 'viewCreated'; }
+      },
       bindings: {
         get () {
           return [
-            { target: 'close button', signal: 'fire', handler: 'cancel' },
+
             { target: 'create view button', signal: 'fire', handler: 'createView' }
           ];
         }
@@ -455,10 +462,6 @@ export class ViewCreatorModel extends ViewModel {
     return this.ui.tableSelector.selection !== '__no_selection__';
   }
 
-  cancel () {
-    signal(this, 'canceled');
-  }
-
   createView () {
     const { viewNameInput, tableSelector } = this.ui;
     if (this._nameOK() && this._tableOK()) {
@@ -473,6 +476,9 @@ export class ViewCreatorModel extends ViewModel {
     }
   }
 }
+
+
+
 
 // ViewCreator.openInWorld()
 const ViewCreator = component({
