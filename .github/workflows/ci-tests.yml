@@ -20,7 +20,7 @@ jobs:
         uses: actions/cache/restore@v3
         env:
           cache-name: lively-repo-with-build
-          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
+          ref: 9c51c586cfca90d3df3c4439a9677adfa40476de
         with:
           path: .            
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ env.ref }}
@@ -29,18 +29,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: LivelyKernel/lively.next
-          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
+          ref: 9c51c586cfca90d3df3c4439a9677adfa40476de
+      - name: Prepare to install `lively.next`
+        run: chmod a+x ./install.sh
       - name: Install `lively.next`
         if: ${{ steps.cache-lively-with-build.outputs.cache-hit != 'true' }}
-        run: |
-          chmod a+x ./install.sh
-          ./install.sh
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 5
+          retry_on: error
+          command: ./install.sh
       - name: Save `lively` installation in cache
         if: ${{ steps.cache-lively-with-build.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v3
         env:
           cache-name: lively-repo-with-build
-          ref: 130b0864109f7f2ba2930ca96821a30df8066c28
+          ref: 9c51c586cfca90d3df3c4439a9677adfa40476de
         with:
           path: .            
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ env.ref }}     
@@ -49,6 +54,11 @@ jobs:
         with:
           ref: ${{ github.ref }}
           path: local_projects/engageLively--galyleo-dashboard
+      - name: Checkout Project Dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: LivelyKernel/partsbin
+          path: local_projects/LivelyKernel--partsbin/
       - name: Start `lively.next`
         run: |
           ./start-server.sh > /dev/null 2>&1 &

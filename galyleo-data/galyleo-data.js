@@ -794,10 +794,7 @@ class RemoteGalyleoTable extends GalyleoTable {
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
     this.headers = { };
-    if (connector.dashboardName != null) {
-      this.dashboardName = connector.dashboardName;
-      this.headers['Dashboard-Name'] = connector.dashboardName;
-    }
+
     // If the connector indicates that polling should take place, simply raise the dataUpdated signal every
     // connector.interval seconds; the client(s), (typically only the dashboard controller) will decide what to do.
     // If there aren't any charts or widgets using this table data, the answer will typically be nothing.
@@ -856,28 +853,19 @@ class RemoteGalyleoTable extends GalyleoTable {
 
   async getFilteredRows (filterSpec = null) {
     const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, 'get_filtered_rows'));
-    /* const body = { table: this.tableName };
+    const body = { table: this.tableName };
 
     if (filterSpec) {
       body.filter = filterSpec;
     }
-    */
+    urlFetcher.body = body;
 
-    // urlFetcher.addBody(JSON.stringify(body));
     urlFetcher.addHeader('Accept', 'application/json');
     urlFetcher.addHeader('Content-Type', 'application/json');
-    urlFetcher.addHeader('Table-Name', this.tableName);
-    if (filterSpec) {
-      urlFetcher.addHeader('Filter-Spec', JSON.stringify(filterSpec));
-    }
-    /* try {
+
+    try {
       const result = await urlFetcher.post();
       return result;
-    } catch (error) {
-      return [];
-    } */
-    try {
-      return await urlFetcher.readJson();
     } catch (error) {
       return [];
     }
@@ -916,7 +904,8 @@ class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getNumericSpec (columnName) {
-    return await this._executeGetRequest_('get_numeric_spec', columnName);
+    let result = await this._executeGetRequest_('get_range_spec', columnName);
+    return { min_val: result[0], max_val: result[1] };
   }
 }
 
