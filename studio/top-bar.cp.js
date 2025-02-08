@@ -167,8 +167,11 @@ class GalyleoTopBarModel extends TopBarModel {
     signal(this.view, 'initiate publication');
     // window.alert('publish requested');
   }
-}
 
+  updateMiniMapIfNeeded () {
+    // just override to prevent errors
+  }
+}
 
 const GalyleoTopBar = component(TopBar, {
   name: 'galyleo/top bar',

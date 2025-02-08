@@ -52,3 +52,4 @@ jupyterlab-universal-extension/package-deploy.json
 package-lock.json
 config.js
 bin/
+old-bin/

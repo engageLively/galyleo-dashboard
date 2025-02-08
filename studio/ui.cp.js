@@ -1,3 +1,4 @@
+/* global URLSearchParams */
 
 import { pt, Color } from 'lively.graphics/index.js';
 import { resource } from 'lively.resources/index.js';
@@ -10,6 +11,7 @@ import { Dashboard } from './dashboard.cp.js';
 import { GalyleoSideBar } from './side-bar.cp.js';
 import { BugReporter } from './helpers.cp.js';
 import { Publisher } from './helpers.cp.js';
+import { studioServer, dashboardStoreServer } from '../config.js';
 
 export class GalyleoStudioWorld extends LivelyWorld {
   static get properties () {
@@ -28,12 +30,18 @@ export class GalyleoStudioWorld extends LivelyWorld {
   }
 
   withTopBarDo (cb) {
-    const topBar = this.getSubmorphNamed('dashboard').get('top bar');
-    cb(topBar);
+    const dashboard = this.getSubmorphNamed('dashboard');
+    if (dashboard) {
+      const topBar = dashboard.get('top bar');
+      cb(topBar);
+    }
   }
 
   get serverURL () {
-    return 'https://matt.engagelively.com';
+    if (this._serverURLFromStart) {
+      return this._serverURLFromStart;
+    }
+    return studioServer;
   }
 
   get commands () {
@@ -80,6 +88,15 @@ export class GalyleoStudioWorld extends LivelyWorld {
   onLoad () {
     super.onLoad();
     // document.getElementById('loading-screen').remove();
+    const parameters = new URLSearchParams(document.location.search);
+    const serverURL = parameters.get('serverURL');
+    if (serverURL) {
+      this._serverURLFromStart = serverURL;
+    }
+    const storeServer = parameters.get('dashboardStoreServer');
+    if (storeServer) {
+      dashboardStoreServer.url = storeServer;
+    }
     this.opacity = 1;
   }
 
@@ -122,6 +139,12 @@ export class GalyleoStudioWorld extends LivelyWorld {
       pointerId,
       target,
       maskBounds: this.getHaloMask()
+    });
+    const submorphsToDrop = ['grab', 'copy', 'inspect', 'edit', 'component', 'responsive'];
+    halo.submorphs.forEach(sm => {
+      if (submorphsToDrop.indexOf(sm.name) >= 0) {
+        sm.remove();
+      }
     });
 
     this.addMorph(halo);
