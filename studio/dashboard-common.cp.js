@@ -559,7 +559,11 @@ class DashboardCommon extends ViewModel {
    * @param { string } storedForm - The stored form in a JSON string
    */
   async restoreFromJSONForm (storedForm) {
-    await this._restoreFromSaved(JSON.parse(storedForm));
+    try {
+      await this._restoreFromSaved(JSON.parse(storedForm));
+    } catch (err) {
+
+    }
   }
 
   /**
