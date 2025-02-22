@@ -47,8 +47,8 @@ export class BugReporterModel extends ViewModel {
    * @param { string } filePath - The path to the dashboard file.
    */
   init (userName, filePath) {
-    this._initInputField_('user', userName);
-    this._initInputField_('file_path', filePath);
+    this._initInputField_('userNameInput', userName);
+    this._initInputField_('fileInput', filePath);
   }
 
   /**
@@ -236,7 +236,7 @@ class URLDisplayModel extends ViewModel {
       bindings: {
         get () {
           return [
-            { model: 'close button', signal: 'fire', handler: 'close' }
+            { target: 'close button', signal: 'fire', handler: 'close' }
           ];
         }
       }
@@ -260,8 +260,8 @@ class URLDisplayModel extends ViewModel {
    */
   init (dashboardURL) {
     this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', dashboardURL.dashboard);
-    const viewString = `https://galyleo.app/published/index.html?dashboard=${dashboardURL}`;
-    this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', dashboardURL.view);
+    const viewString = `https://galyleo.app/published/index.html?dashboard=${dashboardURL.dashboard}`;
+    this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
   }
 
   close () {
@@ -467,9 +467,10 @@ export class PublisherModel extends ViewModel {
       }
       r.contentType = 'application/json';
       r.useCors = true;
-      const response = JSON.parse(await r.post(body));
+      const response = await r.post(body);
+      const responseObject = typeof (response) == 'object' ? response : { dashboad: response };
       const urlDisplay = part(URLDisplay);
-      urlDisplay.init(response);
+      urlDisplay.init(responseObject);
       urlDisplay.openInWorld();
       this.close();
     }
