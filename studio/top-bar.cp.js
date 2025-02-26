@@ -218,6 +218,7 @@ const GalyleoTopBar = component(TopBar, {
         without('load world button'),
         without('open asset browser'),
         without('canvas mode button'),
+        without('right UI wrapper'),
         add({
           type: Image,
           name: 'galyleo logo',
