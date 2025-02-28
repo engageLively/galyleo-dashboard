@@ -1,7 +1,7 @@
 import { TopBar, TopBarModel } from 'lively.ide/studio/top-bar.cp.js';
 import { component, add, without } from 'lively.morphic/components/core.js';
 import { Color } from 'lively.graphics/color.js';
-import { pt } from 'lively.graphics/geometry-2d.js';
+import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
@@ -9,8 +9,10 @@ import { UserFlap } from 'lively.user';
 import { signal, connect } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
-import { part } from 'lively.morphic';
+import { part, TilingLayout } from 'lively.morphic';
 import { BugReporter, Publisher } from './helpers.cp.js';
+import { Text } from 'lively.morphic/text/morph.js';
+import { galyleoVersion } from '../config.js';
 
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
@@ -180,6 +182,10 @@ const GalyleoTopBar = component(TopBar, {
   submorphs: [
     {
       name: 'tiling layout',
+      layout: new TilingLayout({
+        padding: rect(13, 13, 0, 0),
+        spacing: 13
+      }),
       submorphs: [
         add({
           type: Label,
@@ -229,7 +235,25 @@ const GalyleoTopBar = component(TopBar, {
           position: pt(181, 13),
           reactsToPointer: false,
           scale: 0.2505891168205277
-        }, 'hand or halo mode button')
+        }, 'hand or halo mode button'),
+        add({
+          type: Text,
+          name: 'version',
+          fontWeight: '400',
+          fontFamily: galyleoFont,
+          lineHeight: 1,
+          borderColor: Color.rgb(23, 160, 251),
+          borderWidth: 0,
+          dynamicCursorColoring: true,
+          extent: pt(67, 40),
+          fill: Color.rgba(255, 255, 255, 0),
+          fixedWidth: true,
+          lineWrapping: 'by-words',
+          padding: rect(1, 1, 0, 0),
+          position: pt(61.6, 64.6),
+          textAndAttributes: ['\n', null, `Version ${galyleoVersion}`, {}]
+
+        })
       ]
     },
     without('right UI wrapper')
