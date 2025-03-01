@@ -219,6 +219,23 @@ const GalyleoTopBar = component(TopBar, {
           }],
           tooltip: 'Publish this dashboard'
         }),
+        add({
+          type: Text,
+          name: 'version',
+          fontWeight: '400',
+          fontFamily: galyleoFont,
+          lineHeight: 1,
+          borderColor: Color.rgb(23, 160, 251),
+          borderWidth: 0,
+          dynamicCursorColoring: true,
+          extent: pt(67, 40),
+          fill: Color.rgba(255, 255, 255, 0),
+          fixedWidth: true,
+          lineWrapping: 'by-words',
+          padding: rect(1, 1, 0, 0),
+          textAndAttributes: ['\n', null, `Version ${galyleoVersion}`, {}]
+
+        }),
         without('save button'),
         without('open component browser'),
         without('load world button'),
@@ -234,26 +251,10 @@ const GalyleoTopBar = component(TopBar, {
           naturalExtent: pt(700, 320),
           position: pt(181, 13),
           reactsToPointer: false,
-          scale: 0.2505891168205277
-        }, 'hand or halo mode button'),
-        add({
-          type: Text,
-          name: 'version',
-          fontWeight: '400',
-          fontFamily: galyleoFont,
-          lineHeight: 1,
-          borderColor: Color.rgb(23, 160, 251),
-          borderWidth: 0,
-          dynamicCursorColoring: true,
-          extent: pt(67, 40),
-          fill: Color.rgba(255, 255, 255, 0),
-          fixedWidth: true,
-          lineWrapping: 'by-words',
-          padding: rect(1, 1, 0, 0),
-          position: pt(61.6, 64.6),
-          textAndAttributes: ['\n', null, `Version ${galyleoVersion}`, {}]
-
+          scale: 0.2505891168205277,
+          tooltip: 'hand or halo mode button'
         })
+
       ]
     },
     without('right UI wrapper')

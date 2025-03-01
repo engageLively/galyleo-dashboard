@@ -1,3 +1,4 @@
+/* global google */
 import { Morph, morph, ShadowObject } from 'lively.morphic';
 import { ViewModel, part } from 'lively.morphic/components/core.js';
 import { resource } from 'lively.resources/src/helpers.js';
@@ -1265,7 +1266,7 @@ class DashboardCommon extends ViewModel {
    * Note: we're going to have to drop the mapsApiKey at some point.
    * @param { string[] } packageList - The packages to be loaded. Default is the core chart package, the map package, and the chart editor..
    */
-  async _loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor']) {
+  async _loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor', 'visualization']) {
     // await promise.waitFor(20 * 1000, () => !!window.google);
     while (!window.google) {
       await loadViaScript('https://www.gstatic.com/charts/loader.js');
@@ -1458,9 +1459,15 @@ class DashboardCommon extends ViewModel {
   async drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
-    while (!this.gViz) {
+    let count = 0;
+    while (count < 10 && !this.gViz) {
       await this._loadGoogleChartPackages();
       console.log('Loading Google Chart Packages...');
+      count++;
+    }
+    if (!this.gViz) {
+      console.log('Loading Google Visualization failed');
+      return;
     }
     console.log(`Finished loading, this.gViz = ${this.gViz}`);
     this._makeTitle(chart);
