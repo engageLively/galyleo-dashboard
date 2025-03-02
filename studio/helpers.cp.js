@@ -863,7 +863,7 @@ const CloseButton = component(MenuBarButton, {
 const DataLoader = component(GalyleoWindow, {
   defaultViewModel: TableLoaderModel,
   name: 'data loader',
-  extent: pt(340.5, 250.6),
+  extent: pt(340.5, 400),
   submorphs: [{
     name: 'window title',
     textString: 'Load Data'
@@ -871,7 +871,7 @@ const DataLoader = component(GalyleoWindow, {
     name: 'table loader',
     borderColor: Color.rgb(127, 140, 141),
     borderRadius: 10,
-    extent: pt(311, 135),
+    extent: pt(311, 360),
     fill: Color.rgba(215, 219, 221, 0),
     /* layout: new TilingLayout({
       align: 'right',
@@ -903,22 +903,29 @@ const DataLoader = component(GalyleoWindow, {
           imageUrl: projectAsset('close-button-icon-2.svg')
         }]
       }),
+      part(DefaultList, {
+        name: 'table list',
+        position: pt(15, 45),
+        extent: pt(311, 135),
+        fill: Color.rgba(215, 219, 221, 0),
+        borderWidth: 1
+      }),
       part(GalyleoSearch, {
         name: 'url',
         placeholder: 'Enter URL to datasource',
-        position: pt(15, 45)
+        position: pt(15, 190)
       }),
       part(GalyleoSearch, {
         name: 'table',
         placeholder: 'Enter name of table',
-        position: pt(15, 80)
+        position: pt(15, 230)
       }),
       {
         name: 'update_panel',
         borderColor: Color.rgb(127, 140, 141),
         borderRadius: 10,
         extent: pt(311, 50),
-        position: pt(15, 125),
+        position: pt(15, 270),
         fill: Color.rgba(215, 219, 221, 0),
         layout: new TilingLayout({
           align: 'top',
@@ -974,7 +981,7 @@ const DataLoader = component(GalyleoWindow, {
       part(PromptButton, {
         name: 'load button',
         extent: pt(106.5, 30.9),
-        position: pt(228, 170),
+        position: pt(228, 315),
         submorphs: [without('icon')]
       })]
   })]
