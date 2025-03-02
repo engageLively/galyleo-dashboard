@@ -10,7 +10,7 @@ import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
-import { dashboardStoreServer } from '../config.js';
+import { dashboardStoreServer, tableServer } from '../config.js';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -770,7 +770,8 @@ export class TableLoaderModel extends ViewModel {
         get () {
           return [
             { target: 'close button', signal: 'onMouseDown', handler: 'close' },
-            { target: 'load button', signal: 'onMouseDown', handler: 'loadURL' }
+            { target: 'load button', signal: 'onMouseDown', handler: 'loadURL' },
+            { target: 'table list', signal: 'selection', handler: 'updateSelectedTable' }
           ];
         }
       }
@@ -799,6 +800,21 @@ export class TableLoaderModel extends ViewModel {
   viewDidLoad () {
     this.ui.updateToggle.state = false;
     this.ui.updateInterval.number = 300;
+    const tableSource = resource(`${tableServer}/get_table_names`);
+    tableSource.readJson().then(tableList => {
+      tableList.forEach(tableName => {
+        this.ui.tableList.addItem(tableName);
+      });
+    });
+  }
+
+  /**
+   * Set the selection based on user selection
+   */
+  // this.updateSelectedTable('tables/rick/presidential_vote_history.sdml')
+  updateSelectedTable (selection) {
+    this.ui.url.textString = `${tableServer}${selection}`;
+    this.ui.table.textString = `${selection}`;
   }
 
   /**
@@ -838,6 +854,8 @@ export class TableLoaderModel extends ViewModel {
     }
   }
 }
+
+
 
 // part(CloseButton).openInWorld()
 const CloseButton = component(MenuBarButton, {
