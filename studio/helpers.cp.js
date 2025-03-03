@@ -798,8 +798,7 @@ export class TableLoaderModel extends ViewModel {
    * Just set the values of the UI elements on load
    */
   viewDidLoad () {
-    this.ui.updateToggle.state = false;
-    this.ui.updateInterval.number = 300;
+    this.ui.loadToggle.state = false;
     const tableSource = resource(`${tableServer}/get_table_names`);
     tableSource.readJson().then(tableList => {
       tableList.forEach(tableName => {
@@ -841,17 +840,40 @@ export class TableLoaderModel extends ViewModel {
     }
     // if this is rewritten, we really should prompt the user to confirm that
     // it's rewritten
-    const doUpdate = this.ui.updateToggle.state;
-    const updateInterval = this.ui.updateInterval.number;
-    const result = await this.dashboard.loadDataFromUrl(checkResult.resultString, table.textString, doUpdate, updateInterval);
-    if (result.result) {
+    const doLoad = this.ui.loadToggle.state;
+    const r = resource(checkResult.resultString);
+    try {
+      const result = await r.readJson();
+      if (result.schema) {
+        const tableSpec = {
+          columns: result.schema
+        };
+        if (result.rows && doLoad) {
+          tableSpec.rows = result.rows;
+        } else {
+          tableSpec.connector = {
+            url: tableServer
+          };
+        }
+        this.dashboard.addTable({
+          name: table.textString, table: tableSpec
+        });
+        this.view.remove();
+      } else {
+        this.dashboard.confirm(`No table found at ${checkResult.resultString}`);
+      }
+    } catch (err) {
+      this.dashboard.confirm(err);
+    }
+    // const result = await this.dashboard.loadDataFromUrl(checkResult.resultString, table.textString, doUpdate, updateInterval);
+    /* if (result.result) {
       this.view.remove();
     } else {
       const getMessage = await this.dashboard.confirm(result.msg);
       if (getMessage) {
         this.view.remove();
       }
-    }
+    } */
   }
 }
 
@@ -961,37 +983,9 @@ const DataLoader = component(GalyleoWindow, {
           fontWeight: 'bold',
           position: pt(13.5, 11.5),
           reactsToPointer: false,
-          textAndAttributes: ['Update', null]
+          textAndAttributes: ['Cache rows if available', null]
         },
-        add(part(Toggle, { name: 'updateToggle' })),
-        {
-          type: Label,
-          name: 'every',
-          fontColor: Color.rgb(0, 0, 0),
-          fontFamily: 'IBM Plex Sans',
-          fontSize: 14,
-          fontWeight: 'bold',
-          position: pt(13.5, 11.5),
-          reactsToPointer: false,
-          textAndAttributes: [' every ', null],
-          state: false
-        },
-        add(part(GalyleoNumberInput, {
-          name: 'updateInterval',
-          min: 10,
-          max: 3600
-        })),
-        {
-          type: Label,
-          name: 'seconds',
-          fontColor: Color.rgb(0, 0, 0),
-          fontFamily: 'IBM Plex Sans',
-          fontSize: 14,
-          fontWeight: 'bold',
-          position: pt(13.5, 11.5),
-          reactsToPointer: false,
-          textAndAttributes: [' seconds', null]
-        }
+        add(part(Toggle, { name: 'loadToggle' }))
         ]
       },
       part(PromptButton, {

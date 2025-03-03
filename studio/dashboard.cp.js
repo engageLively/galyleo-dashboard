@@ -1024,8 +1024,9 @@ export class Dashboard extends DashboardCommon {
    */
   async loadDataFromUrl (url, tableName, checkUpdates, updateInterval) {
     try {
-      const tableSpecURL = this._makeURL(url, 'get_tables');
-      const schemaText = await resource(tableSpecURL).read();
+      // const tableSpecURL = this._makeURL(url, 'get_tables');
+      // const schemaText = await resource(tableSpecURL).read();
+      const schemaText = await resource(url).read();
       const schemaDict = JSON.parse(schemaText);
       const connector = {
         url: url
