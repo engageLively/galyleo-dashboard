@@ -535,7 +535,7 @@ const Publisher = component(GalyleoWindow, {
           part(MenuBarButton, {
             name: 'close button',
             extent: pt(100, 35),
-            tooltip: 'Close this dialog without loading',
+            tooltip: 'Close this dialog without publishing',
             submorphs: [{
               name: 'label', value: ['CLOSE', null]
             }, {
@@ -854,8 +854,6 @@ export class TableLoaderModel extends ViewModel {
     }
   }
 }
-
-
 
 // part(CloseButton).openInWorld()
 const CloseButton = component(MenuBarButton, {

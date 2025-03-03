@@ -124,7 +124,6 @@ export class SelectableEntryModel extends ViewModel {
   }
 }
 
-
 export class TableEntryMorph extends Morph {
   static get properties () {
     return {
@@ -761,7 +760,7 @@ const MenuBarButtonDefault = component({
     fontSize: 15,
     fontWeight: 'bold',
     reactsToPointer: false,
-    textAndAttributes: ['Load Data', null]
+    textAndAttributes: ['CLOSE', null]
   }, {
     type: Image,
     name: 'icon',
