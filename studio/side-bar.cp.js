@@ -155,6 +155,14 @@ export class DashboardControl extends ViewModel {
     this.adjustIndicator();
   }
 
+  viewDidLoad () {
+    // HACK!  The collapse indicator disappears on
+    // open, but doing a slideIn/slideOut fixes it
+    // this.adjustIndicator();
+    this.toggleSlide();
+    this.toggleSlide();
+  }
+
   clearFocus () {
     this.models.styleControl.clearFocus();
   }
@@ -280,6 +288,7 @@ export class DashboardControl extends ViewModel {
     return await this.dashboard.openDialog(dialogPart);
   }
 }
+
 
 export class EntityControlModel extends ViewModel {
   static get properties () {
