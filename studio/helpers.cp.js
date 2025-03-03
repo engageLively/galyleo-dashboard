@@ -998,7 +998,13 @@ const DataLoader = component(GalyleoWindow, {
         name: 'load button',
         extent: pt(106.5, 30.9),
         position: pt(228, 315),
-        submorphs: [without('icon')]
+        submorphs: [
+          without('icon'),
+          {
+            name: 'label',
+            textAndAttributes: ['Load table', null]
+          }
+        ]
       })]
   })]
 });
