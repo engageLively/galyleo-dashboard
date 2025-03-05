@@ -445,6 +445,60 @@ function constructFilter (table, filterSpec) {
  */
 
 /**
+ * A function which converts a value to the appropriate SDML Type.  SDTP
+ * sends data in JSON strings, which must be converted to the appropriate types
+ * by any client (such as the Galyleo Data package).
+ * @param {Any} value: value to be converted
+ * @param {GalyleoType} sdmlTpe: type to convert to
+ */
+const convertSDMLValue = (value, sdmlType) => {
+  if (sdmlType == 'string') {
+    return typeof (value) == 'string' ? value : JSON.stringify(value);
+  }
+
+  if (sdmlType == 'number') {
+    return Number(value);
+  }
+
+  if (sdmlType == 'boolean') {
+    value = typeof (value) == 'string' ? JSON.parse(value) : value;
+    return !!value;
+  }
+
+  value = value.trim();
+  if (sdmlType == 'datetime') {
+    try {
+      return new Date(value);
+    } catch (err) {
+      return new Date('1970-01-01T00:00:00');
+    }
+  }
+  if (sdmlType == 'date') {
+    try {
+      return new Date(value);
+    } catch (err1) {
+      return new Date('1970-01-01');
+    }
+  }
+  // it's a time of day.  No built-in type for this, so
+  // try parsing it, then try prepending a bogus date onto it
+  // and parsing that
+  try {
+    return new Date(value);
+  } catch (err) {
+    try {
+      return new Date('1970-01-01T' + value);
+    } catch (err1) {
+      return new Date('1970-01-01T00:00:00');
+    }
+  }
+};
+
+const convertSDMLRow = (values, columns) => {
+  return values.map((value, i) => convertSDMLValue(value, columns[i].type));
+};
+
+/**
  * Class for a Galyleo Table.  The functions  in this abstract class are the  only ones that should be
  * used for any instantiated member.
  */
@@ -793,6 +847,7 @@ class RemoteGalyleoTable extends GalyleoTable {
     super(columns, tableName, async () => await this._getRowsFromURL_());
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
+    this.tableName = connector.remoteName ? connector.remoteName : tableName;
     this.headers = { };
 
     // If the connector indicates that polling should take place, simply raise the dataUpdated signal every
@@ -809,11 +864,10 @@ class RemoteGalyleoTable extends GalyleoTable {
    */
   toDictionary () {
     const connector = {
-      url: this.url
+      url: this.url,
+      remoteName: this.remoteName
     };
-    if (this.dashboardName) {
-      connector.dashboardName = this.dashboardName;
-    }
+
     if (this.interval) {
       connector.interval = this.interval;
     }
@@ -838,10 +892,8 @@ class RemoteGalyleoTable extends GalyleoTable {
   * @param  {string} URL: url to make the fetcher for
   */
   _makeURLFetcher_ (url) {
-    const result = new URLFetcher(url, this.tableName);
-    if (this.dashboardName) {
-      result.dashboardName = this.dashboardName;
-    }
+    const result = new URLFetcher(url, this.remoteName);
+
     return result;
   }
 
@@ -858,14 +910,15 @@ class RemoteGalyleoTable extends GalyleoTable {
     if (filterSpec) {
       body.filter = filterSpec;
     }
-    urlFetcher.body = body;
+    urlFetcher.body = body; // urlFetcher.body = {table: 'tables/rick/presidential_margins.sdml'}
 
     urlFetcher.addHeader('Accept', 'application/json');
     urlFetcher.addHeader('Content-Type', 'application/json');
 
     try {
       const result = await urlFetcher.post();
-      return result;
+      const mapped = result.map(row => convertSDMLRow(row, this.columns));
+      return mapped;
     } catch (error) {
       return [];
     }
@@ -878,7 +931,7 @@ class RemoteGalyleoTable extends GalyleoTable {
      * @param {string} columnName -- the name of the column to make the request for
      */
   async _executeGetRequest_ (request, columnName) {
-    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, `${request}?column_name=${columnName}&table_name=${this.tableName}`));
+    const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, `${request}?column=${columnName}&table=${this.tableName}`));
     return await urlFetcher.readJson();
   }
 
@@ -888,7 +941,9 @@ class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getAllValues (columnName) {
-    return await this._executeGetRequest_('get_all_values', columnName);
+    const values = await this._executeGetRequest_('get_all_values', columnName);
+    const columnType = this.getColumnType(columnName);
+    return values.map(value => convertSDMLValue(value, columnType));
   }
 
   /**
@@ -904,7 +959,9 @@ class RemoteGalyleoTable extends GalyleoTable {
      */
 
   async getNumericSpec (columnName) {
-    let result = await this._executeGetRequest_('get_range_spec', columnName);
+    let values = await this._executeGetRequest_('get_range_spec', columnName);
+    const columnType = this.getColumnType(columnName);
+    const result = values.map(value => convertSDMLValue(value, columnType));
     return { min_val: result[0], max_val: result[1] };
   }
 }
@@ -1139,6 +1196,22 @@ class GalyleoDataManager {
   }
 
   /**
+   * Remove a table.  Note that this will also remove all views
+   * that use that table
+   * @param {string} name: name of the table
+   */
+  removeTable (name) {
+    if (name in this.tables) {
+      delete this.tables[name];
+      Object.keys(this.views).forEach(viewName => {
+        if (this.views[viewName].table == name) {
+          this.removeView(viewName);
+        }
+      });
+    }
+  }
+
+  /**
    * Remove a view
    * @param {string} name name of the view
    */
@@ -1278,6 +1351,7 @@ class GalyleoDataManager {
 export {
   GalyleoDataManager, GalyleoView,
   constructGalyleoTable, URLFetcher, RemoteGalyleoTable, ExplicitGalyleoTable, GalyleoTable,
-  constructFilter, checkSpecValid, Filter
+  constructFilter, checkSpecValid, Filter,
+  convertSDMLValue, convertSDMLRow
 
 };

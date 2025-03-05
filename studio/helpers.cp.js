@@ -11,6 +11,7 @@ import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
 import { dashboardStoreServer, tableServer } from '../config.js';
+import { convertSDMLRow } from '../galyleo-data/galyleo-data.js';
 
 /**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
@@ -152,7 +153,7 @@ const BugReporter = component(GalyleoWindow, {
             extent: pt(100, 35),
             tooltip: 'Close this dialog without loading',
             submorphs: [{
-              name: 'label', value: ['CLOSE', null]
+              name: 'label', textAndAttributes: ['CLOSE', null]
             }, {
               name: 'icon',
               extent: pt(14, 14),
@@ -322,7 +323,7 @@ const URLDisplay = component(GalyleoWindow, {
             extent: pt(100, 35),
             tooltip: 'Close this dialog',
             submorphs: [{
-              name: 'label', value: ['CLOSE', null]
+              name: 'label', textAndAttributes: ['CLOSE', null]
             }, {
               name: 'icon',
               extent: pt(14, 14),
@@ -537,7 +538,7 @@ const Publisher = component(GalyleoWindow, {
             extent: pt(100, 35),
             tooltip: 'Close this dialog without publishing',
             submorphs: [{
-              name: 'label', value: ['CLOSE', null]
+              name: 'label', textAndAttributes: ['CLOSE', null]
             }, {
               name: 'icon',
               extent: pt(14, 14),
@@ -709,7 +710,7 @@ export const TableViewer = component(GalyleoWindow, {
             extent: pt(100, 35),
             tooltip: 'Close this dialog without loading',
             submorphs: [{
-              name: 'label', value: ['CLOSE', null]
+              name: 'label', textAndAttributes: ['CLOSE', null]
             }, {
               name: 'icon',
               extent: pt(14, 14),
@@ -849,7 +850,7 @@ export class TableLoaderModel extends ViewModel {
           columns: result.schema
         };
         if (result.rows && doLoad) {
-          tableSpec.rows = result.rows;
+          tableSpec.rows = result.rows.map(row => convertSDMLRow(row, result.schema));
         } else {
           tableSpec.connector = {
             url: tableServer
@@ -889,7 +890,7 @@ const CloseButton = component(MenuBarButton, {
     padding: rect(5, 0, 0, 0)
   }),
   submorphs: [{
-    name: 'label', value: ['CLOSE', null]
+    name: 'label', textAndAttributes: ['CLOSE', null]
   }, {
     name: 'icon',
     extent: pt(14, 18),
@@ -934,7 +935,7 @@ const DataLoader = component(GalyleoWindow, {
         position: pt(230, 5),
         tooltip: 'Close this dialog without loading',
         submorphs: [{
-          name: 'label', value: ['CLOSE', null]
+          name: 'label', textAndAttributes: ['CLOSE', null]
         }, {
           name: 'icon',
           extent: pt(14, 14),

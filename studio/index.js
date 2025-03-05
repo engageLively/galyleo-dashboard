@@ -2,8 +2,6 @@ import { part, config } from 'lively.morphic';
 import { LivelyWorld } from 'lively.ide/world.js';
 import { GalyleoStudioWorld } from './ui.cp.js';
 
-// part(GalyleoDashboardStudio).openInWorld()
-
 export async function main () {
   config.ide.studio.canvasModeEnabled = false;
   const { GalyleoDashboardStudio } = await System.import('engageLively--galyleo-dashboard/studio/int/en/index.js');
