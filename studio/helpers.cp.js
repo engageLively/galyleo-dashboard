@@ -260,8 +260,9 @@ class URLDisplayModel extends ViewModel {
    * @param { string } dashboardURL - The URL of the dashboard to display
    */
   init (dashboardURL) {
-    this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', dashboardURL.dashboard);
-    const viewString = `https://galyleo.app/published/index.html?dashboard=${dashboardURL.dashboard}`;
+    const viewJSONString = `${dashboardStoreServer.url}/view_dashboard_as_json?dashboard=${dashboardURL.dashboard}`;
+    this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', viewJSONString);
+    const viewString = `${dashboardStoreServer.url}/published/index.html?dashboard=${dashboardURL.dashboard}`;
     this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
   }
 
@@ -399,7 +400,8 @@ export class PublisherModel extends ViewModel {
     if (fileName && fileName.length > 0) {
       this.ui.fileInput.textString = fileName;
     }
-    const urlQuery = dashboardStoreServer.url + (userName ? `/list_user_dashboards/${userName}` : '/list_dashboards');
+    // const urlQuery = dashboardStoreServer.url + (userName ? `/list_user_dashboards/${userName}` : '/list_dashboards');
+    const urlQuery = dashboardStoreServer.url + '/list_dashboards';
     if (userName) {
       this.userName = userName;
     }
@@ -456,7 +458,7 @@ export class PublisherModel extends ViewModel {
     }
 
     if (await this._sanityCheck(filePath)) {
-      const r = resource(`${dashboardStoreServer.url}/add_dashboard`, { headers: { 'Content-Type': 'application/json' } });
+      const r = resource(`${dashboardStoreServer.url}/publish`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: filePath,
         dashboard: this.dashboard.prepareSerialization(),
@@ -469,7 +471,7 @@ export class PublisherModel extends ViewModel {
       r.contentType = 'application/json';
       r.useCors = true;
       const response = await r.post(body);
-      const responseObject = typeof (response) == 'object' ? response : { dashboad: response };
+      const responseObject = typeof (response) == 'object' ? response : { dashboard: response };
       const urlDisplay = part(URLDisplay);
       urlDisplay.init(responseObject);
       urlDisplay.openInWorld();
