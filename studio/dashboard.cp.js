@@ -1002,6 +1002,43 @@ export class Dashboard extends DashboardCommon {
     this.dirty = true;
   }
 
+  // the internal routine to loadTablesFromTableServer.  Loads all the tables returned from
+  // this.tableServerURL.  Broken out as a separate routine so that it can be stepped.
+
+  async _loadTablesFromTableServer_ () {
+    if (this.tableServerUrl) {
+      const tableServer = resource(`${this.tableServerUrl}/get_table_schemas`);
+      try {
+        const tableDict = await tableServer.readJson();
+        Object.keys(tableDict).forEach(name => {
+          const connector = {
+            url: this.tableServerUrl
+          };
+          this.addTable({
+            name: name,
+            table: { columns: tableDict[name], connector: connector }
+          });
+        });
+      } catch {
+
+      }
+    }
+  }
+
+  /**
+   * Load tables from a TableServer.  Once this starts, it will continuously check (assuming check interval
+   * is set) for new tables and load them.  Note that it assumes that the user id and authentication
+   * has been set
+   * @params
+   *    tableServerUrl: URL to load the tables from
+   *    loadInterval: interval (in seconds) to load tables
+   */
+  async loadTablesFromServer (tableServerUrl, loadInterval = NaN) {
+    this.tableServerUrl = tableServerUrl;
+    this._loadTablesFromTableServer_();
+    // add code to call _loadTablesFromTableServer_ repeatedly if loadInterval is not NaN and positive
+  }
+
   /**
    * A utility to make an URL from a base and a method.  Designed so that 'https://foo.com/' and 'bar'
    * and 'https://foo.com' and 'bar' both return 'https://foo.com/bar'
@@ -1240,5 +1277,6 @@ export class Dashboard extends DashboardCommon {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
+
 
 export { LoadDialog, SaveDialog };

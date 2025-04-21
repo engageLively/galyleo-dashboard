@@ -5,7 +5,7 @@ import { pt, rect } from 'lively.graphics/geometry-2d.js';
 import { Image } from 'lively.morphic/morph.js';
 import { Icon } from 'lively.morphic/text/icons.js';
 import { Label } from 'lively.morphic/text/label.js';
-import { UserFlap } from 'lively.user';
+// import { UserFlap } from 'lively.user';
 import { signal, connect } from 'lively.bindings/index.js';
 import { galyleoFont } from './shared.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
@@ -13,13 +13,13 @@ import { part, TilingLayout } from 'lively.morphic';
 import { BugReporter, Publisher } from './helpers.cp.js';
 import { Text } from 'lively.morphic/text/morph.js';
 import { galyleoVersion } from '../config.js';
-
+/*
 export default class DashboardUserFlap extends UserFlap {
   onLoad () {
     super.onLoad();
     this.whenRendered().then(_ => {
       this.dashboard = this.get('dashboard');
-      /* const labelType = {
+      const labelType = {
         type: 'label',
         name: 'room-name',
         fontSize: 8,
@@ -27,7 +27,7 @@ export default class DashboardUserFlap extends UserFlap {
         fontWeight: 'bold',
         padding: Rectangle.inset(4),
         reactsToPointer: false
-      }; */
+      };
     });
   }
 
@@ -35,6 +35,7 @@ export default class DashboardUserFlap extends UserFlap {
 
   }
 }
+*/
 
 class GalyleoTopBarModel extends TopBarModel {
   static get properties () {

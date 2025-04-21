@@ -1,3 +1,4 @@
+/* global GalyleoEnv */
 /* global URLSearchParams */
 
 import { pt, Color } from 'lively.graphics/index.js';
@@ -11,7 +12,62 @@ import { Dashboard } from './dashboard.cp.js';
 import { GalyleoSideBar } from './side-bar.cp.js';
 import { BugReporter } from './helpers.cp.js';
 import { Publisher } from './helpers.cp.js';
-import { studioServer, dashboardStoreServer } from '../config.js';
+import { studioServer, dashboardStoreServer, tableServer } from '../config.js';
+
+class GalyleoEnvObject {
+  get galyleoServer () {
+    return this._galyleoServer ? this._galyleoServer : null;
+  }
+
+  set galyleoServer (url) {
+    this._galyleoServer = url;
+  }
+
+  get dashboardStoreServer () {
+    if (this.galyleoServer) {
+      return this.galyleoServer;
+    }
+    if (this._dashboardStoreServer) {
+      return this._dashboardStoreServer;
+    }
+    return dashboardStoreServer;
+  }
+
+  set dashboardStoreServer (url) {
+    this._dashboardStoreServer = url;
+  }
+
+  get tableServer () {
+    if (this.galyleoServer) {
+      return this.galyleoServer;
+    }
+    if (this._tableServer) {
+      return this._tableServer;
+    }
+    return tableServer;
+  }
+
+  set tableServer (url) {
+    this._tableServer = url;
+  }
+
+  get user () {
+    return this._user;
+  }
+
+  set user (name) {
+    this._user = name;
+  }
+
+  constructor () {
+    const urlString = window.location.search;
+    const urlParams = new URLSearchParams(urlString);
+    this._galyleoServer = urlParams.has('galyleo_server') ? urlParams.get('galyleo_server') : null;
+    this._user = urlParams.has('user') ? urlParams.get('user') : null;
+  }
+}
+
+let GALYLEO_ENV = new GalyleoEnvObject();
 
 export class GalyleoStudioWorld extends LivelyWorld {
   static get properties () {
@@ -88,6 +144,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   onLoad () {
     super.onLoad();
     // document.getElementById('loading-screen').remove();
+    GALYLEO_ENV = new GalyleoEnvObject();
     const parameters = new URLSearchParams(document.location.search);
     const serverURL = parameters.get('serverURL');
     if (serverURL) {
@@ -259,6 +316,10 @@ export default class Galyleo extends ViewModel {
     this.ui.topBar.attachToTarget(this.ui.dashboard);
     this.models.sideBar.init(this.ui.dashboard);
     this.models.dashboard.init(this.ui.sideBar);
+    const tableServer = GALYLEO_ENV.tableServer;
+    if (tableServer) {
+      this.models.dashboard.loadTablesFromServer(tableServer);
+    }
     this.focusStealer = this.view.addMorph({
       opacity: 0,
       type: 'text'
@@ -496,4 +557,4 @@ const GalyleoDashboardStudio = component({
   ]
 });
 
-export { GalyleoDashboardStudio };
+export { GalyleoDashboardStudio, GALYLEO_ENV };

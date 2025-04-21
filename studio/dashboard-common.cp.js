@@ -1268,11 +1268,11 @@ class DashboardCommon extends ViewModel {
    */
   async _loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor', 'visualization']) {
     // await promise.waitFor(20 * 1000, () => !!window.google);
-    while (!window.google) {
+    while (!window.google || !window.google.charts) {
       await loadViaScript('https://www.gstatic.com/charts/loader.js');
-      if (this.gCharts) {
-        await this.gCharts.load('current', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
-      }
+    }
+    while (!window.google.visualization) {
+      await this.gCharts.load('50', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
     }
   }
 

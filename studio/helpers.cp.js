@@ -10,7 +10,7 @@ import { Toggle } from './inputs/toggle.cp.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { DefaultList } from 'lively.components/list.cp.js';
 import { projectAsset } from 'lively.project/helpers.js';
-import { dashboardStoreServer, tableServer } from '../config.js';
+import { GALYLEO_ENV } from '../studio/ui.cp.js';
 import { convertSDMLRow } from '../galyleo-data/galyleo-data.js';
 
 /**
@@ -260,9 +260,10 @@ class URLDisplayModel extends ViewModel {
    * @param { string } dashboardURL - The URL of the dashboard to display
    */
   init (dashboardURL) {
-    const viewJSONString = `${dashboardStoreServer.url}/view_dashboard_as_json?dashboard=${dashboardURL.dashboard}`;
+    const dashboardStoreServer = GALYLEO_ENV.dashboardStoreServer;
+    const viewJSONString = `${dashboardStoreServer}/view_dashboard_as_json?dashboard=${dashboardURL.dashboard}`;
     this._setURL(this.ui.dashboardUrl, 'The Dashboard is published at:', viewJSONString);
-    const viewString = `${dashboardStoreServer.url}/published/index.html?dashboard=${dashboardURL.dashboard}`;
+    const viewString = `${dashboardStoreServer}/view_dashboard?dashboard=${dashboardURL.dashboard}`;
     this._setURL(this.ui.dashboardViewUrl, 'The Dashboard can be viewed  at:', viewString);
   }
 
@@ -400,8 +401,9 @@ export class PublisherModel extends ViewModel {
     if (fileName && fileName.length > 0) {
       this.ui.fileInput.textString = fileName;
     }
-    // const urlQuery = dashboardStoreServer.url + (userName ? `/list_user_dashboards/${userName}` : '/list_dashboards');
-    const urlQuery = dashboardStoreServer.url + '/list_dashboards';
+    const dashboardStoreServer = GALYLEO_ENV.dashboardStoreServer;
+    // const urlQuery = dashboardStoreServer + (userName ? `/list_user_dashboards/${userName}` : '/list_dashboards');
+    const urlQuery = dashboardStoreServer + '/list_dashboards';
     if (userName) {
       this.userName = userName;
     }
@@ -458,11 +460,12 @@ export class PublisherModel extends ViewModel {
     }
 
     if (await this._sanityCheck(filePath)) {
-      const r = resource(`${dashboardStoreServer.url}/publish`, { headers: { 'Content-Type': 'application/json' } });
+      const dashboardStoreServer = GALYLEO_ENV.dashboardStoreServer;
+      const r = resource(`${dashboardStoreServer}/publish`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: filePath,
-        dashboard: this.dashboard.prepareSerialization(),
-        studio_secret: dashboardStoreServer.secret
+        dashboard: this.dashboard.prepareSerialization()
+        // studio_secret: dashboardStoreServer.secret
       };
 
       if (this.userName) {
@@ -802,6 +805,7 @@ export class TableLoaderModel extends ViewModel {
    */
   viewDidLoad () {
     this.ui.loadToggle.state = false;
+    const tableServer = GALYLEO_ENV.tableServer;
     const tableSource = resource(`${tableServer}/get_table_names`);
     tableSource.readJson().then(tableList => {
       tableList.forEach(tableName => {
@@ -815,7 +819,7 @@ export class TableLoaderModel extends ViewModel {
    */
   // this.updateSelectedTable('tables/rick/presidential_vote_history.sdml')
   updateSelectedTable (selection) {
-    this.ui.url.textString = `${tableServer}${selection}`;
+    this.ui.url.textString = `${GALYLEO_ENV.tableServer}${selection}`;
     this.ui.table.textString = `${selection}`;
   }
 
@@ -855,7 +859,7 @@ export class TableLoaderModel extends ViewModel {
           tableSpec.rows = result.rows.map(row => convertSDMLRow(row, result.schema));
         } else {
           tableSpec.connector = {
-            url: tableServer
+            url: GALYLEO_ENV.tableServer
           };
         }
         this.dashboard.addTable({
