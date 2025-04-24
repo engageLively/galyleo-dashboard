@@ -197,7 +197,9 @@ export class DashboardControl extends ViewModel {
       duration: 300
     });
     this.ui.controls.visible = false;
-    world.halos().forEach(h => h.maskBounds = world.getHaloMask());
+    if (world) {
+      world.halos().forEach(h => h.maskBounds = world.getHaloMask());
+    }
   }
 
   /**
@@ -215,7 +217,9 @@ export class DashboardControl extends ViewModel {
       easing: easings.inOutExpo,
       duration: 300
     });
-    world.halos().forEach(h => h.maskBounds = world.getHaloMask());
+    if (world) {
+      world.halos().forEach(h => h.maskBounds = world.getHaloMask());
+    }
   }
 
   relayout () {
@@ -288,7 +292,6 @@ export class DashboardControl extends ViewModel {
     return await this.dashboard.openDialog(dialogPart);
   }
 }
-
 
 export class EntityControlModel extends ViewModel {
   static get properties () {

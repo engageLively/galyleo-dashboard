@@ -233,7 +233,6 @@ export class ChartBuilderModel extends ViewModel {
   }
 }
 
-
 // ChartBuilder.openInWorld()
 const ChartBuilder = component(GalyleoWindow, {
   name: 'chart builder',
@@ -841,8 +840,8 @@ export default class ChartDiagramModel extends ViewModel {
   }
 
   /**
- * Draw the visualization.  Just prepare the chart and call drawChart to draw it.
- */
+   * Draw the visualization.  Just prepare the chart and call drawChart to draw it.
+   */
 
   drawVisualization () {
     if (this.view.context) {

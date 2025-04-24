@@ -1,3 +1,4 @@
+/* global URLSearchParams */
 /* global google */
 import { Morph, morph, ShadowObject } from 'lively.morphic';
 import { ViewModel, part } from 'lively.morphic/components/core.js';
@@ -12,6 +13,7 @@ import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data
 import { loadViaScript } from 'lively.resources/index.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { TableViewer } from './helpers.cp.js';
+import { GALYLEO_ENV } from './ui.cp.js';
 
 class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
@@ -579,21 +581,34 @@ class DashboardCommon extends ViewModel {
     }
     this.storedForm = storedForm;
     this._restore = true;
+    if (GALYLEO_ENV.debug) {
+      console.log('Restoring from stored form');
+    }
 
     try {
       const unorderedDescriptors = [];
       this.clear(); // make sure we blow away anything that was here before
       if (storedForm.fill) {
         this.canvas.fill = this._color(storedForm.fill, Color.white);
+        if (GALYLEO_ENV.debug) {
+          console.log(`Restored fill to ${this.canvas.fill}`);
+        }
       }
       // We're going to completely clear the data manager, so just blow it away
       // and get a new one.
       this.dataManager = new GalyleoDataManager(this);
       // The non-morph structures are easy....
       // this.tables = storedForm.tables;
+      if (GALYLEO_ENV.debug) {
+        console.log(`Restoring tables ${Object.keys(storedForm.tables)}`);
+      }
       Object.keys(storedForm.tables).forEach(tableName => {
         this.addTable({ name: tableName, table: storedForm.tables[tableName] });
       });
+
+      if (GALYLEO_ENV.debug) {
+        console.log(`Restoring views ${Object.keys(storedForm.views)}`);
+      }
 
       Object.keys(storedForm.views).forEach(viewName => {
         this.dataManager.addView(viewName, storedForm.views[viewName]);
@@ -608,6 +623,10 @@ class DashboardCommon extends ViewModel {
       // the information we need to instantiate them later
       //
       const storedFilterNames = Object.keys(storedForm.filters);
+
+      if (GALYLEO_ENV.debug) {
+        console.log(`Restoring filters ${Object.keys(storedForm.filters)}`);
+      }
 
       for (let i = 0; i < storedFilterNames.length; i++) {
         const filterName = storedFilterNames[i];
@@ -627,6 +646,10 @@ class DashboardCommon extends ViewModel {
         }
       };
 
+      if (GALYLEO_ENV.debug) {
+        console.log(`Restoring charts ${Object.keys(storedForm.charts)}`);
+      }
+
       const storedChartNames = Object.keys(storedForm.charts);
       for (let i = 0; i < storedChartNames.length; i++) {
         const chartName = storedChartNames[i];
@@ -645,6 +668,9 @@ class DashboardCommon extends ViewModel {
       // is a no-op in the case of an array
 
       const morphNames = Object.keys(storedForm.morphs || []);
+      if (GALYLEO_ENV.debug) {
+        console.log(`Restoring morphs ${morphNames}`);
+      }
       const morphDescriptors = morphNames.map(name => storedForm.morphs[name]).filter(desc => desc);
       morphDescriptors.forEach(morphDescriptor => {
         unorderedDescriptors.push({ type: 'morph', descriptor: morphDescriptor });
@@ -658,6 +684,9 @@ class DashboardCommon extends ViewModel {
       await this._restoreMorphsFromDescriptors(unorderedDescriptors);
     } catch (e) {
       console.log(`Error in _restoreFromSaved_: ${e}`);
+    }
+    if (GALYLEO_ENV.debug) {
+      console.log('Finished restore and drawing all charts');
     }
     this._restore = false;
     this.drawAllCharts();
@@ -1246,12 +1275,14 @@ class DashboardCommon extends ViewModel {
   }
 
   async init () {
-    await this._loadGoogleChartPackages();
+    console.log('A');
+    // await this._loadGoogleChartPackages();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
         this[prop] = {};
       }
     });
+    console.log('B');
     if (this.gCharts) {
       this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
     }
@@ -1259,6 +1290,7 @@ class DashboardCommon extends ViewModel {
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
     }
+    console.log('C');
   }
 
   /**
@@ -1449,6 +1481,17 @@ class DashboardCommon extends ViewModel {
     }
   }
 
+  // finish drawing a chart once gViz has been loaded
+  async _finishDraw (chartName, chart) {
+    // gViz is non-null when we get here
+    this._makeTitle(chart);
+    const wrapper = await this._makeWrapper(chart, chartName);
+    if (wrapper) {
+      this.lastWrapper = wrapper;
+      chart.chartMorph.drawChart(wrapper);
+    }
+  }
+
   /**
    * Draw a chart. This routine is very simple: get the chart for chartName,
    * make its title (this can't be made until just before the chart is drawn,
@@ -1456,12 +1499,22 @@ class DashboardCommon extends ViewModel {
    * pass the wrapper to the chart's morph to be drawn
    * @param { string } chartName - The name of the chart to be drawn.
    */
-  async drawChart (chartName) {
+  drawChart (chartName) {
     const chart = this.charts[chartName];
     if (!chart) return;
-    let count = 0;
+    const check = _ => {
+      if (this.gViz) {
+        this._finishDraw(chartName, chart);
+      } else {
+        setTimeout(check, 50);
+      }
+    };
+    const packageList = ['corechart', 'map', 'charteditor', 'visualization'];
+    this.gCharts.load('50', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
+    setTimeout(check, 50);
+    /* let count = 0;
     while (count < 10 && !this.gViz) {
-      await this._loadGoogleChartPackages();
+      // await this._loadGoogleChartPackages();
       console.log('Loading Google Chart Packages...');
       count++;
     }
@@ -1469,13 +1522,7 @@ class DashboardCommon extends ViewModel {
       console.log('Loading Google Visualization failed');
       return;
     }
-    console.log(`Finished loading, this.gViz = ${this.gViz}`);
-    this._makeTitle(chart);
-    const wrapper = await this._makeWrapper(chart, chartName);
-    if (wrapper) {
-      this.lastWrapper = wrapper;
-      chart.chartMorph.drawChart(wrapper);
-    }
+    console.log(`Finished loading, this.gViz = ${this.gViz}`); */
   }
 
   /**

@@ -1,3 +1,4 @@
+/* global URLSearchParams */
 import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
 import { Morph, ViewModel, TilingLayout } from 'lively.morphic';
 import { component, without, part, add } from 'lively.morphic/components/core.js';
@@ -245,6 +246,7 @@ export class Dashboard extends DashboardCommon {
       dataManager: { defaultValue: null, serialize: false },
       filters: { defaultValue: null },
       charts: { defaultValue: null },
+      initialized: { defaultValue: false },
 
       expose: {
         get () {
@@ -376,6 +378,10 @@ export class Dashboard extends DashboardCommon {
   }
 
   viewDidLoad () {
+    console.log(`Dashboard: viewDidLoad, initialized = ${this.initialized}`);
+    if (!this.initialized) {
+      this.init(); // this is async -- should we wait?
+    }
     this.setContext(this.view);
   }
 
@@ -977,11 +983,24 @@ export class Dashboard extends DashboardCommon {
    */
 
   async init (controller) {
+    console.log('Dashboard init');
+    this.initialized = true;
     this.dashboardController = controller;
     await super.init();
+    console.log('One');
     this._initializeJupyterLabCallbacks();
+    console.log('Two');
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
+    console.log('Three');
+    const parameters = new URLSearchParams(document.location.search);
+    const url = parameters.get('dashboard');
+    if (url) {
+      console.log(url);
+      await this.loadDashboardFromURL(url);
+    } else {
+      console.log('No dashboard!');
+    }
   }
 
   /**
@@ -1277,6 +1296,5 @@ export class Dashboard extends DashboardCommon {
     window.alert(this._log.map(entry => `${entry.time.toLocaleTimeString()}: ${entry.entry}`).join('\n'));
   }
 }
-
 
 export { LoadDialog, SaveDialog };

@@ -59,11 +59,20 @@ class GalyleoEnvObject {
     this._user = name;
   }
 
+  get debug () {
+    return this._debug;
+  }
+
+  set debug (true_false) {
+    this._debug = false;
+  }
+
   constructor () {
     const urlString = window.location.search;
     const urlParams = new URLSearchParams(urlString);
     this._galyleoServer = urlParams.has('galyleo_server') ? urlParams.get('galyleo_server') : null;
     this._user = urlParams.has('user') ? urlParams.get('user') : null;
+    this._debug = urlParams.has('debug') ? urlParams.get('debug') != 'false' : false;
   }
 }
 
@@ -136,6 +145,7 @@ export class GalyleoStudioWorld extends LivelyWorld {
   get __head_html__ () {
     return `
 <script> window.SERVER_URL="${this.serverURL}" </script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <link type="text/css" rel="stylesheet" id="lively-font-awesome" href="/lively.morphic/assets/font-awesome/css/font-awesome.css">
 <link type="text/css" rel="stylesheet" id="lively-font-inconsolata" href="/lively.morphic/assets/inconsolata/inconsolata.css">
 <style type="text/css" id="WorldLandingPage_7068CDA9_749E_4EC1_9BC4_50DF06EAA2BA-Nunito">@import url("https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&display=swap");</style>`;
