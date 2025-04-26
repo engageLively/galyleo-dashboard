@@ -1,3 +1,4 @@
+/* global google */
 /* global URLSearchParams */
 import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
 import { Morph, ViewModel, TilingLayout } from 'lively.morphic';
@@ -845,7 +846,7 @@ export class Dashboard extends DashboardCommon {
     if (dataTable === null) {
       return;
     }
-    const wrapper = new this.gViz.ChartWrapper({
+    const wrapper = new window.google.visualization.ChartWrapper({
       chartType: 'Table',
       dataTable: dataTable,
       options: { width: '100%', height: '100%' }
@@ -1192,15 +1193,20 @@ export class Dashboard extends DashboardCommon {
    * the callback draws the chart, so the user sees the updates, and closes the
    * editor dialog.  Once the callback is defined, open the dialog on the input
    * wrapper we've created.
+   * This is a top-level chart routine, which means it MUST check that
+   * the libraries are loaded.
    * @param { string } chartName - The name of the chart whose style is to be edited
    */
   async editChartStyle (chartName) {
-    const editor = new this.gViz.ChartEditor();
     const chart = this.charts[chartName];
     if (!chart) return;
+    if (!window.google.visualization.ChartEditor) return;
+
+    const editor = new window.google.visualization.ChartEditor();
+
     const wrapper = await this._makeWrapper(chart, chartName);
     if (!wrapper) return;
-    this.gViz.events.addListener(editor, 'ok', async () => {
+    window.google.visualization.events.addListener(editor, 'ok', async () => {
       const wrapperOut = editor.getChartWrapper();
       chart.chartType = wrapperOut.getChartType();
       chart.options = wrapperOut.getOptions();

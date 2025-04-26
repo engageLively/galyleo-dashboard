@@ -14,6 +14,7 @@ import { loadViaScript } from 'lively.resources/index.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
 import { TableViewer } from './helpers.cp.js';
 import { GALYLEO_ENV } from './ui.cp.js';
+import { GOOGLE_CHART_LOADER } from '../utils.js';
 
 class DashboardCommon extends ViewModel {
   /** //this.loadDemoDashboard('presidential-elections/elections')
@@ -23,7 +24,7 @@ class DashboardCommon extends ViewModel {
    *  https://developers.google.com/chart/interactive/docs/reference#DataTable
    * 2. filters.  A dictionary of filters for this dashboard.  Each filter is
    *   a morph of class NamedFilter.  The name of the Morph on the dashboard
-   *   is the same as its name in this dictionar
+   *   is the same as its name in this dictionary
    * 3. Charts.  A chart is an object of the form:
    *    a. chartMorph: the instance of googleChartMorph which holds the
    *        actual Chart.  The morph is a submorph of this, and the name of the
@@ -1026,14 +1027,14 @@ class DashboardCommon extends ViewModel {
    * @returns { DataView|DataTable } - The prepared table/view.
    */
   async prepareData (viewOrTable) {
-    if (!this.gViz) {
+    if (!window.google.visualization) {
       return null;
     }
     if (this.dataManager.tableNames.indexOf(viewOrTable) >= 0) {
       const table = this.dataManager.tables[viewOrTable];
       const columns = table.columns.map(column => this._createGVizColumn(column));
       const rows = await table.getRows();
-      const result = new this.gViz.DataTable({ cols: columns });
+      const result = new window.google.visualization.DataTable({ cols: columns });
       result.addRows(rows);
       return result;
     } else if (this.dataManager.viewNames.indexOf(viewOrTable) >= 0) {
@@ -1123,7 +1124,7 @@ class DashboardCommon extends ViewModel {
       filterSpecs[filterName] = this._getFilterForName(filterName);
     });
     const columns = aView.fullColumns(this.dataManager.tables).map(column => this._createGVizColumn(column));
-    const result = new this.gViz.DataTable({ cols: columns });
+    const result = new window.google.visualization.DataTable({ cols: columns });
     const rows = await aView.getData(filterSpecs, this.dataManager.tables);
     result.addRows(rows);
     return result;
@@ -1412,15 +1413,16 @@ class DashboardCommon extends ViewModel {
     if (!(chart.filter && chart.filter.columnName === filter.columnName)) {
       chart.filter = filter;
     }
-    const wrapper = new this.gViz.ChartWrapper({
+    // window.google.visualization must be non-null
+    const wrapper = new window.google.visualization.ChartWrapper({
       chartType: chart.chartType,
       options: chart.options
     });
     this.lastChartType = [chart.chartType, wrapper.getType()];
     wrapper.setDataTable(dataTable);
-    this.gViz.events.addListener(wrapper, 'select', e => { this._updateChartFilter(e, wrapper, chartName); });
-    this.gViz.events.addListener(wrapper, 'ready', e => { this._setChartForChartMorph(e, wrapper, chartName); });
-    this.gViz.events.addListener(wrapper, 'error', e => { this._setErrorForChart(e, chartName); });
+    window.google.visualization.events.addListener(wrapper, 'select', e => { this._updateChartFilter(e, wrapper, chartName); });
+    window.google.visualization.events.addListener(wrapper, 'ready', e => { this._setChartForChartMorph(e, wrapper, chartName); });
+    window.google.visualization.events.addListener(wrapper, 'error', e => { this._setErrorForChart(e, chartName); });
     return wrapper;
   }
 
@@ -1484,12 +1486,7 @@ class DashboardCommon extends ViewModel {
   // finish drawing a chart once gViz has been loaded
   async _finishDraw (chartName, chart) {
     // gViz is non-null when we get here
-    this._makeTitle(chart);
-    const wrapper = await this._makeWrapper(chart, chartName);
-    if (wrapper) {
-      this.lastWrapper = wrapper;
-      chart.chartMorph.drawChart(wrapper);
-    }
+
   }
 
   /**
@@ -1499,30 +1496,19 @@ class DashboardCommon extends ViewModel {
    * pass the wrapper to the chart's morph to be drawn
    * @param { string } chartName - The name of the chart to be drawn.
    */
-  drawChart (chartName) {
-    const chart = this.charts[chartName];
-    if (!chart) return;
-    const check = _ => {
-      if (this.gViz) {
-        this._finishDraw(chartName, chart);
-      } else {
-        setTimeout(check, 50);
+  async drawChart (chartName) {
+    if (GOOGLE_CHART_LOADER.chartsReady) {
+      const chart = this.charts[chartName];
+      if (!chart) return;
+      this._makeTitle(chart);
+      const wrapper = await this._makeWrapper(chart, chartName);
+      if (wrapper) {
+        this.lastWrapper = wrapper;
+        chart.chartMorph.drawChart(wrapper);
       }
-    };
-    const packageList = ['corechart', 'map', 'charteditor', 'visualization'];
-    this.gCharts.load('50', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
-    setTimeout(check, 50);
-    /* let count = 0;
-    while (count < 10 && !this.gViz) {
-      // await this._loadGoogleChartPackages();
-      console.log('Loading Google Chart Packages...');
-      count++;
+    } else {
+      GOOGLE_CHART_LOADER.queueChart(this, chartName);
     }
-    if (!this.gViz) {
-      console.log('Loading Google Visualization failed');
-      return;
-    }
-    console.log(`Finished loading, this.gViz = ${this.gViz}`); */
   }
 
   /**
@@ -1546,10 +1532,7 @@ class DashboardCommon extends ViewModel {
     chartSpecification.chartMorph = await this._getChartMorph(chartName);
     this.charts[chartName] = chartSpecification;
     chartSpecification.dataManagerFilter = await this._prepareChartFilter(chartSpecification.viewOrTable);
-    if (this.gViz) {
-      // this should ALWAYS be true
-      await this.drawChart(chartName);
-    }
+    this.drawChart(chartName);
   }
 
   /**
