@@ -309,10 +309,6 @@ export default class Galyleo extends ViewModel {
   requestSave () {
     const { dashboardFilePath } = this;
     window.parent.postMessage({ method: 'galyleo:requestSave', dashboardFilePath }, '*');
-    /* const jsonString = dashboard.prepareJSONForm();
-    dashboard.clearSnapshots();
-    window.parent.postMessage({ method: 'galyleo:writeFile', jsonString: jsonString, dashboardFilePath }, '*');
-    window.parent.postMessage({ method: 'galyleo:setDirty', dirty: false, dashboardFilePath }, '*'); */
   }
 
   viewDidLoad () {
@@ -447,7 +443,7 @@ export default class Galyleo extends ViewModel {
 
       'galyleo:load': async (data) => {
         this.lastData = data;
-        await this.ui.dashboard.restoreFromJSONForm(data.jsonString);
+        await this.ui.dashboard.restoreFromSavedForm(data.savedForm);
         await this.view.whenRendered();
         const loadScreen = document.getElementById('loading-screen');
         if (loadScreen) {
@@ -463,9 +459,9 @@ export default class Galyleo extends ViewModel {
           // this._changel2lRoom_();
         }
         const { dashboardFilePath } = this;
-        const jsonString = dashboard.prepareJSONForm();
+        const jsonForm = dashboard.prepareSerialization();
         dashboard.clearSnapshots();
-        window.parent.postMessage({ method: 'galyleo:writeFile', jsonString: jsonString, dashboardFilePath }, '*');
+        window.parent.postMessage({ method: 'galyleo:writeFile', jsonForm: jsonForm, dashboardFilePath }, '*');
         window.parent.postMessage({ method: 'galyleo:setDirty', dirty: false, dashboardFilePath }, '*');
       },
       'galyleo:rename': (data) => {
