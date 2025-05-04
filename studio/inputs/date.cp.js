@@ -2,7 +2,7 @@ import { signal } from 'lively.bindings/index.js';
 import { component, ViewModel, part, ensureFont } from 'lively.morphic/components/core.js';
 import { Morph, TilingLayout, Icon, ShadowObject, Label } from 'lively.morphic';
 import { Color, rect, pt } from 'lively.graphics/index.js';
-import {InputLine } from 'lively.components/inputs.js';
+import { InputLine } from 'lively.components/inputs.js';
 
 import { arr, date } from 'lively.lang/index.js';
 import { galyleoFont } from '../shared.cp.js';
@@ -138,7 +138,6 @@ export class DateArray extends Morph {
       const right = arr.max(dates, d => d.right).right;
       const line = lineProto.copy();
       this.addMorphBack(line);
-      console.log(right, left);
       line.width = right - left;
       line.leftCenter = pt(left, Number.parseInt(top) + dateHeight / 2);
     });

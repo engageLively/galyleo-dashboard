@@ -79,7 +79,6 @@ export default class PublishedDashboard extends DashboardCommon {
   //   storedForm: an object created by _perpareSerialization
 
   async _restoreFromSaved (storedForm = this.storedForm/* Now as an object, not a JSON string */) {
-    debugger;
     await super._restoreFromSaved(storedForm);
     this._repositionAfterRestore_();
     await this.drawAllCharts();
@@ -160,4 +159,3 @@ export default class PublishedDashboard extends DashboardCommon {
 
   // this.loadTestDashboard('drilldown-test')
 }
-

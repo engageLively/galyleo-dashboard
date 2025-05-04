@@ -15,6 +15,7 @@ import { ViewBuilder } from './view-creator.cp.js';
 import { GoogleChartHolder } from './chart-creator.cp.js';
 import { DashboardCommon } from './dashboard-common.cp.js';
 import { GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
+import { GALYLEO_ENV } from './ui.cp.js';
 
 // import './jupiter-drive-resource.js';
 
@@ -380,7 +381,9 @@ export class Dashboard extends DashboardCommon {
   }
 
   viewDidLoad () {
-    console.log(`Dashboard: viewDidLoad, initialized = ${this.initialized}`);
+    if (GALYLEO_ENV.debug) {
+      console.log(`Dashboard: viewDidLoad, initialized = ${this.initialized}`);
+    }
     if (!this.initialized) {
       this.init(); // this is async -- should we wait?
     }
@@ -457,7 +460,9 @@ export class Dashboard extends DashboardCommon {
     if (jupyterObject && !jupyterObject.callbackRegistered) {
       window.EXTENSION_INFO.callbackRegistered = jupyterObject.browserModel.fileChanged.connect((model, args) => {
       // for debugging, delete later
-        console.log(`File renamed in browser: ${JSON.stringify(args)}`);
+        if (GALYLEO_ENV.debug) {
+          console.log(`File renamed in browser: ${JSON.stringify(args)}`);
+        }
         this.checkPossibleRenameFromBrowser(model, args);
       }, this);
     }
@@ -985,23 +990,19 @@ export class Dashboard extends DashboardCommon {
    */
 
   async init (controller) {
-    console.log('Dashboard init');
     this.initialized = true;
     this.dashboardController = controller;
     await super.init();
-    console.log('One');
     this._initializeJupyterLabCallbacks();
-    console.log('Two');
     this.viewBuilders = {}; // list of open view builders, can have only 1 per view
     this.availableTables = {}; // dictionary of tables available from the Notebook, obtained from a get information request
-    console.log('Three');
     const parameters = new URLSearchParams(document.location.search);
     const url = parameters.get('dashboard');
     if (url) {
-      console.log(url);
+      if (GALYLEO_ENV.debug) {
+        console.log(url);
+      }
       await this.loadDashboardFromURL(url);
-    } else {
-      console.log('No dashboard!');
     }
   }
 

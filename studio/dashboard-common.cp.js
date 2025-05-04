@@ -830,7 +830,9 @@ class DashboardCommon extends ViewModel {
     await this.addChart(chartName, chartSpecification, false);
     const chartMorph = this.charts[chartName].chartMorph;
     this._restoreMorphicProperties(storedChart, chartMorph);
-    console.log(`Morphic properties restored for ${chartName}`);
+    if (GALYLEO_ENV.debug) {
+      console.log(`Morphic properties restored for ${chartName}`);
+    }
     // await chartMorph.whenRendered();
     return chartMorph;
   }
@@ -1277,14 +1279,13 @@ class DashboardCommon extends ViewModel {
   }
 
   async init () {
-    console.log('A');
     // await this._loadGoogleChartPackages();
     ['charts', 'filters'].forEach(prop => {
       if (!this[prop]) {
         this[prop] = {};
       }
     });
-    console.log('B');
+
     if (this.gCharts) {
       this.gCharts.setOnLoadCallback(() => { this.drawAllCharts(); });
     }
@@ -1292,7 +1293,6 @@ class DashboardCommon extends ViewModel {
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
     }
-    console.log('C');
   }
 
   /**
@@ -1435,7 +1435,9 @@ class DashboardCommon extends ViewModel {
    * @param {string} chartName -- tha name of the chart
    */
   _setChartForChartMorph (e, wrapper, chartName) {
-    console.log(`Chart ready event for ${chartName}: ${wrapper.getChart()}`);
+    if (GALYLEO_ENV.debug) {
+      console.log(`Chart ready event for ${chartName}: ${wrapper.getChart()}`);
+    }
     const morph = this.charts[chartName].actualChart = wrapper.getChart();
   }
 

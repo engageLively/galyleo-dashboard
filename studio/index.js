@@ -5,27 +5,6 @@ import { GalyleoStudioWorld } from './ui.cp.js';
 import { loadViaScript } from 'lively.resources/index.js';
 import { loadGoogleChartsAndExecute } from '../utils.js';
 
-/**
-  * Load the Google chart packages.
-  * Note: we're going to have to drop the mapsApiKey at some point.
-  * @param { string[] } packageList - The packages to be loaded. Default is the core chart package, the map package, and the chart editor..
-  */
-/* Obsoleted by utils.loadGoogleChartsAndExecute *
-export async function loadGoogleChartPackages (packageList = ['corechart', 'map', 'charteditor', 'visualization']) {
-  // await promise.waitFor(20 * 1000, () => !!window.google);
-  console.log('A1');
-  while (!window.google || !window.google.charts) {
-    await loadViaScript('https://www.gstatic.com/charts/loader.js');
-  }
-  console.log('B1');
-  while (!window.google.visualization) {
-    console.log('B2');
-    await window.google.charts.load('50', { packages: packageList, mapsApiKey: 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I' });
-    console.log('B3');
-  }
-}
-*/
-
 export async function main () {
   // take this out when we figure out how to write the html head
   // really should be a script tag in <head>
