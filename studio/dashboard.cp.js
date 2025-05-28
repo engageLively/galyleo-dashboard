@@ -262,7 +262,7 @@ export class Dashboard extends DashboardCommon {
             'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
             'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
             'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter',
-            'relayout', 'dataManager'
+            'relayout', 'dataManager', 'prepareSerialization'
 
           ];
         }
