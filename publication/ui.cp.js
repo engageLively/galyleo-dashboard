@@ -22,7 +22,7 @@ export class GalyleoDashboardWorld extends LivelyWorld {
   }
 
   get serverURL () {
-    return 'https://matt.engagelively.com';
+    return window.location.origin;
   }
 
   get __head_html__ () {
