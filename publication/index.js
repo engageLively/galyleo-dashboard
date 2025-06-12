@@ -9,6 +9,7 @@ export async function main () {
   const dashboard = part(GalyleoDashboardPublication);
   dashboard.respondsToVisibleWindow = true;
   $world.addMorph(dashboard);
+  $world.opacity = 1;
   dashboard.relayout();
 }
 
