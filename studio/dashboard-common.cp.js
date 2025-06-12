@@ -952,7 +952,7 @@ class DashboardCommon extends ViewModel {
    * @param { string } [tableName] - If non-null, only look for columns in this specfic table.
    */
   async createExternalFilter (filterName, columnName, filterType, filterPart, tableName) {
-    const filterMorph = await this.makeFilterMorph(columnName, filterType, filterPart);
+    const filterMorph = await this.makeFilterMorph(columnName, filterType, filterPart, tableName);
     const namedFilterMorphProto = part(NamedFilter);
     namedFilterMorphProto.init(filterMorph, filterName);
     namedFilterMorphProto.position = pt(0, 0);
@@ -1590,5 +1590,6 @@ class DashboardCommon extends ViewModel {
     return chartMorph;
   }
 }
+
 
 export { DashboardCommon };

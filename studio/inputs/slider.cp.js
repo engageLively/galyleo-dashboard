@@ -412,7 +412,8 @@ class DoubleSliderModel extends ViewModel {
   // minimum and the maximum value
 
   _normalizeValue_ (aValue) {
-    const value = Math.round(aValue / this.increment) * this.increment;
+    const increment = isNaN(this.increment) ? 1 : 1;
+    const value = Math.round(aValue / increment) * increment;
     return Math.max(Math.min(this.maxValue, value), this.minValue);
   }
 

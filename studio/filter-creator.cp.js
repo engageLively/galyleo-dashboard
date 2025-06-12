@@ -23,6 +23,9 @@ const FilterSettings = component({
     }], ['filter selector', {
       height: 'fixed',
       width: 'fill'
+    }], ['table selector', {
+      height: 'fixed',
+      width: 'fill'
     }], ['column selector', {
       height: 'fixed',
       width: 'fill'
@@ -30,7 +33,7 @@ const FilterSettings = component({
     spacing: 10,
     wrapSubmorphs: false
   }),
-  extent: pt(397.9, 182.2),
+  extent: pt(397.9, 200),
   fill: Color.rgba(255, 255, 255, 0),
   submorphs: [
     {
@@ -61,6 +64,7 @@ const FilterSettings = component({
       placeholder: 'Filter name'
     }),
     part(GalyleoDropDown, { name: 'filter selector', viewModel: { placeholder: 'Select widget...', openListInWorld: true } }),
+    part(GalyleoDropDown, { name: 'table selector', viewModel: { placeholder: 'Select table...', openListInWorld: true } }),
     part(GalyleoDropDown, { name: 'column selector', viewModel: { placeholder: 'Select column...', openListInWorld: true } }),
     part(PromptButton, {
       name: 'confirm button',
@@ -92,7 +96,9 @@ export class FilterBuilderModel extends ViewModel {
           return [
             { target: 'close button', signal: 'fire', handler: 'cancel' },
             { target: 'confirm button', signal: 'fire', handler: 'createFilter' },
-            { target: 'filter selector', signal: 'selection', handler: 'updateColumns' }
+            { target: 'filter selector', signal: 'selection', handler: 'updateColumns' },
+            { target: 'column selector', signal: 'selection', handler: 'updateTables' },
+            { target: 'table selector', signal: 'selection', handler: 'updateColumns' }
           ];
         }
       }
@@ -127,12 +133,20 @@ export class FilterBuilderModel extends ViewModel {
    * @param { string } filterType - The type of filter to get the columns for
    * @returns { string[] } A list of column names which match the types the filter can accept.
    */
-  getColumns (filterType) {
-    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes([]) : [];
+  getColumns (filterType, tableName = null) {
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes([], tableName) : [];
   }
 
-  getColumnsOfType (typeArray) {
-    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes(typeArray) : [];
+  getColumnsOfType (typeArray, tableName = null) {
+    return this.dashboard ? this.dashboard.dataManager.getColumnsOfTypes(typeArray, tableName) : [];
+  }
+
+  getTables (columnName = null) {
+    if (this.dashboard && this.dashboard.dataManager) {
+      const mgr = this.dashboard.dataManager;
+      return columnName ? mgr.tableNames.filter(tableName => mgr.tables[tableName].getColumnIndex(columnName) >= 0) : mgr.tableNames;
+    }
+    return [];
   }
 
   viewDidLoad () {
@@ -175,6 +189,11 @@ export class FilterBuilderModel extends ViewModel {
     if (columns && columns.length > 0) {
       columnSelector.items = columns;
     }
+    const tableSelector = this.ui.tableSelector;
+    const tables = this.getTables();
+    if (tables && tables.length > 0) {
+      tableSelector.items = tables;
+    }
   }
 
   /**
@@ -206,10 +225,11 @@ export class FilterBuilderModel extends ViewModel {
    * make the filter.
    */
   async createFilter () {
-    const { filterSelector, columnSelector } = this.ui;
+    const { filterSelector, columnSelector, tableSelector } = this.ui;
     const selectedFilterName = filterSelector.selection;
     const selectedFilter = this.filterTypes[selectedFilterName];
     const selectedColumn = columnSelector.selection;
+    const selectedTable = tableSelector.items.length == 1 ? tableSelector.items[0] : tableSelector.selection;
     if (!selectedFilter) {
       filterSelector.toggleError();
       return false;
@@ -218,12 +238,16 @@ export class FilterBuilderModel extends ViewModel {
       columnSelector.toggleError();
       return false;
     }
+    if (!selectedTable) {
+      tableSelector.toggleError();
+      return false;
+    }
     const validity = this._checkConsistency(selectedColumn, selectedFilter, selectedFilterName);
     if (!validity.valid) {
       this.showError(validity.message);
       return false;
     }
-    await this._createFilter(this, selectedFilter.filterType, selectedFilter.part, selectedColumn);
+    await this._createFilter(this, selectedFilter.filterType, selectedFilter.part, selectedColumn, selectedTable);
     this.view.remove();
   }
 
@@ -248,7 +272,7 @@ export class FilterBuilderModel extends ViewModel {
    * @param { Morph } filterPart - The component to use to create the filter.
    * @param { string } columnName - The column for the filter.
    */
-  async _createFilter (filterBuilder, filterType, filterPart, columnName) {
+  async _createFilter (filterBuilder, filterType, filterPart, columnName, tableName) {
     const filterName = this.getFilterName();
     // alert if there is no name, and return
     if (filterName.length === 0) {
@@ -269,27 +293,41 @@ export class FilterBuilderModel extends ViewModel {
       }
     }
     // create the filter, and add it to the dashboard
-    await this.dashboard.createExternalFilter(filterName, columnName, filterType, filterPart);
+    await this.dashboard.createExternalFilter(filterName, columnName, filterType, filterPart, tableName);
     return true;
   }
 
   /**
-   * update the columns for the right filter type.  This is called from
+   * update the columns for the right filter type and table.  This is called from
    * __initDropDown__() and when the filter type is changed in the menu, via
    * a hardcoded connection.
    */
   updateColumns () {
     const columnSelector = this.ui.columnSelector;
+    const tableSelector = this.ui.tableSelector;
     const selectedFilter = this.filterTypes[this.ui.filterSelector.selection];
-    if (!selectedFilter) return;
-    const columns = this.getColumnsOfType(selectedFilter.columnTypes);
+    const types = selectedFilter ? selectedFilter.columnTypes : [];
+    const columns = this.getColumnsOfType(types, tableSelector.selection);
     if (columns && columns.length > 0) {
       columnSelector.items = columns;
-      if (this._editedFilter) {
-        columnSelector.selection = this._editedFilter.filterMorph.columnName;
-      } else {
-        columnSelector.selection = columns[0];
-      }
+    }
+  }
+
+  /**
+   * update the tables for the right column name.  This is called from
+   * __initDropDown__() and when the columnName is changed in the menu, via
+   * a hardcoded connection.
+   */
+  updateTables () {
+    const columnSelector = this.ui.columnSelector;
+    const tableSelector = this.ui.tableSelector;
+    const columnName = columnSelector.selection;
+    if (!columnName) {
+      return;
+    }
+    const tableNames = this.getTables();
+    if (tableNames && tableNames.length > 0) {
+      tableSelector.items = tableNames;
     }
   }
 
@@ -304,7 +342,6 @@ export class FilterBuilderModel extends ViewModel {
     this.view.remove();
   }
 }
-
 
 export class FilterEditorModel extends FilterBuilderModel {
   static get properties () {
@@ -352,7 +389,6 @@ export class FilterEditorModel extends FilterBuilderModel {
   }
 }
 
-
 // FilterEditor.openInWorld()
 const FilterEditor = component(GalyleoWindow, {
   name: 'filter settings prompt',
@@ -390,6 +426,7 @@ const FilterEditor = component(GalyleoWindow, {
 const FilterBuilder = component(GalyleoWindow, {
   name: 'filter builder',
   defaultViewModel: FilterBuilderModel,
+  extent: pt(343, 290),
   layout: new TilingLayout({
     axis: 'column',
     orderByIndex: true,

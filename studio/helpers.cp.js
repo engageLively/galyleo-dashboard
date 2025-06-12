@@ -403,7 +403,9 @@ export class PublisherModel extends ViewModel {
     }
     const dashboardStoreServer = GALYLEO_ENV.dashboardStoreServer;
     // const urlQuery = dashboardStoreServer + (userName ? `/list_user_dashboards/${userName}` : '/list_dashboards');
-    const urlQuery = dashboardStoreServer + '/list_dashboards';
+    // make sure we don't create double slashes
+    const listDashboards = dashboardStoreServer.endsWith('/') ? 'list_dashboards' : '/list_dashboards';
+    const urlQuery = dashboardStoreServer + listDashboards;
     if (userName) {
       this.userName = userName;
     }
@@ -461,7 +463,8 @@ export class PublisherModel extends ViewModel {
 
     if (await this._sanityCheck(filePath)) {
       const dashboardStoreServer = GALYLEO_ENV.dashboardStoreServer;
-      const r = resource(`${dashboardStoreServer}/publish`, { headers: { 'Content-Type': 'application/json' } });
+      const publish = dashboardStoreServer.endsWith('/') ? 'publish' : '/publish';
+      const r = resource(`${dashboardStoreServer}${publish}`, { headers: { 'Content-Type': 'application/json' } });
       const body = {
         name: filePath,
         dashboard: this.dashboard.prepareSerialization()
