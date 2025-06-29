@@ -847,7 +847,12 @@ class RemoteGalyleoTable extends GalyleoTable {
     super(columns, tableName, async () => await this._getRowsFromURL_());
     this.tableType = 'RemoteGalyleoTable';
     this.url = connector.url;
-    this.tableName = connector.remoteName ? connector.remoteName : tableName;
+    this.remoteName = connector.remoteName ? connector.remoteName : tableName;
+    // The remote manager will generally have tables/user/table_name.sdml, which is too long for UI widgets
+    // (specifically, the Tables list in the sidebar and the dropdowns in view creator and filter creator)
+    // So we strip the 'tables/' prefix to ensure that we have comfortable UI widgets.
+    // ALWAYS USE THE REMOTE NAME TO QUERY!
+    this.tableName = tableName.startsWith('tables/') ? tableName.substring('tables/'.length) : tableName;
     this.headers = { };
 
     // If the connector indicates that polling should take place, simply raise the dataUpdated signal every
@@ -905,7 +910,7 @@ class RemoteGalyleoTable extends GalyleoTable {
 
   async getFilteredRows (filterSpec = null) {
     const urlFetcher = this._makeURLFetcher_(_makeURL(this.url, 'get_filtered_rows'));
-    const body = { table: this.tableName };
+    const body = { table: this.remoteName };
 
     if (filterSpec) {
       body.filter = filterSpec;
@@ -1180,9 +1185,10 @@ class GalyleoDataManager {
    * @param {GalyleoTableSpec} tableSpec specification of the table to add
    */
   addTable (name, spec) {
-    this.tables[name] = constructGalyleoTable(name, spec);
+    const table = constructGalyleoTable(name, spec);
+    this.tables[table.tableName] = table;
     if (this.updateListener) {
-      this.tables[name].registerUpdateListener(this.updateListener);
+      table.registerUpdateListener(this.updateListener);
     }
   }
 

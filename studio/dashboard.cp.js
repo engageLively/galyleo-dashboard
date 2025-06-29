@@ -1,6 +1,6 @@
 /* global google */
 /* global URLSearchParams */
-import Immutable from 'https://jspm.dev/immutable@4.0.0-rc.12';
+import Immutable from 'https://jspm.dev/npm:immutable@4.0.0-rc.12!cjs';
 import { Morph, ViewModel, TilingLayout } from 'lively.morphic';
 import { component, without, part, add } from 'lively.morphic/components/core.js';
 import { createMorphSnapshot } from 'lively.morphic/serialization.js';
@@ -631,11 +631,15 @@ export class Dashboard extends DashboardCommon {
       }, morphs)
     );
     newSnap.set('numMorphs', canvas.submorphs.length);
+    if (newSnap === snap) {
+      return;
+    }
     this._snapshots.push(newSnap); // this returned snap reuses a bulk of the existing stored date, so it only contributes what has actually changed to the total memory expended in the system.
     this._changePointer = this._snapshots.length - 1;
 
     const { dashboardFilePath } = canvas.owner.viewModel; // fixme
-    window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
+    // window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
+    this.viewModel.canvas.owner.requestSave(); //
   }
 
   /**

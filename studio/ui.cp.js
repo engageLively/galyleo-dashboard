@@ -1,3 +1,9 @@
+/* global URLSearchParams */
+/* global URLSearchParams */
+/* global URLSearchParams */
+/* global URLSearchParams */
+/* global URLSearchParams */
+/* global URLSearchParams */
 /* global GalyleoEnv */
 /* global URLSearchParams */
 
@@ -13,6 +19,7 @@ import { GalyleoSideBar } from './side-bar.cp.js';
 import { BugReporter } from './helpers.cp.js';
 import { Publisher } from './helpers.cp.js';
 import { studioServer, dashboardStoreServer, tableServer } from '../config.js';
+import { JupyterFileSystem } from './filesystem.js';
 
 class GalyleoEnvObject {
   get galyleoServer () {
@@ -221,6 +228,123 @@ export class GalyleoStudioWorld extends LivelyWorld {
   }
 }
 
+// Infer the Jupyter Server URL from the window location.  In general, Jupyter servers
+// serve us up as: <baseUrl>/studio-<language>/index.html
+
+const inferJupyterServerAPIUrl = () => {
+  const { origin, pathname } = window.location;
+  const match = pathname.match(/^(.*)\/studio-(en|jp)\//);
+  const base = match ? match[1] : '';
+  return `${origin}${base}/api/contents`;
+};
+
+class JupyterCommunicator {
+  constructor (galyleo) {
+    this.galyleo = galyleo;
+    this.instanceId = galyleo.instanceId;
+    this._lastSaved = null;
+    this._suppressChange = false;
+    this._messages_ = [];
+  }
+
+  _sendMessage (type, payload = {}) {
+    window.parent.postMessage({ type, payload, instanceId: this.instanceId }, '*');
+  }
+
+  _getSnapshot () {
+    try {
+      const dashboard = this.galyleo.ui.dashboard;
+      return dashboard.prepareJSONForm();
+    } catch (err) {
+      console.error('Failed to serialize dashboard:', err);
+      return null;
+    }
+  }
+
+  // Save the current dashboard
+  save () {
+    const jsonForm = this._getSnapshot();
+
+    if (!jsonForm) {
+      return;
+    }
+    if (!this._suppressChange && jsonForm !== this._lastSaved) {
+      this._lastSaved = jsonForm;
+      this._sendMessage('galyleo:contentChanged', { content: jsonForm });
+    }
+  }
+
+  startDirtyCheck (intervalMs = 2000) {
+    this._lastSnapshot = this._getSnapshot();
+
+    this._dirtyCheckInterval = setInterval(() => {
+      const current = this._getSnapshot();
+      if (current && current !== this._lastSnapshot) {
+        this._lastSnapshot = current;
+        this.isDirty = true;
+        this.save(); // triggers galyleo:contentChanged
+      } else {
+        this.isDirty = false;
+      }
+    }, intervalMs);
+  }
+
+  stopDirtyCheck () {
+    clearInterval(this._dirtyCheckInterval);
+  }
+
+  async _load (data) {
+    this._suppressChange = true;
+    const savedForm = data.content;
+    await this.galyleo.updateDashboard(savedForm);
+    this._lastSnapshot = this._getSnapshot(); // make sure that we don't send a load right back.
+    this._suppressChange = false;
+  }
+
+  /**
+   * When embedded inside a jupyter notebook, we communicate via the postMessage
+   * interface, since we are confined to an iframe.
+   */
+  initialize () {
+    const handlers = {
+      'galyleo:fixLabels': async () => {
+        // this is absolutely crazy
+        // this.getSubmorphsByStyleClassName('PrettyMorphList').forEach(l => l.relayout());
+        // this.getSubmorphsByStyleClassName('Label').forEach(l => {
+        //   l._cachedTextBounds = null; l.fit();
+        // });
+      },
+
+      'galyleo:loadContent': async data => await this._load(data),
+      'galyleo:revertContent': async data => await this._load(data),
+
+      'galyleo:save': _ => this.save(),
+      'galyleo:requestSave': _ => this.save(),
+
+      'galyleo:undo': (data) => {
+        const dashboard = this.galyleo.ui.dashboard;
+        dashboard.execCommand('undo');
+      },
+      'galyleo:redo': (data) => {
+        const dashboard = this.galyleo.ui.dashboard;
+        dashboard.execCommand('redo');
+      }
+    };
+    window.addEventListener('message', evt => {
+      if (!this._messages_) {
+        this._messages_ = [];
+      }
+      this._messages_.push(evt.data);
+      const handler = handlers[evt.data.type];
+      if (handler && evt.data.instanceId === this.instanceId) {
+        handler(evt.data.payload);
+      }
+    });
+    this.startDirtyCheck(15000);
+    this._sendMessage('galyleo:ready');
+  }
+}
+
 export default class Galyleo extends ViewModel {
   // window.inJupyterLab = true
 
@@ -232,6 +356,7 @@ export default class Galyleo extends ViewModel {
       _redoButton: {},
       _saveButton: {},
       _topBarNetworkIndicator: {},
+
       bugReporterComponent: {
         get () {
           return this.getProperty('bugReporterComponent') || BugReporter;
@@ -265,6 +390,7 @@ export default class Galyleo extends ViewModel {
           return resource(document.location).query().user;
         }
       },
+
       version: {
         get () {
           return '0.0.1';
@@ -276,6 +402,7 @@ export default class Galyleo extends ViewModel {
           return ['halos', 'withTopBarDo', 'relayout', 'requestSave', 'clearFocus'];
         }
       },
+
       bindings: {
         get () {
           return [
@@ -307,13 +434,27 @@ export default class Galyleo extends ViewModel {
   }
 
   requestSave () {
-    const { dashboardFilePath } = this;
-    window.parent.postMessage({ method: 'galyleo:requestSave', dashboardFilePath }, '*');
+    if (this.jupyterCommunicator) {
+      this.jupyterCommunicator.save();
+    }
+  }
+
+  initializeCommunicator (instanceId) {
+    this.instanceId = instanceId;
+    this.jupyterCommunicator = new JupyterCommunicator(this);
+    this.jupyterCommunicator.initialize();
   }
 
   viewDidLoad () {
+    const parameters = new URLSearchParams(document.location.search);
+
+    if (parameters.has('instanceId')) {
+      const instanceId = parameters.get('instanceId');
+      this.initializeCommunicator(instanceId);
+    }
+
     if (this.inJupyterLab) {
-      this._initMessageListeners();
+      this.jupyterCommunicator.initialize();
       this.view.addKeyBindings([{ command: 'save', keys: { mac: 'Meta-S', win: 'Ctrl-S' } }]);
     }
     this.relayout();
@@ -395,102 +536,12 @@ export default class Galyleo extends ViewModel {
     ];
   }
 
-  /**
-   * When embedded inside a jupyter notebook, we communicate via the postMessage
-   * interface, since we are confined to an iframe.
-   */
-  _initMessageListeners () {
-    const handlers = {
-      'galyleo:fixLabels': async () => {
-        // this is absolutely crazy
-        // this.getSubmorphsByStyleClassName('PrettyMorphList').forEach(l => l.relayout());
-        // this.getSubmorphsByStyleClassName('Label').forEach(l => {
-        //   l._cachedTextBounds = null; l.fit();
-        // });
-      },
-      'galyleo:loadTable': data => {
-        if (data.table && data.table.name && data.table.table) {
-          let matched = true;
-          if (data.table.dashboard) {
-            // normalize the dashboardFilePath and the request in data by throwing out prefixes
-            // and suffixes
-            const currentPath = this.dashboardFilePath;
-            const recipientDashboard = data.table.dashboard;
-            const filePart = pathName => {
-              const parts = pathName.split('/');
-              return parts[parts.length - 1];
-            };
-            const namePart = fileName => {
-              const parts = fileName.split('.');
-              // might have been a leading '.', so find the first part of nonzero length
-              const result = parts.filter(part => part.length > 0);
-              return result && result.length > 0 ? result[0] : null;
-            };
-            const nonNull = filePath => filePath && filePath.length > 0;
-            if (nonNull(currentPath) && nonNull(recipientDashboard)) {
-              const thisFileKernel = namePart(filePart(currentPath));
-              const requestedFileKernel = namePart(filePart(recipientDashboard));
-              if (nonNull(thisFileKernel) && nonNull(requestedFileKernel)) {
-                matched = thisFileKernel === requestedFileKernel;
-              }
-            }
-          }
-          if (matched) {
-            this.ui.dashboard.addTable(data.table);
-          }
-        }
-      },
-
-      'galyleo:load': async (data) => {
-        this.lastData = data;
-        await this.ui.dashboard.restoreFromSavedForm(data.savedForm);
-        await this.view.whenRendered();
-        const loadScreen = document.getElementById('loading-screen');
-        if (loadScreen) {
-          loadScreen.remove();
-        }
-
-        this.relayout();
-      },
-      'galyleo:save': (data) => {
-        const { dashboard } = this.ui;
-        if (data.path) {
-          this.dashboardFilePath = data.path;
-          // this._changel2lRoom_();
-        }
-        const { dashboardFilePath } = this;
-        const jsonForm = dashboard.prepareSerialization();
-        dashboard.clearSnapshots();
-        window.parent.postMessage({ method: 'galyleo:writeFile', jsonForm: jsonForm, dashboardFilePath }, '*');
-        window.parent.postMessage({ method: 'galyleo:setDirty', dirty: false, dashboardFilePath }, '*');
-      },
-      'galyleo:rename': (data) => {
-        if (data.path) {
-          this.dashboardFilePath = data.path;
-          // this._changel2lRoom_();
-        }
-      },
-      'galyleo:undo': (data) => {
-        const { dashboardFilePath } = this;
-        const { dashboard } = this.ui;
-        dashboard.execCommand('undo');
-        window.parent.postMessage({ method: 'galyleo:setDirty', dirty: dashboard.isDirty(), dashboardFilePath }, '*');
-      },
-      'galyleo:redo': (data) => {
-        const { dashboardFilePath } = this;
-        const { dashboard } = this.ui;
-        dashboard.execCommand('redo');
-        window.parent.postMessage({ method: 'galyleo:setDirty', dirty: dashboard.isDirty(), dashboardFilePath }, '*');
-      }
-    };
-    window.addEventListener('message', evt => {
-      if (!this._messages_) {
-        this._messages_ = [];
-      }
-      this._messages_.push(evt.data);
-      handlers[evt.data.method](evt.data);
-    });
-    window.parent.postMessage({ method: 'galyleo:ready', dashboardFilePath: this.dashboardFilePath }, '*');
+  async updateDashboard (savedForm) {
+    await this.ui.dashboard.restoreFromSavedForm(savedForm);
+    await this.view.whenRendered();
+    const loadScreen = document.getElementById('loading-screen');
+    if (loadScreen) loadScreen.remove();
+    this.relayout();
   }
 
   toggleJupyterFrame (active) {
@@ -562,5 +613,58 @@ const GalyleoDashboardStudio = component({
     })
   ]
 });
+
+export class GalyleoMessageTest {
+  constructor (testDashboard, galyleoInstance) {
+    this.testDashboard = testDashboard;
+    this.messagesReceived = [];
+    this.messagesSent = [];
+    this.instanceId = window.crypto.randomUUID();
+    this.galyleoInstance = galyleoInstance;
+    this._initMessageListeners();
+    galyleoInstance.initializeCommunicator(this.instanceId);
+  }
+
+  _initMessageListeners () {
+    const handlers = {
+      'galyleo:ready': () => {
+        this.messagesReceived.push('galyleo:ready');
+        const dashboardObject = JSON.parse(this.testDashboard);
+        const payload = { content: dashboardObject };
+        this._postMessage('galyleo:loadContent', payload);
+      },
+
+      'galyleo:contentChanged': (evt) => {
+        this.messagesReceived.push(evt.data);
+        const { payload } = evt.data;
+        console.log(payload.content);
+      },
+
+      'galyleo:requestSave': () => {
+        this.messagesReceived.push('galyleo:requestSave');
+        // await this._context.save();
+        console.log('galyleo:saveSuccess');
+      }
+    };
+
+    window.addEventListener('message', (evt) => {
+      const { type, instanceId } = evt.data;
+      if (instanceId == this.instanceId && type in handlers) {
+        handlers[type](evt);
+      }
+    });
+  }
+
+  sendDashboard () {
+    const dashboardObject = this.testDashboard;
+    const payload = { content: dashboardObject };
+    this._postMessage('galyleo:loadContent', payload);
+  }
+
+  _postMessage (type, payload = {}) {
+    this.messagesSent.push({ type, payload });
+    window.parent.postMessage({ type, payload, instanceId: this.instanceId }, '*');
+  }
+}
 
 export { GalyleoDashboardStudio, GALYLEO_ENV };

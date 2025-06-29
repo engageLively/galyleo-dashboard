@@ -596,6 +596,14 @@ class DashboardCommon extends ViewModel {
           console.log(`Restored fill to ${this.canvas.fill}`);
         }
       }
+
+      const fields = ['tables', 'views', 'filters', 'charts', 'morphs'];
+      fields.forEach(field => {
+        if (storedForm[field] === null || typeof (storedForm[field]) !== 'object') {
+          storedForm[field] = {};
+        }
+      });
+
       // We're going to completely clear the data manager, so just blow it away
       // and get a new one.
       this.dataManager = new GalyleoDataManager(this);
@@ -604,7 +612,9 @@ class DashboardCommon extends ViewModel {
       if (GALYLEO_ENV.debug) {
         console.log(`Restoring tables ${Object.keys(storedForm.tables)}`);
       }
-      Object.keys(storedForm.tables).forEach(tableName => {
+
+      const tableNames = Object.keys(storedForm.tables || {});
+      Object.keys(tableNames).forEach(tableName => {
         this.addTable({ name: tableName, table: storedForm.tables[tableName] });
       });
 
@@ -612,7 +622,8 @@ class DashboardCommon extends ViewModel {
         console.log(`Restoring views ${Object.keys(storedForm.views)}`);
       }
 
-      Object.keys(storedForm.views).forEach(viewName => {
+      const viewNames = Object.keys(storedForm.views || {});
+      Object.keys(viewNames).forEach(viewName => {
         this.dataManager.addView(viewName, storedForm.views[viewName]);
       });
 
@@ -624,7 +635,7 @@ class DashboardCommon extends ViewModel {
       // the descriptors of each type in unorderedDescriptors, keeping the
       // the information we need to instantiate them later
       //
-      const storedFilterNames = Object.keys(storedForm.filters);
+      const storedFilterNames = Object.keys(storedForm.filters) || [];
 
       if (GALYLEO_ENV.debug) {
         console.log(`Restoring filters ${Object.keys(storedForm.filters)}`);
@@ -1590,6 +1601,5 @@ class DashboardCommon extends ViewModel {
     return chartMorph;
   }
 }
-
 
 export { DashboardCommon };
