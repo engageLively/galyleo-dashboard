@@ -14,6 +14,29 @@ import { GALYLEO_ENV } from '../studio/ui.cp.js';
 import { convertSDMLRow } from '../galyleo-data/galyleo-data.js';
 
 /**
+ * A utility class to log and raise errors of a specific type:
+ * this is raised by routines in the Dashboard and DataManager classes
+ * and tables to indicate a bad specification.
+ */
+
+export class BadDashboardError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'BadDashboardError';
+    this.message = `Bad Dashboard Error: ${message}`;
+  }
+}
+
+/**
+ * A utility to create a BadDashboardError and log it.
+ */
+
+export const createBadDashboardError = (error) => {
+  console.log(error);
+  throw new BadDashboardError(error);
+};
+
+/**
  * A Bug Reporter.  Very simple: just bundles up the input fields and uses
  * a POST call to report the bug and file a ticket.  No properties, just
  * a read-only URL

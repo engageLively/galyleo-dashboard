@@ -71,7 +71,7 @@ class GalyleoEnvObject {
   }
 
   set debug (true_false) {
-    this._debug = false;
+    this._debug = true_false;
   }
 
   constructor () {
@@ -274,7 +274,7 @@ class JupyterCommunicator {
     }
   }
 
-  startDirtyCheck (intervalMs = 2000) {
+  startDirtyCheck (intervalMs = 120000) {
     this._lastSnapshot = this._getSnapshot();
 
     this._dirtyCheckInterval = setInterval(() => {
@@ -340,7 +340,7 @@ class JupyterCommunicator {
         handler(evt.data.payload);
       }
     });
-    this.startDirtyCheck(15000);
+    this.startDirtyCheck(120000);
     this._sendMessage('galyleo:ready');
   }
 }
@@ -561,8 +561,21 @@ export default class Galyleo extends ViewModel {
 
   onHoverOut (evt) {
     super.onHoverOut(evt);
+
     if (!this.innerBounds().insetBy(5).containsPoint(evt.positionIn(this))) {
-      this.focusStealer.focus();
+      const active = document.activeElement;
+
+      // Only steal focus if there's no legitimate input focused
+      if (!active || active === document.body || active === this.focusStealer) {
+        if (GALYLEO_ENV.debug) {
+          console.log('[FocusStealer] Restoring focus to hidden morph');
+        }
+        this.focusStealer.focus();
+      } else {
+        if (GALYLEO_ENV.debug) {
+          console.log('[FocusStealer] Active element:', active, ' - Not stealing focus.');
+        }
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import { resource } from 'lively.resources';
+import { createBadDashboardError } from '../studio/helpers.cp.js';
 // import { signal } from 'lively.bindings';
 // import Inspector, { inspect } from 'lively.ide/js/inspector.js';
 
@@ -985,13 +986,18 @@ class RemoteGalyleoTable extends GalyleoTable {
  * @param {GalyleoTableSpec} galyleoTableSpec: specification of the table
  */
 
-function constructGalyleoTable (name, galyleoTableSpec) {
+async function constructGalyleoTable (name, galyleoTableSpec) {
   const columns = galyleoTableSpec.columns;
   if (galyleoTableSpec.rows != null) {
     return new ExplicitGalyleoTable(columns, name, galyleoTableSpec.rows);
   }
   if (galyleoTableSpec.connector != null) {
-    return new RemoteGalyleoTable(columns, name, galyleoTableSpec.connector);
+    const table = new RemoteGalyleoTable(columns, name, galyleoTableSpec.connector);
+    const url = table.url + '/get_table_schema?table=' + table.remoteName;
+    const f = table._makeURLFetcher_(url);
+    await f.readJson(); // throws an error if the table isn't found
+
+    return table;
   }
   // should never get here
   return null;
@@ -1184,18 +1190,28 @@ class GalyleoDataManager {
    * @param {string} name name of the table
    * @param {GalyleoTableSpec} tableSpec specification of the table to add
    */
-  addTable (name, spec) {
-    const table = constructGalyleoTable(name, spec);
-    this.tables[table.tableName] = table;
-    if (this.updateListener) {
+  async addTable (name, spec) {
+    let table;
+    // console.log(`Galyleo Data Manager adding table ${name}`);
+    try {
+      table = await constructGalyleoTable(name, spec);
+      this.tables[table.tableName] = table;
+      // console.log(`Galyleo Data Manager added table${name}`);
+    } catch (err) {
+      createBadDashboardError(`Error adding table ${name}: ${err}`);
+      // console.log('GDM: Should not get here!');
+    }
+
+    if (table && this.updateListener) {
       table.registerUpdateListener(this.updateListener);
     }
+    return true;
   }
 
   /**
    * Add a view  from a specification
    * @param {string} name name of the view
-   * @param {GalyleoViewSoec} viewSpec specification of the view to add
+   * @param {GalyleoViewSpec} viewSpec specification of the view to add
    */
   addView (name, viewSpec) {
     this.views[name] = new GalyleoView(viewSpec);

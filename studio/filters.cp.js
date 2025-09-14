@@ -8,6 +8,7 @@ import { DatePicker } from './inputs/date.cp.js';
 import { DoubleSliderWithValues, SliderWithValue } from './inputs/slider.cp.js';
 import { GalyleoDropDownList, GalyleoNumberInput, GalyleoDropDown, galyleoFont } from './shared.cp.js';
 import { rect } from 'lively.graphics/geometry-2d.js';
+import { Text } from 'lively.morphic/text/morph.js';
 
 // fixme: turn this into a transparent filter?
 // VisualFilter.openInWorld()
@@ -649,7 +650,6 @@ export class ListFilterMorph extends Morph {
     this.signalEnabled = true;
   }
 }
-
 
 // part(ListFilter).openInWorld()
 const ListFilter = component(VisualFilter, {
@@ -1412,4 +1412,40 @@ const SliderFilter = component(VisualFilter, {
   ]
 });
 
-export { VisualFilter, NamedFilter, BooleanFilter, DateFilter, DoubleSliderFilter, ListFilter, RangeFilter, SelectFilter, SliderFilter };
+const MinInput1 = component({
+  name: undefined,
+  borderColor: Color.blue,
+  borderStyle: 'none',
+  position: pt(368.9, 635.1),
+  submorphs: [{
+    name: 'sliderValue',
+    fontSize: 12.22278010227801,
+    submorphs: [add({
+      type: Text,
+      name: 'placeholder',
+      fontColor: Color.gray,
+      fontSize: 12.22278010227801,
+      fontWeight: 'bold',
+      nativeCursor: 'text',
+      padding: rect(3, 3, 0, 0),
+      reactsToPointer: false,
+      textAlign: 'center',
+      textAndAttributes: ['Enter Value', null],
+      visible: false
+    })],
+    textAndAttributes: ['59', null]
+  }]
+});
+
+export {
+  VisualFilter,
+  NamedFilter,
+  BooleanFilter,
+  DateFilter,
+  DoubleSliderFilter,
+  ListFilter,
+  RangeFilter,
+  SelectFilter,
+  SliderFilter,
+  MinInput1
+};

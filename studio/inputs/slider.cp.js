@@ -2,7 +2,7 @@ import { Morph } from 'lively.morphic/morph.js';
 import { pt, rect, Color } from 'lively.graphics/index.js';
 import { signal, connect } from 'lively.bindings/index.js';
 import { component, ViewModel, part } from 'lively.morphic/components/core.js';
-import { Label, TilingLayout, ShadowObject, Icon } from 'lively.morphic';
+import { Label, Text, TilingLayout, ShadowObject, Icon } from 'lively.morphic';
 import { InputLine } from 'lively.components/inputs.js';
 
 export class SliderModel extends ViewModel {
@@ -196,7 +196,7 @@ class SliderInputLabelMorph extends Morph {
       value: {
         derived: true,
         set (v) {
-          this.getSubmorphNamed('sliderValue').input = String(v);
+          this.getSubmorphNamed('sliderValue').textString = String(v);
           this.relayout();
         },
         get () {
@@ -204,6 +204,11 @@ class SliderInputLabelMorph extends Morph {
         }
       }
     };
+  }
+
+  onLoad () {
+    this.focusable = false;
+    this.submorphs.forEach(m => m.focusable = false);
   }
 
   onInput () {
@@ -249,6 +254,7 @@ class SliderInputLabelMorph extends Morph {
   }
 }
 
+
 class SliderKnob extends Morph {
   // A Slider knob.  This is freely dragged along the x-axis between the
   // bounds given by this.owner.extent.x - this.width (right edge never goes
@@ -260,6 +266,10 @@ class SliderKnob extends Morph {
     const maxPosition = this.owner.extent.x - this.width;
     this.position = pt(Math.max(0, Math.min(maxPosition, x)), 0);
     this._updateValue_();
+  }
+
+  onLoad () {
+    this.focusable = false;
   }
 
   // The drag events are all the same -- do the super, which will move the knob,
@@ -276,6 +286,7 @@ class SliderKnob extends Morph {
   }
 
   onDragEnd (evt) {
+    this;
     super.onDragEnd(evt);
     this._normalizePosition_();
   }
@@ -494,6 +505,10 @@ class DoubleSliderKnob extends Morph {
   // bounds given by this.owner.positionRanges, and its y position is always 0.
   // _normalizePosition_ just ensures that the x position is within reasonable
   // bounds and the y position is 0
+  onLoad () {
+    this.focusable = false;
+  }
+
   _normalizePosition_ () {
     const positionRange = this.owner.positionRanges[this.name];
     const x = Math.min(positionRange.max, Math.max(positionRange.min, this.position.x));
@@ -750,7 +765,7 @@ const SliderInputLabel = component({
       master: { auto: IncrementButton, click: IncrementButtonClick }
     }),
     {
-      type: InputLine,
+      type: Text,
       name: 'sliderValue',
       borderWidth: 3,
       borderRadius: 3,
@@ -772,7 +787,7 @@ const SliderInputLabel = component({
       padding: rect(3, 3, 0, 0),
       placeholder: 'Enter Value',
       textAlign: 'center',
-      textAndAttributes: ['1', null]
+      textAndAttributes: ['', null]
     },
     part(IncrementButton, {
       name: 'decrement button',
@@ -899,4 +914,16 @@ const DoubleSliderWithValues = component({
   ]
 });
 
-export { SliderInputLabel, Slider, DoubleSlider, SliderWithValue, DoubleSliderWithValues };
+const DecrementButton = component({
+  name: undefined,
+  rotation: 3.141592653589793
+});
+
+export {
+  SliderInputLabel,
+  Slider,
+  DoubleSlider,
+  SliderWithValue,
+  DoubleSliderWithValues,
+  DecrementButton
+};

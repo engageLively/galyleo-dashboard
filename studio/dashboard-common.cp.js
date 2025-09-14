@@ -12,7 +12,7 @@ import { GoogleChartHolder } from './chart-creator.cp.js';
 import { checkSpecValid, GalyleoDataManager } from '../galyleo-data/galyleo-data.js';
 import { loadViaScript } from 'lively.resources/index.js';
 import { URL } from 'esm://cache/npm:@jspm/core@2.0.0-beta.26/nodelibs/url';
-import { TableViewer } from './helpers.cp.js';
+import { TableViewer, createBadDashboardError } from './helpers.cp.js';
 import { GALYLEO_ENV } from './ui.cp.js';
 import { GOOGLE_CHART_LOADER } from '../utils.js';
 
@@ -70,7 +70,7 @@ class DashboardCommon extends ViewModel {
             'saveDashboardToFile', 'prepareJSONForm', 'restoreFromJSONForm',
             'restoreFromSavedForm', 'getColumnsOfType',
             'openDialog', 'confirm', 'isDirty', 'clearSnapshots', 'commands', 'init',
-            'tables', 'addTable', 'tableNames', 'views', 'viewNames', 'update',
+            'tables', 'tableNames', 'views', 'viewNames', 'update',
             'addView', 'createViewEditor', 'filters', 'addFilter', 'removeFilter', 'filterNames',
             'charts', 'chartNames', 'addChart', 'editChartStyle', 'removeChart', 'createExternalFilter',
             'relayout', 'dataManager'
@@ -550,10 +550,17 @@ class DashboardCommon extends ViewModel {
    * @param { string or object} storedForm
    */
   async restoreFromSavedForm (storedForm) {
-    if (typeof storedForm === 'string') {
-      await this.restoreFromJSONForm(storedForm);
-    } else if (typeof storedForm === 'object') {
-      await this._restoreFromSaved(storedForm);
+    const formType = typeof storedForm;
+    try {
+      if (formType == 'string') {
+        await this.restoreFromJSONForm(storedForm);
+      } else if (formType === 'object') {
+        await this._restoreFromSaved(storedForm);
+      } else {
+        createBadDashboardError(`unrecognized form of storedForm: ${formType}`);
+      }
+    } catch (error) {
+      $world.inform(error.message);
     }
   }
 
@@ -562,12 +569,13 @@ class DashboardCommon extends ViewModel {
    * restoring the tables, views, filters, and charts from the saved description
    * created in _prepareSerialization.
    * @param { string } storedForm - The stored form in a JSON string
+
    */
   async restoreFromJSONForm (storedForm) {
     try {
       await this._restoreFromSaved(JSON.parse(storedForm));
     } catch (err) {
-
+      $world.inform(err.message);
     }
   }
 
@@ -579,16 +587,16 @@ class DashboardCommon extends ViewModel {
   async _restoreFromSaved (storedForm) {
     if (this._restore) {
       // in the middle of a restore, do nothing
-      return;
+      return [];
     }
+
     this.storedForm = storedForm;
     this._restore = true;
     if (GALYLEO_ENV.debug) {
       console.log('Restoring from stored form');
     }
-
+    let unorderedDescriptors = [];
     try {
-      const unorderedDescriptors = [];
       this.clear(); // make sure we blow away anything that was here before
       if (storedForm.fill) {
         this.canvas.fill = this._color(storedForm.fill, Color.white);
@@ -609,63 +617,83 @@ class DashboardCommon extends ViewModel {
       this.dataManager = new GalyleoDataManager(this);
       // The non-morph structures are easy....
       // this.tables = storedForm.tables;
-      if (GALYLEO_ENV.debug) {
-        console.log(`Restoring tables ${Object.keys(storedForm.tables)}`);
+    } catch (err) {
+      this._restore = false;
+      createBadDashboardError(`Error in _restoreFromSaved, setting up for restore: ${err}`);
+    }
+
+    const tableNames = Object.keys(storedForm.tables || {});
+    if (GALYLEO_ENV.debug) {
+      console.log(`Restoring tables ${tableNames}`);
+    }
+    try {
+      for (let i = 0; i < tableNames.length; i++) {
+        const name = tableNames[i];
+        await this._addTable({ name: name, table: storedForm.tables[name] });
       }
+    } catch (err) {
+      this._restore = false;
+      throw (err);
+    }
 
-      const tableNames = Object.keys(storedForm.tables || {});
-      Object.keys(tableNames).forEach(tableName => {
-        this.addTable({ name: tableName, table: storedForm.tables[tableName] });
-      });
+    if (GALYLEO_ENV.debug) {
+      console.log(`Restoring views ${Object.keys(storedForm.views)}`);
+    }
 
-      if (GALYLEO_ENV.debug) {
-        console.log(`Restoring views ${Object.keys(storedForm.views)}`);
-      }
+    const viewNames = Object.keys(storedForm.views || {});
 
-      const viewNames = Object.keys(storedForm.views || {});
-      Object.keys(viewNames).forEach(viewName => {
+    viewNames.forEach(viewName => {
+      try {
         this.dataManager.addView(viewName, storedForm.views[viewName]);
-      });
-
-      // charts and filters have been initialized to empty dictionaries by
-      // clear
-
-      // Now we need to add morphs, including filters and charts, in order in order
-      // to preserve front-to-back ordering.  So the first step is just to collect
-      // the descriptors of each type in unorderedDescriptors, keeping the
-      // the information we need to instantiate them later
-      //
-      const storedFilterNames = Object.keys(storedForm.filters) || [];
-
-      if (GALYLEO_ENV.debug) {
-        console.log(`Restoring filters ${Object.keys(storedForm.filters)}`);
+      } catch (err) {
+        this._restore = false;
+        createBadDashboardError(`Error in _restoreFromSaved_, setting up view   ${viewName}: ${err}`);
       }
+    });
 
-      for (let i = 0; i < storedFilterNames.length; i++) {
-        const filterName = storedFilterNames[i];
+    // charts and filters have been initialized to empty dictionaries by
+    // clear
+
+    // Now we need to add morphs, including filters and charts, in order in order
+    // to preserve front-to-back ordering.  So the first step is just to collect
+    // the descriptors of each type in unorderedDescriptors, keeping the
+    // the information we need to instantiate them later
+    //
+
+    const storedFilterNames = Object.keys(storedForm.filters) || [];
+    if (GALYLEO_ENV.debug) {
+      console.log(`Restoring filters ${storedFilterNames}`);
+    }
+    for (let i = 0; i < storedFilterNames.length; i++) {
+      const filterName = storedFilterNames[i];
+      try {
         const savedFilter = storedForm.filters[filterName].savedForm;
         this.defaultFilters[filterName] = await this._makeDefaultFilter(savedFilter.columnName, savedFilter.filterType, savedFilter.tableName);
         unorderedDescriptors.push({ type: 'filter', filterName: filterName, descriptor: storedForm.filters[filterName] });
+      } catch (err) {
+        this._restore = false;
+        createBadDashboardError(`Error in _restoreFromSaved_, setting up filter ${filterName}: ${err}`);
       }
+    }
 
-      const getColumnNameTableAndType = viewOrTableName => {
-        if (this.dataManager.tables[viewOrTableName]) {
-          const table = this.dataManager.tables[viewOrTableName];
-          return { columnName: table.columns[0].name, type: table.columns[0].type, tableName: viewOrTableName };
-        } else {
-          const view = this.dataManager.views[viewOrTableName];
-          const table = this.dataManager.tables[view.tableName];
-          return { columnName: view.columns[0], type: table.getColumnType(view.columns[0]), tableName: view.tableName };
-        }
-      };
-
-      if (GALYLEO_ENV.debug) {
-        console.log(`Restoring charts ${Object.keys(storedForm.charts)}`);
+    const getColumnNameTableAndType = viewOrTableName => {
+      if (this.dataManager.tables[viewOrTableName]) {
+        const table = this.dataManager.tables[viewOrTableName];
+        return { columnName: table.columns[0].name, type: table.columns[0].type, tableName: viewOrTableName };
+      } else {
+        const view = this.dataManager.views[viewOrTableName];
+        const table = this.dataManager.tables[view.tableName];
+        return { columnName: view.columns[0], type: table.getColumnType(view.columns[0]), tableName: view.tableName };
       }
+    };
 
-      const storedChartNames = Object.keys(storedForm.charts);
-      for (let i = 0; i < storedChartNames.length; i++) {
-        const chartName = storedChartNames[i];
+    const storedChartNames = Object.keys(storedForm.charts);
+    if (GALYLEO_ENV.debug) {
+      console.log(`Restoring charts ${storedChartNames}`);
+    }
+    for (let i = 0; i < storedChartNames.length; i++) {
+      const chartName = storedChartNames[i];
+      try {
         const storedChart = storedForm.charts[chartName];
 
         const descriptor = getColumnNameTableAndType(storedChart.viewOrTable);
@@ -673,13 +701,18 @@ class DashboardCommon extends ViewModel {
         const filter = await this._makeDefaultFilter(descriptor.columnName, filterType, descriptor.tableName);
         this.defaultFilters[chartName] = filter;
         unorderedDescriptors.push({ type: 'chart', chartName: chartName, descriptor: storedChart });
+      } catch (err) {
+        this._restore = false;
+        createBadDashboardError(`Error in _restoreFromSaved_, setting up chart ${chartName}: ${err}`);
       }
+    }
 
-      // We used to store morphs as a dictionary, which we no longer do.  So check
-      // the type, and if it's an object, convert to an array.  Fortunately, since
-      // Object.keys() of an array returns [0, 1, 2...] the "conversion" here
-      // is a no-op in the case of an array
+    // We used to store morphs as a dictionary, which we no longer do.  So check
+    // the type, and if it's an object, convert to an array.  Fortunately, since
+    // Object.keys() of an array returns [0, 1, 2...] the "conversion" here
+    // is a no-op in the case of an array
 
+    try {
       const morphNames = Object.keys(storedForm.morphs || []);
       if (GALYLEO_ENV.debug) {
         console.log(`Restoring morphs ${morphNames}`);
@@ -696,8 +729,10 @@ class DashboardCommon extends ViewModel {
 
       await this._restoreMorphsFromDescriptors(unorderedDescriptors);
     } catch (e) {
-      console.log(`Error in _restoreFromSaved_: ${e}`);
+      this._restore = false;
+      createBadDashboardError(`Error in _restoreFromSaved_, setting up morphs: ${e}`);
     }
+
     if (GALYLEO_ENV.debug) {
       console.log('Finished restore and drawing all charts');
     }
@@ -1331,13 +1366,14 @@ class DashboardCommon extends ViewModel {
    * is overwritten.
    * @param { object } tableSpec - An object of the form {name: <name> table: { columns: <list of the form <name, type>, rows: <list of list of values>}}
    */
-  addTable (tableSpec) {
+  async _addTable (tableSpec) {
     // should add some error-checking
     this.lastTable = tableSpec;
     if (!this.dataManager) {
       this.dataManager = new GalyleoDataManager(this);
     }
-    this.dataManager.addTable(tableSpec.name, tableSpec.table);
+    let done = await this.dataManager.addTable(tableSpec.name, tableSpec.table);
+    return done;
     // this.tables[tableSpec.name] = tableSpec.table;
   }
 

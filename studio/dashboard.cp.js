@@ -639,7 +639,7 @@ export class Dashboard extends DashboardCommon {
 
     const { dashboardFilePath } = canvas.owner.viewModel; // fixme
     // window.parent.postMessage({ method: 'galyleo:setDirty', dirty: true, dashboardFilePath }, '*');
-    this.viewModel.canvas.owner.requestSave(); //
+    canvas.owner.requestSave(); //
   }
 
   /**
@@ -1020,12 +1020,16 @@ export class Dashboard extends DashboardCommon {
    * is overwritten.
    * @param { object } tableSpec - An object of the form {name: <name> table: { columns: <list of the form <name, type>, rows: <list of list of values>}}
    */
-  addTable (tableSpec) {
-    super.addTable(tableSpec);
-    if (this.dashboardController) {
-      this.dashboardController.update();
+  async addTable (tableSpec) {
+    try {
+      await this._addTable(tableSpec);
+      if (this.dashboardController) {
+        this.dashboardController.update();
+      }
+      this.dirty = true;
+    } catch (error) {
+      $world.inform(error.message);
     }
-    this.dirty = true;
   }
 
   // the internal routine to loadTablesFromTableServer.  Loads all the tables returned from
@@ -1036,11 +1040,11 @@ export class Dashboard extends DashboardCommon {
       const tableServer = resource(`${this.tableServerUrl}/get_table_schemas`);
       try {
         const tableDict = await tableServer.readJson();
-        Object.keys(tableDict).forEach(name => {
+        Object.keys(tableDict).forEach(async name => {
           const connector = {
             url: this.tableServerUrl
           };
-          this.addTable({
+          await this.addTable({
             name: name,
             table: { columns: tableDict[name], connector: connector }
           });
