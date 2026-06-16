@@ -1,10 +1,11 @@
-import { useEffect, useState, useId, useCallback } from 'react';
+import { useEffect, useState, useId, useCallback, useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { prepareChartData, getFirstColumn } from '../utils/chartData';
 import { morphicToCSS } from '../utils/morphicStyles';
 import { ACTIVE_RENDERER } from '../renderers/registry';
 import type { ChartData } from '../renderers/types';
 import type { GalyleoChartSpec, InListFilterValue } from '../types/dashboard';
+import type { InListFilterSpec } from '../data/galyleo-data';
 
 interface Props {
   chartName: string;
@@ -38,15 +39,38 @@ export function ChartWidget({ chartName, spec }: Props) {
     setFilterValue(chartName, filter);
   }, [chartName, spec.viewOrTable, dataManager, setFilterValue]);
 
+  // Compute a dynamic title from the view's columns and current filter values,
+  // matching the pattern the original Galyleo editor wrote: "col2 v col1 where F = v"
+  const dynamicTitle = useMemo(() => {
+    if (!dataManager) return undefined;
+    const view = dataManager.views[spec.viewOrTable];
+    if (!view) return undefined;
+    const cols = view.columns;
+    const dataPart = cols.length > 1
+      ? cols.slice(1).reverse().join(', ') + ' v ' + cols[0]
+      : cols[0];
+    const filterParts: string[] = [];
+    for (const filterName of view.filterNames) {
+      const fv = filterValues[filterName];
+      if (!fv || fv.operator !== 'IN_LIST') continue;
+      const listFv = fv as InListFilterSpec;
+      if (listFv.values.length > 0) {
+        filterParts.push(`${listFv.column} = ${listFv.values[0]}`);
+      }
+    }
+    return filterParts.length > 0 ? `${dataPart} where ${filterParts.join(', ')}` : dataPart;
+  }, [dataManager, spec.viewOrTable, filterValues]);
+
   const outerStyle = morphicToCSS(spec.morphicProperties);
   const Renderer = ACTIVE_RENDERER;
+  const resolvedOptions = dynamicTitle != null ? { ...spec.options, title: dynamicTitle } : spec.options;
 
   return (
     <div style={outerStyle}>
       {chartData && (
         <Renderer
           chartType={spec.chartType}
-          options={spec.options}
+          options={resolvedOptions}
           data={chartData}
           containerId={containerId}
           onSelect={handleSelect}

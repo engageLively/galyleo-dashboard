@@ -8,8 +8,6 @@ export function GoogleChartsRenderer({ chartType, options, data, containerId, on
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wrapperRef = useRef<any>(null);
-  // Track whether the select listener has been attached to the underlying chart
-  const listenerAttached = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current || !window.google?.visualization) return;
@@ -24,28 +22,27 @@ export function GoogleChartsRenderer({ chartType, options, data, containerId, on
     if (!wrapperRef.current) {
       wrapperRef.current = new viz.ChartWrapper({ chartType, options: mergedOptions });
       wrapperRef.current.setContainerId(containerId);
+
+      // Attach once to the wrapper (stable across redraws); underlying chart
+      // objects can be recreated on each draw(), so attaching there loses the
+      // listener after the first redraw.
+      if (onSelect) {
+        viz.events.addListener(wrapperRef.current, 'select', () => {
+          const chart = wrapperRef.current?.getChart();
+          if (!chart) return;
+          const sel = chart.getSelection();
+          if (!sel || sel.length === 0 || sel[0].row == null) return;
+          const currentDt = wrapperRef.current!.getDataTable();
+          const value = currentDt.getValue(sel[0].row, 0);
+          const colName = currentDt.getColumnLabel(0);
+          onSelect(colName, value);
+        });
+      }
     } else {
       (wrapperRef.current as unknown as { setOptions: (o: object) => void }).setOptions(mergedOptions);
     }
 
     wrapperRef.current.setDataTable(dt);
-
-    if (!listenerAttached.current) {
-      listenerAttached.current = true;
-      viz.events.addListener(wrapperRef.current, 'ready', () => {
-        const chart = wrapperRef.current?.getChart();
-        if (!chart || !onSelect) return;
-        viz.events.addListener(chart, 'select', () => {
-          const sel = chart.getSelection();
-          if (!sel || sel.length === 0 || sel[0].row == null) return;
-          const row = sel[0].row;
-          const table = wrapperRef.current!.getDataTable();
-          const value = table.getValue(row, 0);
-          onSelect(data.columns[0]?.name ?? '', value);
-        });
-      });
-    }
-
     wrapperRef.current.draw();
   });
 
