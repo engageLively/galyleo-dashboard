@@ -5,7 +5,7 @@ import type { MorphicColor, MorphicColorRGBA, MorphicProperties, MorphicBorder }
 
 // ---- Color parsing ----
 
-// Parse a Color expression string like "Color.white", "Color.rgb(255,0,0)", etc.
+/** Maps lively.next named colours to CSS hex values. */
 const COLOR_NAME_MAP: Record<string, string> = {
   'Color.white': '#ffffff',
   'Color.black': '#000000',
@@ -25,10 +25,14 @@ const COLOR_NAME_MAP: Record<string, string> = {
   'Color.magenta': '#ff00ff',
 };
 
+/**
+ * Converts a lively.next colour string to a CSS colour string.
+ * Handles `Color.white`, `Color.rgb(r,g,b)`, `Color.rgba(r,g,b,a)`, and gradients
+ * (which fall back to white).
+ */
 function parseColorString(s: string): string {
   if (COLOR_NAME_MAP[s]) return COLOR_NAME_MAP[s];
 
-  // Color.rgb(r, g, b) or Color.rgba(r, g, b, a) — values 0-255
   const rgbMatch = s.match(/Color\.rgba?\s*\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/);
   if (rgbMatch) {
     const [, r, g, b, a] = rgbMatch;
@@ -37,22 +41,34 @@ function parseColorString(s: string): string {
       : `rgb(${r},${g},${b})`;
   }
 
-  // LinearGradient / RadialGradient — return a fallback color
   if (s.includes('Gradient')) return '#ffffff';
 
   return '#ffffff';
 }
 
+/**
+ * Converts a `MorphicColor` (named string, `Color.rgb(…)` expression, or RGBA object)
+ * to a CSS colour string.
+ *
+ * @param color - The colour value to parse.
+ * @param fallback - CSS string to return when `color` is null/undefined.
+ */
 export function parseMorphicColor(color: MorphicColor | undefined | null, fallback = 'transparent'): string {
   if (color == null) return fallback;
   if (typeof color === 'string') return parseColorString(color);
-  // RGBA object with values in [0, 1]
+  // RGBA object with components in [0, 1]
   const { r, g, b, a } = color as MorphicColorRGBA;
   return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a ?? 1})`;
 }
 
 // ---- Border parsing ----
 
+/**
+ * Extracts the value for one CSS side from a per-side map or a uniform scalar.
+ *
+ * @param val - Either a `{ top, right, bottom, left }` map or a scalar.
+ * @param side - The side to extract (`'top'`, `'right'`, `'bottom'`, `'left'`).
+ */
 function perSide<T>(val: Record<string, T> | T, side: string): T {
   if (val !== null && typeof val === 'object' && !Array.isArray(val) && side in (val as object)) {
     return (val as Record<string, T>)[side];
@@ -60,11 +76,14 @@ function perSide<T>(val: Record<string, T> | T, side: string): T {
   return val as T;
 }
 
+/**
+ * Converts a `MorphicBorder` descriptor to CSS border properties.
+ * Handles per-side style/width/colour and all border-radius forms.
+ */
 function borderCSS(border: MorphicBorder): CSSProperties {
   const sides = ['top', 'right', 'bottom', 'left'] as const;
   const style: CSSProperties = {};
 
-  // Per-side style
   sides.forEach(side => {
     const s = perSide(border.style, side) as string;
     const w = perSide(border.width, side) as number;
@@ -74,7 +93,6 @@ function borderCSS(border: MorphicBorder): CSSProperties {
     (style as Record<string, unknown>)[`border${side.charAt(0).toUpperCase() + side.slice(1)}Color`] = c;
   });
 
-  // Border radius
   if (border.radius && typeof border.radius === 'object') {
     const r = border.radius as Record<string, number>;
     style.borderTopLeftRadius = `${r.topLeft ?? 0}px`;
@@ -92,6 +110,12 @@ function borderCSS(border: MorphicBorder): CSSProperties {
 
 // ---- Main conversion ----
 
+/**
+ * Converts a lively.next `MorphicProperties` object to a React `CSSProperties` object
+ * suitable for absolute positioning on the dashboard canvas.
+ *
+ * @param props - The morph properties from the `.gd.json` spec.
+ */
 export function morphicToCSS(props: MorphicProperties): CSSProperties {
   const style: CSSProperties = {
     position: 'absolute',
@@ -113,7 +137,12 @@ export function morphicToCSS(props: MorphicProperties): CSSProperties {
   return style;
 }
 
-// Compute the bounding box (width, height) needed to contain all widgets.
+/**
+ * Computes the minimum canvas size (width × height) needed to contain all widgets
+ * without clipping, based on each widget's position and extent.
+ *
+ * @param morphProps - Array of `MorphicProperties` for every widget on the canvas.
+ */
 export function computeCanvasBounds(morphProps: MorphicProperties[]): { width: number; height: number } {
   let width = 0;
   let height = 0;

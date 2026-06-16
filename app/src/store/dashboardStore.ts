@@ -1,3 +1,14 @@
+/**
+ * Zustand store — single source of truth for the loaded dashboard.
+ *
+ * All components subscribe to slices of this store. The store owns:
+ * - The parsed dashboard spec (`GalyleoDashboard`)
+ * - The live `GalyleoDataManager` (tables + views)
+ * - The current `filterValues` map (what every filter widget / chart has selected)
+ * - Loading / error state
+ * - The `googleChartsReady` flag set by `useGoogleCharts`
+ */
+
 import { create } from 'zustand';
 import { GalyleoDataManager } from '../data/galyleo-data';
 import type { FilterDictionary, FilterSpec } from '../data/galyleo-data';
@@ -12,6 +23,11 @@ import type {
 
 // ---- Initial filter value from savedForm ----
 
+/**
+ * Derives the initial `FilterSpec` from a filter widget's `savedForm`.
+ * Returns `undefined` for filter types that don't have a meaningful initial value
+ * (e.g. an empty list selection).
+ */
 function initialFilterValue(filterSpec: GalyleoFilterSpec): FilterSpec | undefined {
   const sf = filterSpec.savedForm as Record<string, unknown>;
   const filterType = sf.filterType as string;
@@ -43,16 +59,30 @@ function initialFilterValue(filterSpec: GalyleoFilterSpec): FilterSpec | undefin
 // ---- Store ----
 
 interface DashboardState {
+  /** The parsed dashboard spec, or null before a dashboard is loaded. */
   spec: GalyleoDashboard | null;
+  /** The live data manager holding all tables and views, or null before load. */
   dataManager: GalyleoDataManager | null;
+  /**
+   * Current filter values keyed by filter name or chart name.
+   * Updated by filter widgets (via `setFilterValue`) and chart click handlers.
+   */
   filterValues: FilterDictionary;
+  /** True once the Google Charts API has fully initialized. */
   googleChartsReady: boolean;
   loading: boolean;
   error: string | null;
 
+  /** Fetches a `.gd.json` file from `url` and loads it. */
   loadDashboardFromURL: (url: string) => Promise<void>;
+  /** Builds the data manager and seeds initial filter values from `spec`. */
   loadDashboardFromSpec: (spec: GalyleoDashboard) => Promise<void>;
+  /**
+   * Sets or updates the filter value for `name`.
+   * Triggers a re-render of all charts subscribed to `filterValues`.
+   */
   setFilterValue: (name: string, value: FilterSpec) => void;
+  /** Called by `useGoogleCharts` once `google.visualization` is available. */
   setGoogleChartsReady: () => void;
 }
 

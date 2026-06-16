@@ -1,3 +1,11 @@
+/**
+ * Dispatcher component for filter widgets.
+ *
+ * Reads `filterType` from `savedForm` and renders the appropriate filter
+ * sub-component. Unknown filter types (Boolean, Slider, Date) fall back to
+ * a plain text label so the widget's space on the canvas is visible.
+ */
+
 import { morphicToCSS } from '../../utils/morphicStyles';
 import { SelectFilter } from './SelectFilter';
 import { RangeFilter } from './RangeFilter';
@@ -8,10 +16,15 @@ import type {
 } from '../../types/dashboard';
 
 interface Props {
+  /** The filter's key in `dashboard.filters` — used as the store key. */
   filterName: string;
   spec: GalyleoFilterSpec;
 }
 
+/**
+ * Positions a filter widget on the canvas and delegates rendering to the
+ * appropriate sub-component based on `savedForm.filterType`.
+ */
 export function FilterWidget({ filterName, spec }: Props) {
   const { savedForm } = spec;
   const sf = savedForm as Record<string, unknown>;

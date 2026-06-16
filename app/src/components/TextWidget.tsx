@@ -1,3 +1,11 @@
+/**
+ * Renders a Text morph from the dashboard spec.
+ *
+ * Applies layout from `morphicToCSS` and text styling from `textProperties`
+ * (fontSize, fontWeight, fontStyle, color, fontFamily, textAlign).
+ * Text is non-selectable, clipped with an ellipsis if it overflows.
+ */
+
 import { morphicToCSS } from '../utils/morphicStyles';
 import type { MorphDescriptor } from '../types/dashboard';
 
@@ -5,6 +13,7 @@ interface Props {
   descriptor: MorphDescriptor;
 }
 
+/** Absolutely-positioned text label derived from a `MorphDescriptor`. */
 export function TextWidget({ descriptor }: Props) {
   const { morphicProperties, textString, textProperties } = descriptor;
   const containerStyle = morphicToCSS(morphicProperties);

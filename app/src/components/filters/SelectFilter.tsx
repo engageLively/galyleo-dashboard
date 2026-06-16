@@ -1,12 +1,22 @@
+/**
+ * Dropdown filter for Select, NumericSelect, and List filter types.
+ *
+ * Renders a `<select>` element populated from `savedForm.choices`.
+ * On change, writes an IN_LIST filter to the store under `filterName`.
+ * Numeric values are coerced from the string DOM value unless `savedForm.isString` is true.
+ */
+
 import type { SelectFilterSavedForm } from '../../types/dashboard';
 import type { InListFilterValue } from '../../types/dashboard';
 import { useDashboardStore } from '../../store/dashboardStore';
 
 interface Props {
+  /** Key used to read/write this filter's value in the store. */
   filterName: string;
   savedForm: SelectFilterSavedForm;
 }
 
+/** Dropdown that writes an IN_LIST filter to the store when the selection changes. */
 export function SelectFilter({ filterName, savedForm }: Props) {
   const filterValues = useDashboardStore(s => s.filterValues);
   const setFilterValue = useDashboardStore(s => s.setFilterValue);

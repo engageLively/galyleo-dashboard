@@ -1,12 +1,22 @@
+/**
+ * Dual-handle range filter for Range and DoubleSlider filter types.
+ *
+ * Renders two `<input type="range">` sliders — one for the lower bound and one
+ * for the upper bound. Each change writes an IN_RANGE filter to the store.
+ * The lower handle is clamped to never exceed the upper, and vice versa.
+ */
+
 import { useDashboardStore } from '../../store/dashboardStore';
 import type { RangeFilterSavedForm } from '../../types/dashboard';
 import type { InRangeFilterValue } from '../../types/dashboard';
 
 interface Props {
+  /** Key used to read/write this filter's value in the store. */
   filterName: string;
   savedForm: RangeFilterSavedForm;
 }
 
+/** Two-slider range widget that writes an IN_RANGE filter to the store on change. */
 export function RangeFilter({ filterName, savedForm }: Props) {
   const filterValues = useDashboardStore(s => s.filterValues);
   const setFilterValue = useDashboardStore(s => s.setFilterValue);

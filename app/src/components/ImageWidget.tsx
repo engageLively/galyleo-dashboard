@@ -1,3 +1,9 @@
+/**
+ * Renders an Image morph from the dashboard spec.
+ * Positions itself absolutely using `morphicToCSS` and renders the image
+ * with `object-fit: contain` to preserve aspect ratio within the morph bounds.
+ */
+
 import { morphicToCSS } from '../utils/morphicStyles';
 import type { MorphDescriptor } from '../types/dashboard';
 
@@ -5,6 +11,7 @@ interface Props {
   descriptor: MorphDescriptor;
 }
 
+/** Absolutely-positioned image widget derived from a `MorphDescriptor`. */
 export function ImageWidget({ descriptor }: Props) {
   const style = morphicToCSS(descriptor.morphicProperties);
   return (

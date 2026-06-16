@@ -1,9 +1,26 @@
-// Google Charts implementation of ChartRendererProps.
-// All Google-specific API usage is confined to this file.
+/**
+ * Google Charts implementation of {@link ChartRendererProps}.
+ *
+ * Manages a single `google.visualization.ChartWrapper` per component instance.
+ * The wrapper is created on first render and reused (with updated options/data)
+ * on subsequent renders, avoiding full chart teardown on each filter change.
+ *
+ * **Select handling**: `getChart()` returns null when the ChartWrapper's `select`
+ * event fires (the underlying chart isn't ready yet at that point). Instead, we
+ * attach the select listener to the underlying chart object inside the `ready`
+ * handler. We track the chart instance in `attachedChartRef` so we don't
+ * accumulate duplicate listeners if the chart object is reused across redraws.
+ *
+ * All Google-specific API usage is confined to this file.
+ */
 
 import { useEffect, useRef } from 'react';
 import type { ChartRendererProps } from './types';
 
+/**
+ * Renders a single Google Charts chart inside a managed `ChartWrapper`.
+ * Re-draws automatically whenever `data` or `options` change.
+ */
 export function GoogleChartsRenderer({ chartType, options, data, containerId, onSelect }: ChartRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,10 +42,6 @@ export function GoogleChartsRenderer({ chartType, options, data, containerId, on
       wrapperRef.current = new viz.ChartWrapper({ chartType, options: mergedOptions });
       wrapperRef.current.setContainerId(containerId);
 
-      // 'ready' fires after every draw(). We attach the select listener to the
-      // underlying chart there because getChart() returns null before 'ready'.
-      // We track the chart instance so we don't accumulate listeners if the
-      // chart is reused across redraws.
       if (onSelect) {
         viz.events.addListener(wrapperRef.current, 'ready', () => {
           const chart = wrapperRef.current?.getChart();

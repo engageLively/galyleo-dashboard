@@ -1,3 +1,11 @@
+/**
+ * Top-level canvas component that renders a loaded dashboard.
+ *
+ * Computes the minimum canvas size from all widget positions and extents,
+ * then absolutely-positions morphs, filter widgets, and chart widgets.
+ * Morphs are rendered first (bottom layer), filters next, charts on top.
+ */
+
 import { useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { computeCanvasBounds, parseMorphicColor } from '../utils/morphicStyles';
@@ -7,6 +15,7 @@ import { ImageWidget } from './ImageWidget';
 import { TextWidget } from './TextWidget';
 import type { MorphDescriptor, MorphicProperties } from '../types/dashboard';
 
+/** Renders the full dashboard canvas once a spec is loaded. */
 export function DashboardViewer() {
   const spec = useDashboardStore(s => s.spec);
   const loading = useDashboardStore(s => s.loading);

@@ -1,3 +1,15 @@
+/**
+ * Wrapper component for a single chart on the dashboard canvas.
+ *
+ * Responsibilities:
+ * - Subscribes to `filterValues` in the store and re-fetches view data on change.
+ * - Computes a dynamic title from the view's columns and active filter values,
+ *   matching the pattern written by the Galyleo editor: `"col2 v col1 where F = v"`.
+ * - Passes an `onSelect` callback to the renderer so that clicking a chart data
+ *   point calls `setFilterValue(chartName, filter)`, making the chart itself act
+ *   as a filter for other views (chart-as-filter pattern).
+ */
+
 import { useEffect, useState, useId, useCallback, useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { prepareChartData, getFirstColumn } from '../utils/chartData';
@@ -8,10 +20,12 @@ import type { GalyleoChartSpec, InListFilterValue } from '../types/dashboard';
 import type { InListFilterSpec } from '../data/galyleo-data';
 
 interface Props {
+  /** The chart's key in `dashboard.charts` — also used as the filter key on selection. */
   chartName: string;
   spec: GalyleoChartSpec;
 }
 
+/** Renders a single chart widget, bound to its view and reactive to filter changes. */
 export function ChartWidget({ chartName, spec }: Props) {
   const uid = useId();
   const containerId = `gc-${uid.replace(/:/g, '')}-${chartName.replace(/[^a-zA-Z0-9]/g, '_')}`;
@@ -33,14 +47,21 @@ export function ChartWidget({ chartName, spec }: Props) {
     return () => { cancelled = true; };
   }, [googleChartsReady, dataManager, filterValues, spec.viewOrTable]);
 
+  /**
+   * Called by the renderer when the user clicks a data point.
+   * Stores an IN_LIST filter under `chartName` so other views can react.
+   */
   const handleSelect = useCallback((column: string, value: unknown) => {
     const col = column || getFirstColumn(spec.viewOrTable, dataManager!) || '';
     const filter: InListFilterValue = { operator: 'IN_LIST', column: col, values: [value] };
     setFilterValue(chartName, filter);
   }, [chartName, spec.viewOrTable, dataManager, setFilterValue]);
 
-  // Compute a dynamic title from the view's columns and current filter values,
-  // matching the pattern the original Galyleo editor wrote: "col2 v col1 where F = v"
+  /**
+   * Builds a dynamic title of the form `"col2 v col1 where F = v"` from the
+   * view's column list and the currently active IN_LIST filter values.
+   * Matches the title format written by the Galyleo dashboard editor.
+   */
   const dynamicTitle = useMemo(() => {
     if (!dataManager) return undefined;
     const view = dataManager.views[spec.viewOrTable];

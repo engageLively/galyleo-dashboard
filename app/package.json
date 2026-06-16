@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs": "typedoc --entryPointStrategy expand --entryPoints src --out docs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -17,6 +18,7 @@
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.0.0",
+    "typedoc": "^0.28.19",
     "typescript": "^5.3.3",
     "vite": "^4.5.5"
   }
