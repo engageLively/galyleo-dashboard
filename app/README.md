@@ -52,7 +52,7 @@ src/
 
   types/
     dashboard.ts              TypeScript types for the .gd.json format:
-                                GalyeleoDashboard, GalyleoTableSpec, GalyleoViewSpec,
+                                GalyleoDashboard, GalyleoTableSpec, GalyleoViewSpec,
                                 GalyleoChartSpec, GalyleoFilterSpec, MorphDescriptor, etc.
 
   hooks/

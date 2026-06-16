@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { GalyleoDataManager } from '../data/galyleo-data';
 import type { FilterDictionary, FilterSpec } from '../data/galyleo-data';
 import type {
-  GalyeleoDashboard,
+  GalyleoDashboard,
   GalyleoFilterSpec,
   SelectFilterSavedForm,
   RangeFilterSavedForm,
@@ -43,7 +43,7 @@ function initialFilterValue(filterSpec: GalyleoFilterSpec): FilterSpec | undefin
 // ---- Store ----
 
 interface DashboardState {
-  spec: GalyeleoDashboard | null;
+  spec: GalyleoDashboard | null;
   dataManager: GalyleoDataManager | null;
   filterValues: FilterDictionary;
   googleChartsReady: boolean;
@@ -51,7 +51,7 @@ interface DashboardState {
   error: string | null;
 
   loadDashboardFromURL: (url: string) => Promise<void>;
-  loadDashboardFromSpec: (spec: GalyeleoDashboard) => Promise<void>;
+  loadDashboardFromSpec: (spec: GalyleoDashboard) => Promise<void>;
   setFilterValue: (name: string, value: FilterSpec) => void;
   setGoogleChartsReady: () => void;
 }
@@ -74,7 +74,7 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
     try {
       const res = await fetch(url, { mode: 'cors' });
       if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
-      const spec: GalyeleoDashboard = await res.json();
+      const spec: GalyleoDashboard = await res.json();
       await get().loadDashboardFromSpec(spec);
     } catch (err) {
       set({ loading: false, error: String(err) });

@@ -162,7 +162,7 @@ export interface MorphDescriptor {
 
 // ---- Top-level dashboard spec ----
 
-export interface GalyeleoDashboard {
+export interface GalyleoDashboard {
   fill?: string;
   tables: Record<string, GalyleoTableSpec>;
   views: Record<string, GalyleoViewSpec>;
