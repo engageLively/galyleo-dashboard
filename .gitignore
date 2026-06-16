@@ -50,6 +50,7 @@ jupyterlab-universal-extension/lively_universal_extension.egg-info/PKG-INFO
 jupyterlab-universal-extension/lively_universal_extension.egg-info/SOURCES.txt
 jupyterlab-universal-extension/package-deploy.json
 package-lock.json
+!app/package-lock.json
 config.js
 bin/
 old-bin/
