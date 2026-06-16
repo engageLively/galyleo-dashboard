@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { useGoogleCharts } from './hooks/useGoogleCharts';
 import { useDashboardStore } from './store/dashboardStore';
 import { DashboardViewer } from './components/DashboardViewer';
+
+const EditorShell = lazy(() => import('./editor/EditorShell'));
 
 export default function App() {
   useGoogleCharts();
@@ -10,15 +12,29 @@ export default function App() {
   const spec = useDashboardStore(s => s.spec);
   const loading = useDashboardStore(s => s.loading);
 
+  const params = new URLSearchParams(window.location.search);
+  // VITE_DEFAULT_MODE=edit is set at build time for the /editor/ deployment.
+  // ?mode=edit overrides in either direction.
+  const editMode = params.get('mode') === 'edit' ||
+    (params.get('mode') !== 'interact' && import.meta.env.VITE_DEFAULT_MODE === 'edit');
+
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
     const dashboardUrl = params.get('dashboard');
     if (dashboardUrl) {
       loadDashboardFromURL(dashboardUrl);
       const name = dashboardUrl.split('/').pop()?.replace(/\.gd\.json$|\.json$/, '') ?? '';
       if (name) document.title = name;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadDashboardFromURL]);
+
+  if (editMode) {
+    return (
+      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#555' }}>Loading editor…</div>}>
+        <EditorShell />
+      </Suspense>
+    );
+  }
 
   if (!spec && !loading) {
     return (

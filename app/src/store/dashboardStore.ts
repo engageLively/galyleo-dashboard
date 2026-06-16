@@ -84,6 +84,12 @@ interface DashboardState {
   setFilterValue: (name: string, value: FilterSpec) => void;
   /** Called by `useGoogleCharts` once `google.visualization` is available. */
   setGoogleChartsReady: () => void;
+  /**
+   * Applies a pure transformation to the current spec without rebuilding the
+   * data manager. Use this for position, style, text, and image mutations.
+   * For structural changes (add/remove tables or views), use loadDashboardFromSpec.
+   */
+  patchSpec: (updater: (spec: GalyleoDashboard) => GalyleoDashboard) => void;
 }
 
 export const useDashboardStore = create<DashboardState>()((set, get) => ({
@@ -95,6 +101,9 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
   error: null,
 
   setGoogleChartsReady: () => set({ googleChartsReady: true }),
+
+  patchSpec: (updater) =>
+    set(state => state.spec ? { spec: updater(state.spec) } : {}),
 
   setFilterValue: (name, value) =>
     set(state => ({ filterValues: { ...state.filterValues, [name]: value } })),

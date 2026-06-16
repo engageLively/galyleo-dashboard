@@ -26,14 +26,32 @@ jobs:
         run: npm ci
         working-directory: app
 
-      - name: Build
+      # --- Viewer build (base: /galyleo-dashboard/) ---
+      - name: Build viewer
         run: npm run build
         working-directory: app
         env:
           VITE_BASE_URL: /galyleo-dashboard/
 
+      - name: Save viewer build
+        run: cp -r app/dist app/dist-viewer
+
+      # --- Editor build (base: /galyleo-dashboard/editor/, defaults to edit mode) ---
+      - name: Build editor
+        run: npm run build
+        working-directory: app
+        env:
+          VITE_BASE_URL: /galyleo-dashboard/editor/
+          VITE_DEFAULT_MODE: edit
+
+      # --- Combine: editor lives at /galyleo-dashboard/editor/ ---
+      - name: Assemble combined dist
+        run: |
+          mkdir -p app/dist-viewer/editor
+          cp -r app/dist/* app/dist-viewer/editor/
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./app/dist
+          publish_dir: ./app/dist-viewer
