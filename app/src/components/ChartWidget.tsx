@@ -34,6 +34,7 @@ export function ChartWidget({ chartName, spec }: Props) {
   }, [googleChartsReady, dataManager, filterValues, spec.viewOrTable]);
 
   const handleSelect = useCallback((column: string, value: unknown) => {
+    console.log('[handleSelect]', chartName, column, value);
     const col = column || getFirstColumn(spec.viewOrTable, dataManager!) || '';
     const filter: InListFilterValue = { operator: 'IN_LIST', column: col, values: [value] };
     setFilterValue(chartName, filter);

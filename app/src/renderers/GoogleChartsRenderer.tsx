@@ -29,12 +29,15 @@ export function GoogleChartsRenderer({ chartType, options, data, containerId, on
       if (onSelect) {
         viz.events.addListener(wrapperRef.current, 'select', () => {
           const chart = wrapperRef.current?.getChart();
+          console.log('[select] wrapper select fired, chart=', chart);
           if (!chart) return;
           const sel = chart.getSelection();
+          console.log('[select] getSelection()=', JSON.stringify(sel));
           if (!sel || sel.length === 0 || sel[0].row == null) return;
           const currentDt = wrapperRef.current!.getDataTable();
           const value = currentDt.getValue(sel[0].row, 0);
           const colName = currentDt.getColumnLabel(0);
+          console.log('[select] calling onSelect', colName, value);
           onSelect(colName, value);
         });
       }
