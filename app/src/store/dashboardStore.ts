@@ -103,6 +103,28 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
       if (val) filterValues[name] = val;
     }
 
+    // Initialize chart-based filters (charts whose names appear in view
+    // filterNames but have no savedForm). Without this, views that depend
+    // only on a chart selection show unfiltered data on first load.
+    for (const viewSpec of Object.values(spec.views)) {
+      for (const filterName of viewSpec.filterNames) {
+        if (filterName in filterValues) continue;
+        if (!(filterName in spec.charts)) continue;
+        const chartSpec = spec.charts[filterName];
+        const view = dataManager.views[chartSpec.viewOrTable];
+        if (!view) continue;
+        const fullCols = view.fullColumns(dataManager.tables);
+        if (!fullCols || fullCols.length === 0) continue;
+        const rows = await view.getData(filterValues, dataManager.tables);
+        if (!rows || rows.length === 0) continue;
+        filterValues[filterName] = {
+          operator: 'IN_LIST',
+          column: fullCols[0].name,
+          values: [rows[0][0]],
+        };
+      }
+    }
+
     set({ dataManager, filterValues, loading: false });
   },
 }));
