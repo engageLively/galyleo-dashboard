@@ -19,6 +19,15 @@ export function TextWidget({ descriptor }: Props) {
   const containerStyle = morphicToCSS(morphicProperties);
 
   const tp = (textProperties ?? {}) as Record<string, unknown>;
+
+  // Parse numeric string weights (e.g. '700') to numbers so browsers apply them reliably.
+  const rawWeight = tp.fontWeight as string | number | undefined;
+  const fontWeight: string | number =
+    rawWeight == null ? 'normal'
+    : typeof rawWeight === 'number' ? rawWeight
+    : /^\d+$/.test(rawWeight) ? parseInt(rawWeight, 10)
+    : rawWeight;
+
   const textStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
@@ -28,8 +37,10 @@ export function TextWidget({ descriptor }: Props) {
       : (tp.textAlign as string) === 'center' ? 'center'
       : 'flex-start',
     fontSize: tp.fontSize != null ? `${tp.fontSize}px` : '16px',
-    fontWeight: (tp.fontWeight as string) ?? 'normal',
+    fontWeight,
     fontStyle: (tp.fontStyle as string) ?? 'normal',
+    textDecoration: (tp.textDecoration as string) ?? 'none',
+    verticalAlign: (tp.verticalAlign as string) ?? 'baseline',
     color: (tp.color as string) ?? '#000000',
     fontFamily: (tp.fontFamily as string) ?? 'inherit',
     overflow: 'hidden',

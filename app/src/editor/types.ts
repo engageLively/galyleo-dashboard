@@ -15,6 +15,9 @@ export type DialogId =
   | 'fileSaveAs'
   | 'fileRename';
 
+/** Active drawing tool in the top bar. 'select' is the default pointer mode. */
+export type ActiveTool = 'select' | 'rectangle' | 'ellipse' | 'text' | 'image';
+
 /** Which edge or corner a resize handle represents. */
 export type ResizeHandle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 

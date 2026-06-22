@@ -9,11 +9,12 @@
  * absolutely positioned over the selected widget.
  */
 
+import { useRef } from 'react';
 import type { ResizeHandle, WidgetKind } from '../types';
 import { useDrag } from '../hooks/useDrag';
 import { useEditorStore } from '../../store/editorStore';
 import { useDashboardStore } from '../../store/dashboardStore';
-import { deleteWidget, bringToFront, sendToBack } from '../utils/specMutations';
+import { deleteWidget, bringToFront, sendToBack, rotateWidget } from '../utils/specMutations';
 
 const HANDLE_SIZE = 8;
 const HANDLE_BORDER = '2px solid #4A90D9';
@@ -235,6 +236,91 @@ export function MenuHaloHandle({ widgetId, kind, showMenu, onToggleMenu }: MenuH
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---- Rotate handle ----
+
+interface RotateHandleProps {
+  widgetId: string;
+  kind: WidgetKind;
+  w: number;
+  h: number;
+  rotation: number;
+}
+
+export function RotateHaloHandle({ widgetId, kind, w, h, rotation }: RotateHandleProps) {
+  const patchSpec = useDashboardStore(s => s.patchSpec);
+  const divRef = useRef<HTMLDivElement>(null);
+
+  const deg = Math.round(((rotation * 180 / Math.PI) % 360 + 360) % 360);
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Snapshot pre-rotation spec for undo (pushed at gesture end)
+    const preRotateSpec = useDashboardStore.getState().spec!;
+
+    // Center of the halo = center of the widget in client coords
+    const haloEl = divRef.current?.parentElement;
+    if (!haloEl) return;
+    const rect = haloEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
+    const startRotation = rotation;
+
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+    function onMove(ev: PointerEvent) {
+      const a = Math.atan2(ev.clientY - cy, ev.clientX - cx);
+      patchSpec(s => rotateWidget(s, widgetId, kind, startRotation + (a - startAngle)));
+    }
+
+    function onUp() {
+      // Push pre-rotate snapshot to undo stack (mirrors endDrag pattern)
+      useEditorStore.setState(s => ({
+        undoStack: [...s.undoStack.slice(-49), preRotateSpec],
+        redoStack: [],
+      }));
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
+  return (
+    <div
+      ref={divRef}
+      onPointerDown={onPointerDown}
+      title="Rotate"
+      style={{
+        position: 'absolute',
+        left: w,
+        top: h,
+        transform: 'translate(4px, 4px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        cursor: 'crosshair',
+        pointerEvents: 'all',
+        userSelect: 'none',
+        zIndex: 2,
+      }}
+    >
+      <div style={{ fontSize: 8, color: '#4A90D9', lineHeight: 1, marginBottom: 2 }}>{deg}°</div>
+      <div style={{
+        width: 18, height: 18, borderRadius: '50%',
+        background: '#4A90D9', border: '2px solid #fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontSize: 11,
+        boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+      }}>↻</div>
     </div>
   );
 }

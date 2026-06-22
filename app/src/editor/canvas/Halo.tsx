@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { getMorphicProps } from '../../store/editorStore';
 import type { WidgetKind, ResizeHandle } from '../types';
-import { ResizeHaloHandle, MoveHaloHandle, TrashHaloHandle, MenuHaloHandle } from './HaloHandle';
+import { ResizeHaloHandle, MoveHaloHandle, TrashHaloHandle, MenuHaloHandle, RotateHaloHandle } from './HaloHandle';
 
 const RESIZE_HANDLES: ResizeHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 
@@ -83,6 +83,9 @@ export function Halo({ id, kind }: Props) {
           morphY={y}
         />
       ))}
+
+      {/* Rotate knob — bottom-right corner */}
+      <RotateHaloHandle widgetId={id} kind={kind} w={w} h={h} rotation={mp.rotation ?? 0} />
     </div>
   );
 }

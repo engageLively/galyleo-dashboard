@@ -15,17 +15,27 @@ import { useDashboardStore } from '../../store/dashboardStore';
 import { useEditorStore } from '../../store/editorStore';
 import { DashboardViewer } from '../../components/DashboardViewer';
 import { Halo } from './Halo';
-import { morphsAsDict } from '../utils/specMutations';
+import {
+  morphsAsDict,
+  addMorphDescriptor,
+  newRectangleMorph,
+  newEllipseMorph,
+  newTextMorph,
+  newImageMorph,
+} from '../utils/specMutations';
 import { computeCanvasBounds } from '../../utils/morphicStyles';
 import type { MorphicProperties, MorphDescriptor } from '../../types/dashboard';
 import type { WidgetKind } from '../types';
 
 export function EditableCanvas() {
   const spec = useDashboardStore(s => s.spec);
+  const patchSpec = useDashboardStore(s => s.patchSpec);
   const mode = useEditorStore(s => s.mode);
   const selectedId = useEditorStore(s => s.selectedId);
   const selectedKind = useEditorStore(s => s.selectedKind);
   const selectWidget = useEditorStore(s => s.selectWidget);
+  const activeTool = useEditorStore(s => s.activeTool);
+  const setActiveTool = useEditorStore(s => s.setActiveTool);
 
   // Compute the same canvas size DashboardViewer uses, so the overlay matches
   const canvasSize = useMemo(() => {
@@ -39,6 +49,24 @@ export function EditableCanvas() {
   }, [spec]);
 
   const editMode = mode === 'edit';
+  const drawingActive = editMode && activeTool !== 'select';
+
+  function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (drawingActive) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = Math.round(e.clientX - rect.left);
+      const y = Math.round(e.clientY - rect.top);
+      const morph = activeTool === 'rectangle' ? newRectangleMorph(x, y, 200, 100)
+        : activeTool === 'ellipse'   ? newEllipseMorph(x, y, 100, 100)
+        : activeTool === 'text'      ? newTextMorph(x, y, 200, 40)
+        :                              newImageMorph(x, y, 200, 150);
+      patchSpec(spec => addMorphDescriptor(spec, morph));
+      selectWidget(morph.name, 'morph');
+      setActiveTool('select');
+      return;
+    }
+    selectWidget(null, null);
+  }
 
   return (
     <div style={{ position: 'relative' }}>
@@ -55,8 +83,9 @@ export function EditableCanvas() {
             left: 0,
             width: Math.max(canvasSize.width, window.innerWidth),
             height: Math.max(canvasSize.height, window.innerHeight),
+            cursor: drawingActive ? 'crosshair' : 'default',
           }}
-          onClick={() => selectWidget(null, null)}
+          onClick={handleCanvasClick}
         >
           {/* Chart hit zones */}
           {Object.entries(spec.charts).map(([name, chartSpec]) => (

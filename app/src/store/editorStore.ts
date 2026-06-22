@@ -11,6 +11,7 @@ import { create } from 'zustand';
 import { createIO } from '../editor/io/createIO';
 import type { DashboardIO } from '../editor/io/ioInterface';
 import type {
+  ActiveTool,
   DialogId,
   ResizeHandle,
   WidgetKind,
@@ -45,11 +46,14 @@ interface EditorState {
   activeDialog: DialogId | null;
   dialogContext: unknown;
 
+  activeTool: ActiveTool;
+
   io: DashboardIO;
 
   // --- Actions ---
 
   setMode: (mode: 'interact' | 'edit') => void;
+  setActiveTool: (tool: ActiveTool) => void;
   selectWidget: (id: string | null, kind: WidgetKind | null) => void;
   setSidebarTab: (tab: EditorState['sidebarTab']) => void;
   toggleSidebar: () => void;
@@ -76,7 +80,7 @@ interface EditorState {
 }
 
 export const useEditorStore = create<EditorState>()((set, get) => ({
-  mode: 'interact',
+  mode: 'edit',
   selectedId: null,
   selectedKind: null,
   sidebarTab: 'charts',
@@ -87,9 +91,11 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
   redoStack: [],
   activeDialog: null,
   dialogContext: null,
+  activeTool: 'select',
   io: createIO(),
 
   setMode: (mode) => set({ mode, selectedId: null, selectedKind: null }),
+  setActiveTool: (tool) => set({ activeTool: tool }),
 
   selectWidget: (id, kind) => set({ selectedId: id, selectedKind: kind }),
 

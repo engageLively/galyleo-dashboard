@@ -33,6 +33,10 @@ const COLOR_NAME_MAP: Record<string, string> = {
 function parseColorString(s: string): string {
   if (COLOR_NAME_MAP[s]) return COLOR_NAME_MAP[s];
 
+  // Pass CSS color literals straight through
+  if (s.startsWith('#') || s.startsWith('rgb') || s.startsWith('hsl')) return s;
+
+  // lively.next Color.rgb(...) / Color.rgba(...) format
   const rgbMatch = s.match(/Color\.rgba?\s*\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/);
   if (rgbMatch) {
     const [, r, g, b, a] = rgbMatch;

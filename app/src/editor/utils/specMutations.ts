@@ -268,8 +268,8 @@ export function newRectangleMorph(x: number, y: number, w: number, h: number): M
     morphIndex: 0,
     morphicProperties: {
       ...defaultMorphicProperties(x, y, w, h),
-      fill: 'rgba(200,220,255,1)',
-      border: { style: 'solid', width: 1, color: { all: 'rgba(100,140,200,1)' }, radius: 4 },
+      fill: 'rgba(255,255,255,0)',
+      border: { style: 'solid', width: 1, color: { all: 'rgba(0,0,0,1)' }, radius: 0 },
     },
   };
 }
@@ -281,18 +281,24 @@ export function newEllipseMorph(x: number, y: number, w: number, h: number): Mor
     morphIndex: 0,
     morphicProperties: {
       ...defaultMorphicProperties(x, y, w, h),
-      fill: 'rgba(200,220,255,1)',
-      border: { style: 'solid', width: 1, color: { all: 'rgba(100,140,200,1)' }, radius: 0 },
+      fill: 'rgba(255,255,255,0)',
+      border: { style: 'solid', width: 1, color: { all: 'rgba(0,0,0,1)' }, radius: 0 },
     },
   };
 }
+
+const PLACEHOLDER_IMAGE_URL =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E" +
+  "%3Crect width='400' height='300' fill='%23cccccc'/%3E" +
+  "%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' " +
+  "fill='%23666' font-size='28' font-family='sans-serif'%3EImage%3C/text%3E%3C/svg%3E";
 
 export function newImageMorph(x: number, y: number, w: number, h: number): MorphDescriptor {
   return {
     type: 'Image',
     name: nextMorphName('image'),
     morphIndex: 0,
-    imageUrl: '',
+    imageUrl: PLACEHOLDER_IMAGE_URL,
     morphicProperties: defaultMorphicProperties(x, y, w, h),
   };
 }

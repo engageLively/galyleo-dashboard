@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
-import { computeCanvasBounds, parseMorphicColor } from '../utils/morphicStyles';
+import { computeCanvasBounds, parseMorphicColor, morphicToCSS } from '../utils/morphicStyles';
 import { ChartWidget } from './ChartWidget';
 import { FilterWidget } from './filters/FilterWidget';
 import { ImageWidget } from './ImageWidget';
@@ -54,10 +54,17 @@ export function DashboardViewer() {
         overflow: 'hidden',
       }}
     >
-      {/* Static morphs (images, text) */}
+      {/* Static morphs (shapes, images, text) */}
       {morphArray.map((m, i) => {
         if (m.type === 'Image' || m.imageUrl) return <ImageWidget key={i} descriptor={m} />;
         if (m.type === 'Text') return <TextWidget key={i} descriptor={m} />;
+        if (m.type === 'Ellipse') {
+          const s = morphicToCSS(m.morphicProperties);
+          return <div key={i} style={{ ...s, borderRadius: '50%' }} />;
+        }
+        if (m.type === 'Rectangle') {
+          return <div key={i} style={morphicToCSS(m.morphicProperties)} />;
+        }
         return null;
       })}
 

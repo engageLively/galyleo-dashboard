@@ -21,7 +21,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 function localDashboardPlugin() {
   const dashboardDir = process.env.DASHBOARD_DIR
     ? path.resolve(process.env.DASHBOARD_DIR)
-    : process.cwd();
+    : path.resolve(process.cwd(), 'public', 'dashboards');
 
   function safePath(name: string): string | null {
     const resolved = path.resolve(dashboardDir, name);

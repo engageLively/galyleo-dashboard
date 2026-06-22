@@ -15,7 +15,7 @@
 import { useEffect } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 
-const PACKAGES = ['corechart', 'geochart', 'table', 'controls'];
+const PACKAGES = ['corechart', 'geochart', 'table', 'controls', 'charteditor'];
 const MAPS_API_KEY = 'AIzaSyA4uHMmgrSNycQGwdF3PSkbuNW49BAwN1I';
 
 let scriptInjected = false;

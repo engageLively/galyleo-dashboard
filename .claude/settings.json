@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(python3 -c ' *)",
+      "Bash(npx vite *)",
+      "Bash(VITE_BASE_URL=/galyleo-dashboard/ npm run build --prefix app)",
+      "Bash(cp -r app/dist app/dist-viewer)",
+      "Bash(VITE_BASE_URL=/galyleo-dashboard/editor/ VITE_DEFAULT_MODE=edit npm run build --prefix app)"
+    ]
+  }
+}
