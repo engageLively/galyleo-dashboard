@@ -30,11 +30,14 @@ export function TableEditor({ spec, editName, tableServers, onCommit, onClose }:
   const [name, setName] = useState(editName ?? '');
   const [kind, setKind] = useState<TableKind>(existing ? existingKind : 'remote');
 
-  // Remote fields — url defaults to the existing connector, then first configured server, then blank
-  const defaultServer = tableServers?.[0] ?? '';
-  const [url, setUrl] = useState(existing?.connector?.url ?? defaultServer);
+  const [url, setUrl] = useState(existing?.connector?.url ?? tableServers?.[0] ?? '');
   const [remoteName, setRemoteName] = useState(existing?.connector?.remoteName ?? '');
   const [fetching, setFetching] = useState(false);
+
+  // If tableServers arrives after mount (async config fetch), seed url from it
+  useEffect(() => {
+    if (!url && tableServers && tableServers.length > 0) setUrl(tableServers[0]);
+  }, [tableServers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Table names from the currently selected server
   const [serverTableNames, setServerTableNames] = useState<string[]>([]);
@@ -156,19 +159,16 @@ export function TableEditor({ spec, editName, tableServers, onCommit, onClose }:
               </div>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Remote table name</label>
-                {serverTableNames.length > 0 ? (
-                  <select style={selectStyle} value={remoteName}
-                    onChange={e => setRemoteName(e.target.value)}>
-                    <option value="">— select a table —</option>
-                    {serverTableNames.map(n => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input style={inputStyle} value={remoteName}
-                    onChange={e => setRemoteName(e.target.value)}
-                    placeholder={name || 'same as name'} />
-                )}
+                <input
+                  style={inputStyle}
+                  value={remoteName}
+                  onChange={e => setRemoteName(e.target.value)}
+                  placeholder={name || 'same as name'}
+                  list="sdtp-table-names"
+                />
+                <datalist id="sdtp-table-names">
+                  {serverTableNames.map(n => <option key={n} value={n} />)}
+                </datalist>
               </div>
               <button
                 style={{ ...cancelBtnStyle, alignSelf: 'flex-start' }}
