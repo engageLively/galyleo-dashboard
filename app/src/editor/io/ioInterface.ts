@@ -51,4 +51,14 @@ export interface DashboardIO {
 
   /** Returns the path of the currently open file, or null if none. */
   currentPath(): string | null;
+
+  /**
+   * Optional: returns true if `content` is the echo of the last spec this
+   * backend saved — i.e., the host is reflecting back content that WE wrote.
+   *
+   * Used by EditorShell to break the load → save → reload loop that can occur
+   * when JupyterLab's document model autosaves and then notifies all open
+   * editors about the updated content.
+   */
+  isOwnEcho?(content: unknown): boolean;
 }

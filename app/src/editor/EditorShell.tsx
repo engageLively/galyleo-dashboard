@@ -14,6 +14,7 @@ import { ShapeConfigurer } from './sidebar/ShapeConfigurer';
 import type { LoadableEntry } from './io/repoLoader';
 import type { ActiveTool } from './types';
 import type { GalyleoDashboard } from '../types/dashboard';
+import { fetchGalyleoConfig } from './io/configCache';
 
 const BLANK_SPEC: GalyleoDashboard = {
   fill: 'Color.white',
@@ -56,11 +57,55 @@ export default function EditorShell() {
   // Derived: which panel to actually show
   const displayPanel: 'data' | 'properties' = sidebarPanel === 'auto' ? 'data' : sidebarPanel;
 
-  // Auto-load a blank dashboard on first mount if nothing is loaded
+  // Auto-load a blank dashboard on first mount if nothing is loaded.
+  // Skip in Jupyter iframe mode — the extension will push content via galyleo:loadContent.
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('instanceId')) return;
     if (!useDashboardStore.getState().spec) {
       loadDashboardFromSpec(BLANK_SPEC);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Jupyter iframe bridge: announce readiness and receive content from the extension.
+  // io is read via getState() inside the handler to avoid stale-closure issues.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const instanceId = params.get('instanceId');
+    if (!instanceId) return;
+
+    function handleMessage(evt: MessageEvent) {
+      // Extension protocol: instanceId is at root, content is inside payload.
+      // Message shape: { type, instanceId, payload: { content? } }
+      const { type, instanceId: msgId, payload } = (evt.data ?? {}) as {
+        type?: string;
+        instanceId?: string;
+        payload?: { content?: GalyleoDashboard };
+      };
+      if (msgId !== instanceId) return;
+
+      if (type === 'galyleo:loadContent') {
+        const content = payload?.content;
+        // Suppress echoes of our own saves to prevent the
+        // contentChanged → autosave → loadContent → reload → contentChanged loop.
+        const currentIo = useEditorStore.getState().io;
+        if (currentIo.isOwnEcho?.(content)) return;
+        // New files arrive as {} — treat as a blank dashboard rather than
+        // passing an empty object that would leave required spec fields undefined.
+        const spec = content && Object.keys(content).length > 0 ? content : BLANK_SPEC;
+        loadDashboardFromSpec(spec);
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+    // Extension protocol: instanceId at root, not inside payload.
+    window.parent.postMessage(
+      { type: 'galyleo:ready', instanceId },
+      '*',
+    );
+
+    return () => window.removeEventListener('message', handleMessage);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -137,13 +182,49 @@ export default function EditorShell() {
   async function handlePublish() {
     const s = useDashboardStore.getState().spec;
     if (!s) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const galyleoServer = params.get('galyleo_server');
+
+    if (galyleoServer) {
+      // Running in Jupyter: publish to the configured publish server
+      const config = await fetchGalyleoConfig(galyleoServer).catch(() => null);
+      const publishServer = config?.publishServer ?? galyleoServer;
+      const defaultName = io.currentPath()?.replace(/\.gd\.json$/, '') ?? 'dashboard';
+      const name = prompt('Dashboard name:', defaultName);
+      if (!name) return;
+      try {
+        const res = await fetch(`${publishServer}/publish`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, dashboard: s }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json().catch(() => ({})) as { object_key?: string };
+        const objectKey = result.object_key ?? '';
+        if (objectKey) {
+          const viewUrl = `${publishServer}/static/published/index.html?dashboard=${encodeURIComponent(`${publishServer}/${objectKey}`)}`;
+          if (confirm(`Published!\n${viewUrl}\n\nOpen in new tab?`)) {
+            window.open(viewUrl, '_blank');
+          }
+        } else {
+          alert('Published successfully.');
+        }
+      } catch (err) {
+        alert(`Publish failed: ${err}`);
+      }
+      return;
+    }
+
+    // Fallback: config-based publish server
     let publishServer = '';
     try {
-      const cfg = await fetch('/galyleo.config.json').then(r => r.json());
+      const cfg = await fetch('/galyleo.config.json').then(r => r.json()) as { publishServer?: string };
       publishServer = cfg.publishServer ?? '';
     } catch { /* ignore */ }
     if (!publishServer) {
-      alert('Set "publishServer" in public/galyleo.config.json to enable publishing.');
+      alert('Set "publishServer" in public/galyleo.config.json or run in Jupyter to enable publishing.');
       return;
     }
     try {
@@ -153,7 +234,7 @@ export default function EditorShell() {
         body: JSON.stringify(s),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const result = await res.json().catch(() => ({}));
+      const result = await res.json().catch(() => ({})) as { viewUrl?: string };
       if (result.viewUrl) {
         if (confirm(`Published!\n${result.viewUrl}\n\nOpen in new tab?`)) {
           window.open(result.viewUrl, '_blank');

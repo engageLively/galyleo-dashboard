@@ -4,7 +4,7 @@
  * and an "+ Add" button at the bottom.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { useEditorStore } from '../../store/editorStore';
 import {
@@ -13,6 +13,7 @@ import {
   updateChart,
 } from '../utils/specMutations';
 import { openGoogleChartEditor } from '../utils/googleChartEditor';
+import { fetchGalyleoConfig } from '../io/configCache';
 import { FilterEditor } from '../dialogs/FilterEditor';
 import { ViewEditor } from '../dialogs/ViewEditor';
 import { ChartSourcePicker } from '../dialogs/ChartSourcePicker';
@@ -40,6 +41,15 @@ export function DataPanel() {
   const activeTab             = useEditorStore(s => s.sidebarTab);
   const setTab                = useEditorStore(s => s.setSidebarTab);
   const pushUndo              = useEditorStore(s => s.pushUndo);
+
+  // When running in Jupyter, the Hub galyleo service URL is passed as a URL param
+  const galyleoServer = new URLSearchParams(window.location.search).get('galyleo_server') ?? undefined;
+
+  const [tableServers, setTableServers] = useState<string[]>([]);
+  useEffect(() => {
+    if (!galyleoServer) return;
+    fetchGalyleoConfig(galyleoServer).then(cfg => setTableServers(cfg.tableServers));
+  }, [galyleoServer]);
 
   // Dialog state — null = closed, string = editing that name, true = adding new
   const [filterDialog, setFilterDialog] = useState<string | true | null>(null);
@@ -204,6 +214,8 @@ export function DataPanel() {
         <TableEditor
           spec={spec}
           editName={typeof tableDialog === 'string' ? tableDialog : null}
+          galyleoServer={galyleoServer}
+          tableServers={tableServers}
           onCommit={commitTable}
           onClose={() => setTableDialog(null)}
         />

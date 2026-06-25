@@ -3,7 +3,7 @@
  * with a manually-defined schema.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { GalyleoDashboard, GalyleoTableSpec, GalyleoColumn, ColumnType } from '../../types/dashboard';
 import {
   overlayStyle, dialogStyle, headerStyle, closeBtnStyle,
@@ -14,6 +14,10 @@ import {
 interface Props {
   spec: GalyleoDashboard;
   editName?: string | null;
+  /** Hub galyleo service URL — used for auth context. */
+  galyleoServer?: string;
+  /** Configured SDTP server URLs from /config — shown as a dropdown. */
+  tableServers?: string[];
   onCommit: (name: string, tableSpec: GalyleoTableSpec) => void;
   onClose: () => void;
 }
@@ -21,17 +25,33 @@ interface Props {
 type TableKind = 'remote' | 'inline';
 const COLUMN_TYPES: ColumnType[] = ['string', 'number', 'boolean', 'date', 'datetime', 'timeofday'];
 
-export function TableEditor({ spec, editName, onCommit, onClose }: Props) {
+export function TableEditor({ spec, editName, galyleoServer, tableServers, onCommit, onClose }: Props) {
   const existing = editName ? spec.tables[editName] : null;
   const existingKind: TableKind = existing?.connector ? 'remote' : 'inline';
 
   const [name, setName] = useState(editName ?? '');
   const [kind, setKind] = useState<TableKind>(existing ? existingKind : 'remote');
 
-  // Remote fields
-  const [url, setUrl] = useState(existing?.connector?.url ?? '');
+  // Remote fields — url defaults to the existing connector, then first configured server, then blank
+  const defaultServer = tableServers?.[0] ?? galyleoServer ?? '';
+  const [url, setUrl] = useState(existing?.connector?.url ?? defaultServer);
   const [remoteName, setRemoteName] = useState(existing?.connector?.remoteName ?? '');
   const [fetching, setFetching] = useState(false);
+
+  // Table names from the currently selected server
+  const [serverTableNames, setServerTableNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!url || kind !== 'remote') return;
+    setServerTableNames([]);
+    setRemoteName('');
+    fetch(`${url}/get_table_names`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then((names: unknown) => {
+        if (Array.isArray(names)) setServerTableNames(names as string[]);
+      })
+      .catch(() => { /* silently ignore — user can still type manually */ });
+  }, [url, kind]);
 
   // Inline / shared schema
   const [columns, setColumns] = useState<GalyleoColumn[]>(
@@ -44,7 +64,10 @@ export function TableEditor({ spec, editName, onCommit, onClose }: Props) {
     if (!baseUrl || !rn) { alert('Enter URL and table name first'); return; }
     setFetching(true);
     try {
-      const res = await fetch(`${baseUrl}/get_table_schema?table_name=${encodeURIComponent(rn)}`);
+      const res = await fetch(
+        `${baseUrl}/get_table_schema?table_name=${encodeURIComponent(rn)}`,
+        { credentials: 'include' },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as { schema?: GalyleoColumn[]; columns?: GalyleoColumn[] };
       const fetched = data.schema ?? data.columns;
@@ -122,15 +145,32 @@ export function TableEditor({ spec, editName, onCommit, onClose }: Props) {
             <>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Server URL</label>
-                <input style={inputStyle} value={url}
-                  onChange={e => setUrl(e.target.value)}
-                  placeholder="https://example.com/services/galyleo" />
+                {tableServers && tableServers.length > 0 ? (
+                  <select style={selectStyle} value={url} onChange={e => setUrl(e.target.value)}>
+                    {tableServers.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                ) : (
+                  <input style={inputStyle} value={url}
+                    onChange={e => setUrl(e.target.value)}
+                    placeholder="https://example.com/services/galyleo"
+                  />
+                )}
               </div>
               <div style={fieldStyle}>
-                <label style={labelStyle}>Remote table name (leave blank to use table name above)</label>
-                <input style={inputStyle} value={remoteName}
-                  onChange={e => setRemoteName(e.target.value)}
-                  placeholder={name || 'same as name'} />
+                <label style={labelStyle}>Remote table name</label>
+                {serverTableNames.length > 0 ? (
+                  <select style={selectStyle} value={remoteName}
+                    onChange={e => setRemoteName(e.target.value)}>
+                    <option value="">— select a table —</option>
+                    {serverTableNames.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input style={inputStyle} value={remoteName}
+                    onChange={e => setRemoteName(e.target.value)}
+                    placeholder={name || 'same as name'} />
+                )}
               </div>
               <button
                 style={{ ...cancelBtnStyle, alignSelf: 'flex-start' }}

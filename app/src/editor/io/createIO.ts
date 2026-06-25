@@ -11,6 +11,7 @@
  */
 
 import type { DashboardIO } from './ioInterface';
+import { IframeIO } from './iframeIO';
 import { JupyterIO } from './jupyterIO';
 import { LocalIO } from './localIO';
 
@@ -20,6 +21,10 @@ export function createIO(): DashboardIO {
 
   if (backend === 'local') return new LocalIO();
   if (backend === 'jupyter') return new JupyterIO();
+  if (backend === 'iframe') return new IframeIO(params.get('instanceId') ?? '');
+
+  // Running inside a JupyterLab GalyleoPanel iframe
+  if (params.has('instanceId')) return new IframeIO(params.get('instanceId')!);
 
   // DevIO is imported dynamically so it's never bundled into the production build
   if (backend === 'dev' || import.meta.env.DEV) {
