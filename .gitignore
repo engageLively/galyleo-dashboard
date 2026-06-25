@@ -43,6 +43,9 @@ jupyterlab_universal_extension/
 package-lock.json
 !app/package-lock.json
 
+# Local standalone config (each dev sets their own)
+app/public/galyleo.config.json
+
 # Runtime dashboard files (scratch / test data)
 *.gd.json
 *.txt

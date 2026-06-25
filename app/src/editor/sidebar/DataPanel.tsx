@@ -42,14 +42,10 @@ export function DataPanel() {
   const setTab                = useEditorStore(s => s.setSidebarTab);
   const pushUndo              = useEditorStore(s => s.pushUndo);
 
-  // When running in Jupyter, the Hub galyleo service URL is passed as a URL param
-  const galyleoServer = new URLSearchParams(window.location.search).get('galyleo_server') ?? undefined;
-
   const [tableServers, setTableServers] = useState<string[]>([]);
   useEffect(() => {
-    if (!galyleoServer) return;
-    fetchGalyleoConfig(galyleoServer).then(cfg => setTableServers(cfg.tableServers));
-  }, [galyleoServer]);
+    fetchGalyleoConfig().then(cfg => setTableServers(cfg.tableServers));
+  }, []);
 
   // Dialog state — null = closed, string = editing that name, true = adding new
   const [filterDialog, setFilterDialog] = useState<string | true | null>(null);
@@ -214,7 +210,6 @@ export function DataPanel() {
         <TableEditor
           spec={spec}
           editName={typeof tableDialog === 'string' ? tableDialog : null}
-          galyleoServer={galyleoServer}
           tableServers={tableServers}
           onCommit={commitTable}
           onClose={() => setTableDialog(null)}

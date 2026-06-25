@@ -183,62 +183,31 @@ export default function EditorShell() {
     const s = useDashboardStore.getState().spec;
     if (!s) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const galyleoServer = params.get('galyleo_server');
-
-    if (galyleoServer) {
-      // Running in Jupyter: publish to the configured publish server
-      const config = await fetchGalyleoConfig(galyleoServer).catch(() => null);
-      const publishServer = config?.publishServer ?? galyleoServer;
-      const defaultName = io.currentPath()?.replace(/\.gd\.json$/, '') ?? 'dashboard';
-      const name = prompt('Dashboard name:', defaultName);
-      if (!name) return;
-      try {
-        const res = await fetch(`${publishServer}/publish`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, dashboard: s }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const result = await res.json().catch(() => ({})) as { object_key?: string };
-        const objectKey = result.object_key ?? '';
-        if (objectKey) {
-          const viewUrl = `${publishServer}/static/published/index.html?dashboard=${encodeURIComponent(`${publishServer}/${objectKey}`)}`;
-          if (confirm(`Published!\n${viewUrl}\n\nOpen in new tab?`)) {
-            window.open(viewUrl, '_blank');
-          }
-        } else {
-          alert('Published successfully.');
-        }
-      } catch (err) {
-        alert(`Publish failed: ${err}`);
-      }
-      return;
-    }
-
-    // Fallback: config-based publish server
-    let publishServer = '';
-    try {
-      const cfg = await fetch('/galyleo.config.json').then(r => r.json()) as { publishServer?: string };
-      publishServer = cfg.publishServer ?? '';
-    } catch { /* ignore */ }
+    const config = await fetchGalyleoConfig().catch(() => null);
+    const publishServer = config?.publishServer ?? '';
     if (!publishServer) {
-      alert('Set "publishServer" in public/galyleo.config.json or run in Jupyter to enable publishing.');
+      alert('No publish server configured. Set "publishServer" in public/galyleo.config.json or configure PUBLISH_SERVER_URL on the galyleo service.');
       return;
     }
+
+    const defaultName = io.currentPath()?.replace(/\.gd\.json$/, '') ?? 'dashboard';
+    const name = prompt('Dashboard name:', defaultName);
+    if (!name) return;
     try {
       const res = await fetch(`${publishServer}/publish`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(s),
+        body: JSON.stringify({ name, dashboard: s }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const result = await res.json().catch(() => ({})) as { viewUrl?: string };
-      if (result.viewUrl) {
-        if (confirm(`Published!\n${result.viewUrl}\n\nOpen in new tab?`)) {
-          window.open(result.viewUrl, '_blank');
-        }
+      const result = await res.json().catch(() => ({})) as { object_key?: string; viewUrl?: string };
+      const viewUrl = result.viewUrl
+        ?? (result.object_key
+          ? `${publishServer}/static/published/index.html?dashboard=${encodeURIComponent(`${publishServer}/${result.object_key}`)}`
+          : null);
+      if (viewUrl) {
+        if (confirm(`Published!\n${viewUrl}\n\nOpen in new tab?`)) window.open(viewUrl, '_blank');
       } else {
         alert('Published successfully.');
       }

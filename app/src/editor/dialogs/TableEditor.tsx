@@ -14,8 +14,6 @@ import {
 interface Props {
   spec: GalyleoDashboard;
   editName?: string | null;
-  /** Hub galyleo service URL — used for auth context. */
-  galyleoServer?: string;
   /** Configured SDTP server URLs from /config — shown as a dropdown. */
   tableServers?: string[];
   onCommit: (name: string, tableSpec: GalyleoTableSpec) => void;
@@ -25,7 +23,7 @@ interface Props {
 type TableKind = 'remote' | 'inline';
 const COLUMN_TYPES: ColumnType[] = ['string', 'number', 'boolean', 'date', 'datetime', 'timeofday'];
 
-export function TableEditor({ spec, editName, galyleoServer, tableServers, onCommit, onClose }: Props) {
+export function TableEditor({ spec, editName, tableServers, onCommit, onClose }: Props) {
   const existing = editName ? spec.tables[editName] : null;
   const existingKind: TableKind = existing?.connector ? 'remote' : 'inline';
 
@@ -33,7 +31,7 @@ export function TableEditor({ spec, editName, galyleoServer, tableServers, onCom
   const [kind, setKind] = useState<TableKind>(existing ? existingKind : 'remote');
 
   // Remote fields — url defaults to the existing connector, then first configured server, then blank
-  const defaultServer = tableServers?.[0] ?? galyleoServer ?? '';
+  const defaultServer = tableServers?.[0] ?? '';
   const [url, setUrl] = useState(existing?.connector?.url ?? defaultServer);
   const [remoteName, setRemoteName] = useState(existing?.connector?.remoteName ?? '');
   const [fetching, setFetching] = useState(false);
