@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SDTP Test Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app/test-server/server.py",
+      "cwd": "${workspaceFolder}/app/test-server",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "React Editor (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000/?mode=edit",
+      "webRoot": "${workspaceFolder}/app",
+      "sourceMapPathOverrides": {
+        "/@fs/*": "/*"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["SDTP Test Server", "React Editor (Chrome)"]
+    }
+  ]
+}
