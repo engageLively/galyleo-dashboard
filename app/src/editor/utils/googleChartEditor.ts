@@ -50,7 +50,7 @@ export async function openGoogleChartEditor(
 
   const editor = new viz.ChartEditor();
   viz.events.addListener(editor, 'ok', () => {
-    const result = editor.getResult();
+    const result = editor.getChartWrapper();
     onCommit(
       result.getChartType() as string,
       (result.getOptions() ?? {}) as Record<string, unknown>,

@@ -42,6 +42,12 @@ export function FilterEditor({ spec, editName, onCommit, onClose }: Props) {
   const [tableName, setTableName] = useState((existingForm?.tableName as string) ?? '');
   const [columnName, setColumnName] = useState((existingForm?.columnName as string) ?? '');
   const [filterType, setFilterType] = useState<FilterType>((existingForm?.filterType as FilterType) ?? 'Select');
+  const [minVal, setMinVal] = useState(String((existingForm?.min_val as number) ?? 0));
+  const [maxVal, setMaxVal] = useState(String((existingForm?.max_val as number) ?? 100));
+  const [step, setStep]     = useState(String((existingForm?.step as number) ?? 1));
+  const [remoteChoices, setRemoteChoices] = useState<FilterChoice[]>(
+    (existingForm?.choices as FilterChoice[] | undefined) ?? []
+  );
 
   const tableNames = Object.keys(spec.tables);
   const columns = tableName ? spec.tables[tableName]?.columns ?? [] : [];
@@ -56,8 +62,86 @@ export function FilterEditor({ spec, editName, onCommit, onClose }: Props) {
   const isNumeric = selectedColumn?.type === 'number';
   const isBoolean = selectedColumn?.type === 'boolean';
 
+  // Auto-populate min/max (and step for Slider) from column data
+  useEffect(() => {
+    if (!isNumeric || !tableName || !columnName) return;
+    if (filterType !== 'Range' && filterType !== 'Slider') return;
+
+    const table = spec.tables[tableName];
+    if (!table) return;
+
+    if (table.connector) {
+      const { url, remoteName } = table.connector;
+      if (filterType === 'Slider') {
+        // Fetch all values to compute step as the minimum gap between consecutive distinct values
+        fetch(`${url}/get_all_values?table_name=${encodeURIComponent(remoteName)}&column_name=${encodeURIComponent(columnName)}`)
+          .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+          .then((vals: unknown) => {
+            if (!Array.isArray(vals) || vals.length === 0) return;
+            const nums = [...new Set(vals.map(Number).filter(v => !isNaN(v)))].sort((a, b) => a - b);
+            setMinVal(String(nums[0]));
+            setMaxVal(String(nums[nums.length - 1]));
+            if (nums.length > 1) {
+              const minGap = nums.slice(1).reduce((gap, v, i) => Math.min(gap, v - nums[i]), Infinity);
+              if (minGap > 0) setStep(String(minGap));
+            }
+          })
+          .catch(err => console.warn('get_all_values failed:', err));
+      } else {
+        fetch(`${url}/get_range_spec?table_name=${encodeURIComponent(remoteName)}&column_name=${encodeURIComponent(columnName)}`)
+          .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+          .then((range: unknown) => {
+            if (Array.isArray(range) && range.length === 2) {
+              setMinVal(String(range[0]));
+              setMaxVal(String(range[1]));
+            }
+          })
+          .catch(err => console.warn('get_range_spec failed:', err));
+      }
+    } else if (table.rows && table.rows.length > 0) {
+      const colIdx = table.columns.findIndex(c => c.name === columnName);
+      if (colIdx < 0) return;
+      const nums = [...new Set(table.rows.map(r => Number(r[colIdx])).filter(v => !isNaN(v)))].sort((a, b) => a - b);
+      if (nums.length > 0) {
+        setMinVal(String(nums[0]));
+        setMaxVal(String(nums[nums.length - 1]));
+        if (filterType === 'Slider' && nums.length > 1) {
+          const minGap = nums.slice(1).reduce((gap, v, i) => Math.min(gap, v - nums[i]), Infinity);
+          if (minGap > 0) setStep(String(minGap));
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableName, columnName, filterType, isNumeric]);
+
+  // Fetch distinct values for Select/List filters on remote tables
+  useEffect(() => {
+    if (filterType !== 'Select' && filterType !== 'List') return;
+    if (!tableName || !columnName) return;
+    const table = spec.tables[tableName];
+    if (!table?.connector) return;
+
+    const { url, remoteName } = table.connector;
+    fetch(`${url}/get_all_values?table_name=${encodeURIComponent(remoteName)}&column_name=${encodeURIComponent(columnName)}`)
+      .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
+      .then((vals: unknown) => {
+        if (!Array.isArray(vals)) return;
+        const col = table.columns.find(c => c.name === columnName);
+        const isStr = col?.type === 'string';
+        const choices: FilterChoice[] = vals.map(v => ({
+          isListItem: true,
+          string: String(v),
+          value: isStr ? String(v) : v,
+        }));
+        setRemoteChoices(choices);
+      })
+      .catch(err => console.warn('get_all_values failed:', err));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableName, columnName, filterType]);
+
   function buildSavedForm() {
-    const choices = getColumnChoices(spec, tableName, columnName);
+    const inlineChoices = getColumnChoices(spec, tableName, columnName);
+    const choices = inlineChoices.length > 0 ? inlineChoices : remoteChoices;
     const isString = selectedColumn?.type === 'string';
 
     if (filterType === 'Select') {
@@ -81,20 +165,26 @@ export function FilterEditor({ spec, editName, onCommit, onClose }: Props) {
       };
     }
     if (filterType === 'Range') {
+      const mn = Number(minVal) || 0;
+      const mx = Number(maxVal) || 100;
       return {
         filterType: 'Range' as const,
         columnName, tableName,
-        min_val: 0, max_val: 100,
-        low_selection: 0, high_selection: 100,
+        min_val: mn, max_val: mx,
+        low_selection: mn, high_selection: mx,
         part: null,
       };
     }
     if (filterType === 'Slider') {
+      const mn = Number(minVal) || 0;
+      const mx = Number(maxVal) || 100;
+      const st = Number(step) || 1;
       return {
         filterType: 'Slider' as const,
         columnName, tableName,
-        min_val: 0, max_val: 100,
-        selection: 0,
+        min_val: mn, max_val: mx,
+        step: st,
+        selection: mn,
         part: null,
       };
     }
@@ -180,11 +270,32 @@ export function FilterEditor({ spec, editName, onCommit, onClose }: Props) {
             </select>
           </div>
 
-          {columnName && tableName && (
+          {(filterType === 'Range' || filterType === 'Slider') && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ ...fieldStyle, flex: 1 }}>
+                <label style={labelStyle}>Min</label>
+                <input style={inputStyle} type="number" value={minVal} onChange={e => setMinVal(e.target.value)} />
+              </div>
+              <div style={{ ...fieldStyle, flex: 1 }}>
+                <label style={labelStyle}>Max</label>
+                <input style={inputStyle} type="number" value={maxVal} onChange={e => setMaxVal(e.target.value)} />
+              </div>
+              {filterType === 'Slider' && (
+                <div style={{ ...fieldStyle, flex: 1 }}>
+                  <label style={labelStyle}>Step</label>
+                  <input style={inputStyle} type="number" value={step} onChange={e => setStep(e.target.value)} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {columnName && tableName && (filterType === 'Select' || filterType === 'List') && (
             <p style={{ margin: 0, fontSize: 12, color: '#888' }}>
-              {getColumnChoices(spec, tableName, columnName).length > 0
-                ? `${getColumnChoices(spec, tableName, columnName).length} distinct values found in table`
-                : 'Remote/static table — choices populated at runtime'}
+              {remoteChoices.length > 0
+                ? `${remoteChoices.length} distinct values loaded from server`
+                : getColumnChoices(spec, tableName, columnName).length > 0
+                  ? `${getColumnChoices(spec, tableName, columnName).length} distinct values found in table`
+                  : 'Loading choices…'}
             </p>
           )}
         </div>

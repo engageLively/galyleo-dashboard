@@ -227,7 +227,9 @@ export default function EditorShell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif' }}>
       {showLoadDialog && (
-        <LoadDialog io={io} onLoad={handleLoadEntry} onClose={() => setShowLoadDialog(false)} />
+        <LoadDialog io={io} onLoad={handleLoadEntry}
+          onLoadDirect={spec => { loadDashboardFromSpec(spec); setShowLoadDialog(false); }}
+          onClose={() => setShowLoadDialog(false)} />
       )}
 
       {/* Top bar */}

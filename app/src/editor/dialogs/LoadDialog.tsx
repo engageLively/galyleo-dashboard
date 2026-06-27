@@ -10,16 +10,18 @@ import { useEffect, useState } from 'react';
 import type { LoadableEntry } from '../io/repoLoader';
 import { listAllDashboards } from '../io/repoLoader';
 import type { DashboardIO } from '../io/ioInterface';
+import type { GalyleoDashboard } from '../../types/dashboard';
 
 interface Props {
   io: DashboardIO;
   onLoad: (entry: LoadableEntry) => void;
+  onLoadDirect: (spec: GalyleoDashboard) => void;
   onClose: () => void;
 }
 
 type Status = 'loading' | 'ready' | 'error';
 
-export function LoadDialog({ io, onLoad, onClose }: Props) {
+export function LoadDialog({ io, onLoad, onLoadDirect, onClose }: Props) {
   const [entries, setEntries] = useState<LoadableEntry[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -85,7 +87,27 @@ export function LoadDialog({ io, onLoad, onClose }: Props) {
           ))}
         </div>
 
-        <div style={{ borderTop: '1px solid #ddd', padding: '8px 12px', textAlign: 'right' }}>
+        <div style={{ borderTop: '1px solid #ddd', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button style={cancelBtnStyle} onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,.gd.json';
+            input.onchange = () => {
+              const file = input.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                try {
+                  onLoadDirect(JSON.parse(reader.result as string) as GalyleoDashboard);
+                  onClose();
+                } catch { alert(`${file.name} is not valid JSON`); }
+              };
+              reader.readAsText(file);
+            };
+            input.click();
+          }}>
+            Browse files…
+          </button>
           <button style={cancelBtnStyle} onClick={onClose}>Cancel</button>
         </div>
       </div>

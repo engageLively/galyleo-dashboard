@@ -1,6 +1,5 @@
 {
-  "dashboardRepos": [
-    "/galyleo-dashboard/dashboards/"
-  ],
-  "publishServer": ""
+  "publishServer": "http://localhost:5000",
+  "tableServers": ["http://localhost:5000"]
 }
+

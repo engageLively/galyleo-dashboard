@@ -171,6 +171,7 @@ export interface SliderFilterSavedForm {
   tableName: string;
   min_val: number;
   max_val: number;
+  step?: number;
   selection: number;
   part: unknown;
 }

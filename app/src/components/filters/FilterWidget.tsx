@@ -9,10 +9,12 @@
 import { morphicToCSS } from '../../utils/morphicStyles';
 import { SelectFilter } from './SelectFilter';
 import { RangeFilter } from './RangeFilter';
+import { SliderFilter } from './SliderFilter';
 import type {
   GalyleoFilterSpec,
   SelectFilterSavedForm,
   RangeFilterSavedForm,
+  SliderFilterSavedForm,
 } from '../../types/dashboard';
 
 interface Props {
@@ -39,10 +41,11 @@ export function FilterWidget({ filterName, spec }: Props) {
   } else if (filterType === 'Range' || filterType === 'DoubleSlider') {
     inner = <RangeFilter filterName={filterName} savedForm={savedForm as RangeFilterSavedForm} />;
   } else if (filterType === 'List') {
-    // Multi-select list — rendered as a <select multiple> for now
     inner = <SelectFilter filterName={filterName} savedForm={savedForm as SelectFilterSavedForm} />;
+  } else if (filterType === 'Slider') {
+    inner = <SliderFilter filterName={filterName} savedForm={savedForm as SliderFilterSavedForm} />;
   } else {
-    // Fallback for Boolean, Slider, Date — render a label so the widget is visible
+    // Fallback for Boolean, Date, unknown types
     inner = (
       <div style={{ fontSize: 11, padding: 2, overflow: 'hidden' }}>
         {filterName} ({filterType})

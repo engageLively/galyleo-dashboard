@@ -84,7 +84,10 @@ export function ChartWidget({ chartName, spec }: Props) {
 
   const outerStyle = morphicToCSS(spec.morphicProperties);
   const Renderer = ACTIVE_RENDERER;
-  const resolvedOptions = dynamicTitle != null ? { ...spec.options, title: dynamicTitle } : spec.options;
+  const resolvedOptions = useMemo(
+    () => dynamicTitle != null ? { ...spec.options, title: dynamicTitle } : spec.options,
+    [spec.options, dynamicTitle],
+  );
 
   return (
     <div style={outerStyle}>
