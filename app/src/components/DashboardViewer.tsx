@@ -62,7 +62,8 @@ export function DashboardViewer() {
           const s = morphicToCSS(m.morphicProperties);
           return <div key={i} style={{ ...s, borderRadius: '50%' }} />;
         }
-        if (m.type === 'Rectangle') {
+        // 'Rectangle' is the new editor type; 'Morph' is the legacy lively.next type
+        if (m.type === 'Rectangle' || m.type === 'Morph') {
           return <div key={i} style={morphicToCSS(m.morphicProperties)} />;
         }
         return null;

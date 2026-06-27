@@ -268,7 +268,7 @@ export function newRectangleMorph(x: number, y: number, w: number, h: number): M
     morphIndex: 0,
     morphicProperties: {
       ...defaultMorphicProperties(x, y, w, h),
-      fill: 'rgba(255,255,255,0)',
+      fill: 'rgba(255,255,255,1)',
       border: { style: 'solid', width: 1, color: { all: 'rgba(0,0,0,1)' }, radius: 0 },
     },
   };
