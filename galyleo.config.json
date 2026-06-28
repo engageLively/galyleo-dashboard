@@ -1,0 +1,5 @@
+{
+  "publishServer": "http://localhost:5000",
+  "tableServers": ["http://localhost:5000"]
+}
+
