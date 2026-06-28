@@ -46,11 +46,40 @@ export class IframeIO implements DashboardIO {
     );
   }
 
+  readonly hostManagedPath = true;
   currentPath(): string | null { return null; }
 
-  async listDashboards(): Promise<DashboardFileEntry[]> { return []; }
+  async listDashboards(): Promise<DashboardFileEntry[]> {
+    return new Promise((resolve) => {
+      const TIMEOUT_MS = 5_000;
+      const timer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        resolve([]);
+      }, TIMEOUT_MS);
 
-  async load(_path?: string): Promise<GalyleoDashboard> {
+      const handler = (evt: MessageEvent) => {
+        const { type, instanceId, payload } = (evt.data ?? {}) as {
+          type?: string; instanceId?: string; payload?: { dashboards?: DashboardFileEntry[] };
+        };
+        if (type === 'galyleo:dashboardList' && instanceId === this._instanceId) {
+          clearTimeout(timer);
+          window.removeEventListener('message', handler);
+          resolve(payload?.dashboards ?? []);
+        }
+      };
+
+      window.addEventListener('message', handler);
+      this._post('galyleo:listDashboards');
+    });
+  }
+
+  async load(path?: string): Promise<GalyleoDashboard> {
+    if (path) {
+      // Ask JupyterLab to open the file in a new editor tab
+      this._post('galyleo:openFile', { path });
+      // Return a never-resolving promise — JupyterLab will open a new panel
+      return new Promise(() => { /* intentionally never resolves */ });
+    }
     throw new Error('IframeIO: content is pushed by the JupyterLab extension via galyleo:loadContent');
   }
 

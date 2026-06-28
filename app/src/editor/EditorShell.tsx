@@ -9,6 +9,7 @@ import { useEditorStore } from '../store/editorStore';
 import { EditableCanvas } from './canvas/EditableCanvas';
 import { deleteWidget } from './utils/specMutations';
 import { LoadDialog } from './dialogs/LoadDialog';
+import { SaveDialog } from './dialogs/SaveDialog';
 import { DataPanel } from './sidebar/DataPanel';
 import { ShapeConfigurer } from './sidebar/ShapeConfigurer';
 import type { LoadableEntry } from './io/repoLoader';
@@ -44,6 +45,7 @@ export default function EditorShell() {
   const setActiveTool = useEditorStore(s => s.setActiveTool);
 
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   // 'auto' = follow selection; 'data' / 'properties' = user explicitly chose
   const [sidebarPanel, setSidebarPanel] = useState<'data' | 'properties' | 'auto'>('auto');
 
@@ -170,13 +172,19 @@ export default function EditorShell() {
   async function handleSave() {
     const s = useDashboardStore.getState().spec;
     if (!s) return;
-    try {
-      await io.save(s);
-    } catch {
-      const name = prompt('Save as (filename):');
-      if (!name) return;
-      try { await io.saveAs(s, name); } catch (err) { alert(`Save failed: ${err}`); }
+    if (io.currentPath() || io.hostManagedPath) {
+      try { await io.save(s); return; } catch { /* fall through to dialog */ }
     }
+    setShowSaveDialog(true);
+  }
+
+  async function handleSaveAs(name: string) {
+    const s = useDashboardStore.getState().spec;
+    if (!s) return;
+    try {
+      await io.saveAs(s, name);
+      document.title = name.replace(/\.gd\.json$/, '');
+    } catch (err) { alert(`Save failed: ${err}`); }
   }
 
   async function handlePublish() {
@@ -230,6 +238,12 @@ export default function EditorShell() {
         <LoadDialog io={io} onLoad={handleLoadEntry}
           onLoadDirect={spec => { loadDashboardFromSpec(spec); setShowLoadDialog(false); }}
           onClose={() => setShowLoadDialog(false)} />
+      )}
+      {showSaveDialog && (
+        <SaveDialog
+          initialName={io.currentPath() ?? 'dashboard.gd.json'}
+          onSave={handleSaveAs}
+          onClose={() => setShowSaveDialog(false)} />
       )}
 
       {/* Top bar */}

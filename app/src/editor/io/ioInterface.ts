@@ -61,4 +61,11 @@ export interface DashboardIO {
    * editors about the updated content.
    */
   isOwnEcho?(content: unknown): boolean;
+
+  /**
+   * If true, the backend manages its own file path (e.g. JupyterLab owns the
+   * document context). Save should call save() directly without showing a
+   * filename dialog, even when currentPath() returns null.
+   */
+  hostManagedPath?: boolean;
 }

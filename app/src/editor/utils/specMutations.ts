@@ -133,7 +133,7 @@ export function addMorphDescriptor(
   spec: GalyleoDashboard, morph: MorphDescriptor,
 ): GalyleoDashboard {
   const dict = morphsAsDict(spec);
-  return { ...spec, morphs: { ...dict, [morph.name]: morph } };
+  return { ...spec, morphs: { ...dict, [morph.name]: morph }, numMorphs: (spec.numMorphs ?? 0) + 1 };
 }
 
 export function updateMorphDescriptor(
