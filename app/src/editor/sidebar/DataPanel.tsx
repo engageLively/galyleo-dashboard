@@ -115,10 +115,10 @@ export function DataPanel() {
   // ---- Items for active tab ----
 
   const items: string[] =
-    activeTab === 'tables'  ? Object.keys(spec.tables)
-    : activeTab === 'filters' ? Object.keys(spec.filters)
-    : activeTab === 'views'   ? Object.keys(spec.views)
-    :                           Object.keys(spec.charts);
+    activeTab === 'tables'  ? Object.keys(spec.tables  ?? {})
+    : activeTab === 'filters' ? Object.keys(spec.filters ?? {})
+    : activeTab === 'views'   ? Object.keys(spec.views   ?? {})
+    :                           Object.keys(spec.charts  ?? {});
 
   function openAdd() {
     if (activeTab === 'filters') setFilterDialog(true);

@@ -126,18 +126,18 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
     const dataManager = new GalyleoDataManager();
 
     // Load tables sequentially (order matters for schema validation)
-    for (const [name, tableSpec] of Object.entries(spec.tables)) {
+    for (const [name, tableSpec] of Object.entries(spec.tables ?? {})) {
       await dataManager.addTable(name, tableSpec);
     }
 
     // Add views
-    for (const [name, viewSpec] of Object.entries(spec.views)) {
+    for (const [name, viewSpec] of Object.entries(spec.views ?? {})) {
       dataManager.addView(name, viewSpec);
     }
 
     // Build initial filter values from savedForms
     const filterValues: FilterDictionary = {};
-    for (const [name, filterSpec] of Object.entries(spec.filters)) {
+    for (const [name, filterSpec] of Object.entries(spec.filters ?? {})) {
       const val = initialFilterValue(filterSpec);
       if (val) filterValues[name] = val;
     }
@@ -145,7 +145,7 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
     // Initialize chart-based filters (charts whose names appear in view
     // filterNames but have no savedForm). Without this, views that depend
     // only on a chart selection show unfiltered data on first load.
-    for (const viewSpec of Object.values(spec.views)) {
+    for (const viewSpec of Object.values(spec.views ?? {})) {
       for (const filterName of viewSpec.filterNames) {
         if (filterName in filterValues) continue;
         if (!(filterName in spec.charts)) continue;
